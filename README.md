@@ -15,13 +15,38 @@
 Currently supported:
 
 * **ChaCha20**, a high-speed stream cipher based on Salsa20.
-* **Poly1305**, a state-of-the-art secret-key message-authentication code.
+* **Poly1305**, a state-of-the-art secret-key message-authentication code (MAC).
 * **ChaCha20-Poly1305**, an Authenticated Encryption with Associated Data (AEAD) algorithm.
 
 Partially supported but requires more testing:
 
 * **XChaCha20**, based on ChaCha20 IETF with extended nonce.
 * **XChaCha20-Poly1305**, an IETF variant of ChaCha20-Poly1305.
+
+## Usage
+
+### Symmetric Key Encryption
+
+```csharp
+// Create the primitive
+var aead = new ChaCha20Poly1305(key);
+
+// Use the primitive to encrypt a plaintext
+var ciphertext = aead.Encrypt(plainText, aad, nonce);
+
+// ... or to decrypt a ciphertext
+var output = aead.Decrypt(ciphertext, aad, nonce);
+```
+
+### MAC (Message Authentication Code)
+
+```csharp
+// Use the primitive to compute a tag
+var tag = Poly1305.ComputeMac(key, data);
+
+// ... or to verify a tag
+Poly1305.VerifyMac(key, data, mac)
+```
 
 ## Learn More
 
