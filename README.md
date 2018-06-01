@@ -10,18 +10,18 @@
 
 ## Introduction
 
-NaCl.Core is a managed-only cryptographic library for [.NET](https://dot.net) which provides modern cryptographic _primitives_.
+**NaCl.Core** is a managed-only cryptographic library for [.NET](https://dot.net) which provides modern cryptographic _primitives_.
 
 Currently supported:
 
-* ChaCha20, a high-speed stream cipher based on Salsa20
-* Poly1305, a state-of-the-art secret-key message-authentication
-* ChaCha20-Poly1305, an Authenticated Encryption with Associated Data (AEAD) algorithm
+* **ChaCha20**, a high-speed stream cipher based on Salsa20
+* **Poly1305**, a state-of-the-art secret-key message-authentication
+* **ChaCha20-Poly1305**, an Authenticated Encryption with Associated Data (AEAD) algorithm
 
 Partially supported but requires more testing:
 
-* XChaCha20, based on ChaCha20 IETF with extended nonce
-* XChaCha20-Poly1305, an IETF variant of ChaCha20-Poly1305
+* **XChaCha20**, based on ChaCha20 IETF with extended nonce
+* **XChaCha20-Poly1305**, an IETF variant of ChaCha20-Poly1305
 
 ## Learn More
 
