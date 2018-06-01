@@ -8,7 +8,7 @@
     <Copyright>Copyright © 2018 David De Smet</Copyright>
     <PackageLicenseUrl>https://opensource.org/licenses/MIT</PackageLicenseUrl>
     <PackageTags>NaCl cryptography dotnet dotnet-core netstandard</PackageTags>
-    <PackageProjectUrl>https://github.com/idaviddesmet/paseto-dotnet</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/idaviddesmet/NaCl.Core</PackageProjectUrl>
   </PropertyGroup>
 
   <ItemGroup>
