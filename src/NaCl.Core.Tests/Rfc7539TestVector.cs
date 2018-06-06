@@ -1,5 +1,7 @@
 ﻿namespace NaCl.Core.Tests.Crypto
 {
+    using Internal;
+
     public class Rfc7539TestVector
     {
         public byte[] Key { get; private set; }

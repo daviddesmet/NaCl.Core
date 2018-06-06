@@ -7,8 +7,8 @@
 
     using NUnit.Framework;
 
+    using Base;
     using Internal;
-    using Internal.ChaCha;
 
     [TestFixture]
     public class ChaCha20Tests

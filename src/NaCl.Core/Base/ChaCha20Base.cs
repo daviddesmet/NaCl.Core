@@ -1,9 +1,10 @@
-﻿namespace NaCl.Core.Internal.ChaCha
+﻿namespace NaCl.Core.Base
 {
     using System;
+    using Internal;
 
     /// <summary>
-    /// Base class for <seealso cref="NaCl.Core.Internal.ChaCha.ChaCha20" /> and <seealso cref="NaCl.Core.Internal.ChaCha.XChaCha20" />.
+    /// Base class for <seealso cref="NaCl.Core.ChaCha20" /> and <seealso cref="NaCl.Core.XChaCha20" />.
     /// </summary>
     /// <seealso cref="NaCl.Core.Internal.Snuffle" />
     public abstract class ChaCha20Base : Snuffle

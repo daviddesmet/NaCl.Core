@@ -1,8 +1,10 @@
-﻿namespace NaCl.Core.Internal
+﻿namespace NaCl.Core.Base
 {
     using System;
     using System.Linq;
     using System.Security.Cryptography;
+
+    using Internal;
 
     /// <summary>
     /// An AEAD construction with a <see cref="Snuffle"/> and <see cref="Poly1305"/>, following RFC 7539, section 2.8.

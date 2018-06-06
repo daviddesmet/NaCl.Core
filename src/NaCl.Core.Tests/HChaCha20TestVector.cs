@@ -4,6 +4,8 @@
     using System.Collections.Generic;
     using System.Text;
 
+    using Internal;
+
     public class HChaCha20TestVector
     {
         public byte[] Key;

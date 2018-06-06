@@ -1,4 +1,4 @@
-﻿namespace NaCl.Core.Internal
+﻿namespace NaCl.Core.Base
 {
     using System;
     using System.Linq;
@@ -10,13 +10,13 @@
     /// <remarks>
     /// Variants of Snuffle have two differences: the size of the nonce and the block function that
     /// produces a key stream block from a key, a nonce, and a counter. Subclasses of this class
-    /// specifying these two information by overriding <seealso cref="NaCl.Core.Internal.Snuffle.NonceSizeInBytes()" /> and <seealso cref="NaCl.Core.Internal.Snuffle.GetKeyStreamBlock(byte[], int)" />.
+    /// specifying these two information by overriding <seealso cref="NaCl.Core.Base.Snuffle.NonceSizeInBytes()" /> and <seealso cref="NaCl.Core.Base.Snuffle.GetKeyStreamBlock(byte[], int)" />.
     ///
-    /// Concrete implementations of this class are meant to be used to construct an Aead with <seealso cref="NaCl.Core.Internal.Poly1305" />. The
-    /// base class of these Aead constructions is <seealso cref="NaCl.Core.Internal.SnufflePoly1305" />.
-    /// For example, <seealso cref="NaCl.Core.Internal.ChaCha.XChaCha20" /> is a subclass of this class and a
+    /// Concrete implementations of this class are meant to be used to construct an Aead with <seealso cref="NaCl.Core.Poly1305" />. The
+    /// base class of these Aead constructions is <seealso cref="NaCl.Core.Base.SnufflePoly1305" />.
+    /// For example, <seealso cref="NaCl.Core.XChaCha20" /> is a subclass of this class and a
     /// concrete Snuffle implementation, and <seealso cref="NaCl.Core.XChaCha20Poly1305" /> is
-    /// a subclass of <seealso cref="NaCl.Core.Internal.SnufflePoly1305" /> and a concrete Aead construction.
+    /// a subclass of <seealso cref="NaCl.Core.Base.SnufflePoly1305" /> and a concrete Aead construction.
     /// </remarks>
     public abstract class Snuffle
     {
