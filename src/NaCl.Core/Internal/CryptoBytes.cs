@@ -1,4 +1,4 @@
-﻿namespace NaCl.Core
+﻿namespace NaCl.Core.Internal
 {
     using System;
     using System.Linq;

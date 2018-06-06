@@ -5,6 +5,7 @@
 
     using NUnit.Framework;
 
+    using Base;
     using Internal;
 
     [TestFixture]

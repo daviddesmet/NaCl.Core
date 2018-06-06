@@ -1,6 +1,7 @@
-﻿namespace NaCl.Core.Internal
+﻿namespace NaCl.Core
 {
     using System;
+    using Internal;
 
     /// <summary>
     /// Poly1305 one-time MAC based on RFC 7539.

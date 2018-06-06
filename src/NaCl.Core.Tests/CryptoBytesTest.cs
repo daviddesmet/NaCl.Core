@@ -5,6 +5,8 @@
 
     using NUnit.Framework;
 
+    using Internal;
+
     [TestFixture]
     public class CryptoBytesTest
     {

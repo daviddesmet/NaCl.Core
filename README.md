@@ -32,7 +32,7 @@ Partially supported but requires more testing:
 var aead = new ChaCha20Poly1305(key);
 
 // Use the primitive to encrypt a plaintext
-var ciphertext = aead.Encrypt(plainText, aad, nonce);
+var ciphertext = aead.Encrypt(plaintext, aad, nonce);
 
 // ... or to decrypt a ciphertext
 var output = aead.Decrypt(ciphertext, aad, nonce);
