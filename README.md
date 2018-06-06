@@ -10,7 +10,7 @@
 
 ## Introduction
 
-**NaCl.Core** is a managed-only cryptographic library for [.NET](https://dot.net) which provides modern cryptographic _primitives_.
+**NaCl.Core** is a managed-only cryptography library for [.NET](https://dot.net) which provides modern cryptographic _primitives_.
 
 Currently supported:
 
