@@ -2,8 +2,12 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
+    using System.Net;
+    using System.Net.Http;
 
     using NUnit.Framework;
+    using Newtonsoft.Json;
 
     using Base;
     using Internal;
@@ -268,9 +272,83 @@
             }
         }
 
+        [Test]
         public void WycheproofTestVectors()
         {
+            var json = GetWycheproofTestVector();
 
+            var vector = JsonConvert.DeserializeObject<WycheproofVector>(json);
+
+            var errors = 0;
+            foreach (var group in vector.TestGroups)
+            {
+                foreach (var test in group.Tests)
+                {
+                    var id = $"TestCase {test.TcId}";
+                    if (!string.IsNullOrEmpty(test.Comment))
+                        id += $" ({test.Comment})";
+
+                    var iv = CryptoBytes.FromHexString(test.Iv);
+                    var key = CryptoBytes.FromHexString(test.Key);
+                    var msg = CryptoBytes.FromHexString(test.Msg);
+                    var aad = CryptoBytes.FromHexString(test.Aad);
+                    var ct = CryptoBytes.FromHexString(test.Ct);
+                    var tag = CryptoBytes.FromHexString(test.Tag);
+                    var ciphertext = iv.Concat(ct).Concat(tag).ToArray();
+
+                    // Result is one of "valid", "invalid", "acceptable".
+                    // "valid" are test vectors with matching plaintext, ciphertext and tag.
+                    // "invalid" are test vectors with invalid parameters or invalid ciphertext and tag.
+                    // "acceptable" are test vectors with weak parameters or legacy formats.
+
+                    var result = test.Result;
+
+                    try
+                    {
+                        var aead = new ChaCha20Poly1305(key);
+                        var decrypted = aead.Decrypt(ciphertext, aad);
+
+                        if (test.Result == "invalid")
+                        {
+                            TestContext.WriteLine($"FAIL {id}: accepting invalid ciphertext, cleartext: {test.Msg}, decrypted: {CryptoBytes.ToHexStringLower(decrypted)}");
+                            errors++;
+
+                            continue;
+                        }
+
+                        if (!CryptoBytes.ConstantTimeEquals(msg, decrypted))
+                        {
+                            TestContext.WriteLine($"FAIL {id}: incorrect decryption, result: {CryptoBytes.ToHexStringLower(decrypted)}, expected: {test.Msg}");
+                            errors++;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        if (test.Result == "valid")
+                        {
+                            TestContext.WriteLine($"FAIL {id}: cannot decrypt, exception: {ex}");
+                            errors++;
+                        }
+                    }
+                }
+            }
+
+            Assert.AreEqual(0, errors);
+        }
+
+        private string GetWycheproofTestVector()
+        {
+#if NET47
+            using (var client = new WebClient())
+            {
+                return client.DownloadString("https://github.com/google/wycheproof/raw/master/testvectors/chacha20_poly1305_test.json");
+            }
+#else
+            using (var client = new HttpClient())
+            {
+                return client.GetStringAsync("https://github.com/google/wycheproof/raw/master/testvectors/chacha20_poly1305_test.json").Result;
+            }
+#endif
         }
     }
 }
