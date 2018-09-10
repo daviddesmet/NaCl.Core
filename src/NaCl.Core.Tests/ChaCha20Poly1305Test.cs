@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Net;
     using System.Net.Http;
 
     using NUnit.Framework;
@@ -337,10 +338,17 @@
 
         private string GetWycheproofTestVector()
         {
+#if NET47
+            using (var client = new WebClient())
+            {
+                return client.DownloadString("https://github.com/google/wycheproof/raw/master/testvectors/chacha20_poly1305_test.json");
+            }
+#else
             using (var client = new HttpClient())
             {
                 return client.GetStringAsync("https://github.com/google/wycheproof/raw/master/testvectors/chacha20_poly1305_test.json").Result;
             }
+#endif
         }
     }
 }
