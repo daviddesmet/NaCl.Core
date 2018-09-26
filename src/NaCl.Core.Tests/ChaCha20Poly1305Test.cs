@@ -232,10 +232,10 @@
         [Test]
         public void ChaCha20Poly1305TestVector()
         {
-            // https://tools.ietf.org/html/rfc7539
+            // https://tools.ietf.org/html/rfc8439
 
             // Arrange
-            foreach (var test in Rfc7539TestVector.Rfc7539AeadTestVectors)
+            foreach (var test in Rfc8439TestVector.Rfc8439AeadTestVectors)
             {
                 // Act
                 var aead = new ChaCha20Poly1305(test.Key);
@@ -253,10 +253,10 @@
         [Test]
         public void ChaCha20Poly1305TestVector2()
         {
-            // https://tools.ietf.org/html/rfc7634
+            // https://tools.ietf.org/html/rfc8439
 
             // Arrange
-            foreach (var test in Rfc7539TestVector.Rfc7634AeadTestVectors)
+            foreach (var test in Rfc8439TestVector.Rfc7634AeadTestVectors)
             {
                 // Act
                 var aead = new ChaCha20Poly1305(test.Key);
@@ -339,7 +339,7 @@
         {
             using (var client = new HttpClient())
             {
-                return client.GetStringAsync("https://github.com/google/wycheproof/raw/master/testvectors/chacha20_poly1305_test.json").Result;
+                return client.GetStringAsync("https://github.com/google/wycheproof/raw/master/testvectors/chacha20_poly1305_test.json").Result; // TODO: Grab a copy for testing locally in case the remote resource is no longer available
             }
         }
     }

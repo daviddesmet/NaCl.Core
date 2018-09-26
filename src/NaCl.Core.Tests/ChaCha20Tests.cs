@@ -94,7 +94,7 @@
         [Test]
         public void QuarterRoundTest()
         {
-            // https://tools.ietf.org/html/rfc7539#section-2.1.1
+            // https://tools.ietf.org/html/rfc8439#section-2.1.1
 
             // Arrange
             var x = new uint[] { 0x11111111, 0x01020304, 0x9b8d6f43, 0x01234567 };
@@ -109,7 +109,7 @@
         [Test]
         public void QuarterRound16Test()
         {
-            // https://tools.ietf.org/html/rfc7539#section-2.2.1
+            // https://tools.ietf.org/html/rfc8439#section-2.2.1
 
             // Arrange
             var x = new uint[] { 0x879531e0, 0xc5ecf37d, 0x516461b1, 0xc9a62f8a, 0x44c20ef3, 0x3390af7f, 0xd9fc690b, 0x2a5f714c, 0x53372767, 0xb00a5631, 0x974c541a, 0x359e9963, 0x5c971061, 0x3d631689, 0x2098d9d6, 0x91dbd320 };
@@ -124,7 +124,7 @@
         [Test]
         public void ChaCha20BlockTestVector()
         {
-            // https://tools.ietf.org/html/rfc7539#section-2.3.2
+            // https://tools.ietf.org/html/rfc8439#section-2.3.2
 
             // Arrange
             var key = CryptoBytes.FromHexString("00:01:02:03:04:05:06:07:08:09:0a:0b:0c:0d:0e:0f:10:11:12:13:14:15:16:17:18:19:1a:1b:1c:1d:1e:1f".Replace(":", string.Empty));
@@ -150,10 +150,10 @@
         [Test]
         public void ChaCha20TestVector()
         {
-            // https://tools.ietf.org/html/rfc7539#section-2.4.2
+            // https://tools.ietf.org/html/rfc8439#section-2.4.2
 
             // Arrange
-            foreach (var test in Rfc7539TestVector.Rfc7539TestVectors)
+            foreach (var test in Rfc8439TestVector.Rfc8439TestVectors)
             {
                 // Act
                 var cipher = new ChaCha20(test.Key, test.InitialCounter);
@@ -182,7 +182,7 @@
             };
 
             // The first 4 bytes are set to zero and a large counter
-            // is used; this makes the RFC 7539 version of ChaCha20
+            // is used; this makes the RFC 8439 version of ChaCha20
             // compatible with the original specification by D. J. Bernstein.
             var nonce = new byte[12] { 0x00, 0x00, 0x00, 0x00,
                 0x1A, 0xDA, 0x31, 0xD5, 0xCF, 0x68, 0x82, 0x21

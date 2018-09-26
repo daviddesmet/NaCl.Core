@@ -5,7 +5,7 @@
 
     /// <summary>
     /// A stream cipher based on https://download.libsodium.org/doc/advanced/xchacha20.html
-    /// 
+    ///
     /// This cipher is meant to be used to construct an AEAD with Poly1305.
     /// </summary>
     /// <seealso cref="NaCl.Core.Base.ChaCha20Base" />
@@ -29,7 +29,7 @@
             if (nonce is null || nonce.Length != NonceSizeInBytes()) // The nonce is always 24 bytes.
                 throw new CryptographyException($"The nonce length in bytes must be {NonceSizeInBytes()}.");
 
-            // Set the initial state based on https://cr.yp.to/snuffle/xsalsa-20081128.pdf
+            // Set the initial state based on https://cr.yp.to/snuffle/xsalsa-20110204.pdf or https://cr.yp.to/snuffle/xsalsa-20081128.pdf
             var state = new Array16<uint>();
 
             SetSigma(ref state);
@@ -38,8 +38,8 @@
             // Set Nonce
             state.x12 = (uint)counter;
             state.x13 = 0;
-            state.x14 = ByteIntegerConverter.LoadLittleEndian32(nonce, 4);
-            state.x15 = ByteIntegerConverter.LoadLittleEndian32(nonce, 8);
+            state.x14 = ByteIntegerConverter.LoadLittleEndian32(nonce, 4); // or 16?
+            state.x15 = ByteIntegerConverter.LoadLittleEndian32(nonce, 8); // or 20?
 
             return state;
         }

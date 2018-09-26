@@ -83,5 +83,56 @@
                 Assert.IsTrue(CryptoBytes.ConstantTimeEquals(test.Output, output));
             }
         }
+
+        /*
+        [Test]
+        public void HChaCha20BlockTestVector()
+        {
+            // Arrange
+            var key = CryptoBytes.FromHexString("00:01:02:03:04:05:06:07:08:09:0a:0b:0c:0d:0e:0f:10:11:12:13:14:15:16:17:18:19:1a:1b:1c:1d:1e:1f".Replace(":", string.Empty));
+            var nonce = CryptoBytes.FromHexString("00:00:00:09:00:00:00:4a:00:00:00:00:31:41:59:27:00:00:00:00:00:00:00:00".Replace(":", string.Empty));
+
+            // Act
+            var output = XChaCha20.HChaCha20(key, nonce);
+            var hex = CryptoBytes.ToHexStringLower(output); // is equal to 'expected' on the first and last rows
+
+            // Assert
+            var expected = new uint[8]
+            {
+                0x82413b42, 0x27b27bfe, 0xd30e4250, 0x8a877d73,
+                //0x4864a70a, 0xf3cd5479, 0x37cd6a84, 0xad583c7b,
+                //0x8355e377, 0x127ce783, 0x2d6a07e0, 0xe5d06cbc,
+                0xa0f9e4d5, 0x8a74a853, 0xc12ec413, 0x26d3ecdc
+            };
+
+            Assert.AreEqual(expected, TestHelpers.ToUInt16Array(output));
+        }
+        */
+
+        /*
+        [Test]
+        public void XChaCha20BlockTestVector()
+        {
+            // Arrange
+            var key = CryptoBytes.FromHexString("00:01:02:03:04:05:06:07:08:09:0a:0b:0c:0d:0e:0f:10:11:12:13:14:15:16:17:18:19:1a:1b:1c:1d:1e:1f".Replace(":", string.Empty));
+            var nonce = CryptoBytes.FromHexString("00:00:00:09:00:00:00:4a:00:00:00:00:31:41:59:27".Replace(":", string.Empty));
+            var counter = 1;
+
+            // Act
+            var xchacha20 = new XChaCha20(key, 1);
+            var output = xchacha20.GetKeyStreamBlock(nonce, counter);
+
+            // Assert
+            var expected = new uint[16]
+            {
+                0x82413b42, 0x27b27bfe, 0xd30e4250, 0x8a877d73,
+                0x4864a70a, 0xf3cd5479, 0x37cd6a84, 0xad583c7b,
+                0x8355e377, 0x127ce783, 0x2d6a07e0, 0xe5d06cbc,
+                0xa0f9e4d5, 0x8a74a853, 0xc12ec413, 0x26d3ecdc,
+            };
+
+            Assert.AreEqual(expected, TestHelpers.ToUInt16Array(output));
+        }
+        */
     }
 }

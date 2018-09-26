@@ -96,10 +96,13 @@
         {
             var state = new Array16<uint>();
 
+            // Set ChaCha20 constant
             SetSigma(ref state);
+
+            // Set 256-bit Key
             SetKey(ref state, key);
 
-            // Set Nonce
+            // Set 128-bit Nonce
             state.x12 = ByteIntegerConverter.LoadLittleEndian32(nonce, 0);
             state.x13 = ByteIntegerConverter.LoadLittleEndian32(nonce, 4);
             state.x14 = ByteIntegerConverter.LoadLittleEndian32(nonce, 8);

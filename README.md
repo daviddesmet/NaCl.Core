@@ -14,14 +14,14 @@
 
 Currently supported:
 
-* **ChaCha20**, a high-speed stream cipher based on Salsa20.
-* **Poly1305**, a state-of-the-art secret-key message-authentication code (MAC).
-* **ChaCha20-Poly1305**, an Authenticated Encryption with Associated Data (AEAD) algorithm.
+- **ChaCha20**, a high-speed stream cipher based on Salsa20.
+- **Poly1305**, a state-of-the-art secret-key message-authentication code (MAC).
+- **ChaCha20-Poly1305**, an Authenticated Encryption with Associated Data (AEAD) algorithm; IETF variant as defined in [RFC8439](https://tools.ietf.org/html/rfc8439) and in its predecessor [RFC7539](https://tools.ietf.org/html/rfc7539).
 
 Partially supported but requires more testing:
 
-* **XChaCha20**, based on ChaCha20 IETF with extended nonce.
-* **XChaCha20-Poly1305**, an IETF variant of ChaCha20-Poly1305.
+- **XChaCha20**, based on ChaCha20 IETF with extended nonce (192-bit instead of 96-bit).
+- **XChaCha20-Poly1305**, a variant of ChaCha20-Poly1305 that utilizes the XChaCha20 construction in place of ChaCha20.
 
 ## Usage
 
@@ -50,6 +50,7 @@ Poly1305.VerifyMac(key, data, tag)
 
 ## Learn More
 
-*   [ChaCha, a variant of Salsa20](http://cr.yp.to/chacha/chacha-20080128.pdf) by Daniel J. Bernstein.
-*   [The Poly1305-AES message-authentication code](http://cr.yp.to/mac/poly1305-20050329.pdf) by Daniel J. Bernstein.
-*   [ChaCha20 and Poly1305 for IETF Protocols](https://tools.ietf.org/html/rfc7539) RFC.
+- [ChaCha, a variant of Salsa20](http://cr.yp.to/chacha/chacha-20080128.pdf) by Daniel J. Bernstein.
+- [The Poly1305-AES message-authentication code](http://cr.yp.to/mac/poly1305-20050329.pdf) by Daniel J. Bernstein.
+- [ChaCha20 and Poly1305 for IETF Protocols](https://tools.ietf.org/html/rfc8439) RFC.
+- [XSalsa20](https://cr.yp.to/snuffle/xsalsa-20110204.pdf), an extended-nonce Salsa20 variant used in [NaCl](https://nacl.cr.yp.to).
