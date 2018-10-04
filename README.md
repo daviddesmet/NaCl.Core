@@ -48,6 +48,11 @@ var tag = Poly1305.ComputeMac(key, data);
 Poly1305.VerifyMac(key, data, tag)
 ```
 
+## Test Coverage
+
+- Includes the mandatory RFC test vectors.
+- [Project Wycheproof](https://github.com/google/wycheproof), for testing against known attacks (when applicable).
+
 ## Learn More
 
 - [ChaCha, a variant of Salsa20](http://cr.yp.to/chacha/chacha-20080128.pdf) by Daniel J. Bernstein.
