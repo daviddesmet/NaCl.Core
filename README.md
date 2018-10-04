@@ -51,7 +51,7 @@ Poly1305.VerifyMac(key, data, tag)
 ## Test Coverage
 
 - Includes the mandatory RFC test vectors.
-- [Project Wycheproof](https://github.com/google/wycheproof), for testing against known attacks (when applicable).
+- [Project Wycheproof](https://github.com/google/wycheproof) by members of Google Security Team, for testing against known attacks (when applicable).
 
 ## Learn More
 
