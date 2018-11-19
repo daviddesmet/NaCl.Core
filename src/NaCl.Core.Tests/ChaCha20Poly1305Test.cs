@@ -65,6 +65,33 @@
         }
 
         [Test]
+        public void EncryptDecryptWithNonceTest()
+        {
+            var rnd = new Random();
+            var key = new byte[Snuffle.KEY_SIZE_IN_BYTES];
+            rnd.NextBytes(key);
+
+            var aead = new ChaCha20Poly1305(key);
+            for (var i = 0; i < 100; i++)
+            {
+                var message = new byte[100];
+                rnd.NextBytes(message);
+
+                var aad = new byte[16];
+                rnd.NextBytes(aad);
+
+                var nonce = new byte[12];
+                rnd.NextBytes(nonce);
+
+                var ciphertext = aead.Encrypt(message, aad, nonce);
+                var decrypted = aead.Decrypt(ciphertext, aad, nonce);
+
+                //Assert.AreEqual(message, decrypted);
+                Assert.IsTrue(CryptoBytes.ConstantTimeEquals(message, decrypted));
+            }
+        }
+
+        [Test]
         public void EncryptDecryptLongMessagesTest()
         {
             var rnd = new Random();
@@ -84,6 +111,36 @@
                 var aead = new ChaCha20Poly1305(key);
                 var ciphertext = aead.Encrypt(plaintext, aad);
                 var decrypted = aead.Decrypt(ciphertext, aad);
+
+                //Assert.AreEqual(plaintext, decrypted);
+                Assert.IsTrue(CryptoBytes.ConstantTimeEquals(plaintext, decrypted));
+                dataSize += 5 * dataSize / 11;
+            }
+        }
+
+        [Test]
+        public void EncryptDecryptLongMessagesWithNonceTest()
+        {
+            var rnd = new Random();
+
+            var dataSize = 16;
+            while (dataSize <= (1 << 24))
+            {
+                var plaintext = new byte[dataSize];
+                rnd.NextBytes(plaintext);
+
+                var aad = new byte[dataSize / 3];
+                rnd.NextBytes(aad);
+
+                var nonce = new byte[12];
+                rnd.NextBytes(nonce);
+
+                var key = new byte[Snuffle.KEY_SIZE_IN_BYTES];
+                rnd.NextBytes(key);
+
+                var aead = new ChaCha20Poly1305(key);
+                var ciphertext = aead.Encrypt(plaintext, aad, nonce);
+                var decrypted = aead.Decrypt(ciphertext, aad, nonce);
 
                 //Assert.AreEqual(plaintext, decrypted);
                 Assert.IsTrue(CryptoBytes.ConstantTimeEquals(plaintext, decrypted));

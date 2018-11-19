@@ -96,7 +96,7 @@
             if (ciphertext is null)
                 throw new ArgumentNullException(nameof(ciphertext));
 
-            if (ciphertext.Length < _snuffle.NonceSizeInBytes() + Poly1305.MAC_TAG_SIZE_IN_BYTES)
+            if (ciphertext.Length + (nonce is null ? 0 : nonce.Length) < _snuffle.NonceSizeInBytes() + Poly1305.MAC_TAG_SIZE_IN_BYTES)
                 throw new CryptographyException($"The {nameof(ciphertext)} is too short.");
 
             var limit = ciphertext.Length - Poly1305.MAC_TAG_SIZE_IN_BYTES;
