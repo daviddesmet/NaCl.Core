@@ -45,7 +45,7 @@ var output = aead.Decrypt(ciphertext, aad, nonce);
 var tag = Poly1305.ComputeMac(key, data);
 
 // ... or to verify a tag
-Poly1305.VerifyMac(key, data, tag)
+Poly1305.VerifyMac(key, data, tag);
 ```
 
 ## Test Coverage
