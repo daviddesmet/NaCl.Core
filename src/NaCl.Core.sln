@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NaCl.Core", "NaCl.Core\NaCl
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NaCl.Core.Tests", "NaCl.Core.Tests\NaCl.Core.Tests.csproj", "{2FAB1426-5BDB-4835-9323-676F3E286D57}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NaCl.Core.Benchmarks", "NaCl.Core.Benchmarks\NaCl.Core.Benchmarks.csproj", "{F55397B0-B348-40C6-A6A8-5BECEB74A840}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{2FAB1426-5BDB-4835-9323-676F3E286D57}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2FAB1426-5BDB-4835-9323-676F3E286D57}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2FAB1426-5BDB-4835-9323-676F3E286D57}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F55397B0-B348-40C6-A6A8-5BECEB74A840}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F55397B0-B348-40C6-A6A8-5BECEB74A840}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F55397B0-B348-40C6-A6A8-5BECEB74A840}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F55397B0-B348-40C6-A6A8-5BECEB74A840}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
