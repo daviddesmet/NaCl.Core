@@ -6,8 +6,8 @@
 
     [BenchmarkCategory("MAC")]
     [CoreJob(baseline: true), ClrJob/*, MonoJob*/]
-	[MemoryDiagnoser]
-	[RPlotExporter, RankColumn]
+    [MemoryDiagnoser]
+    [RPlotExporter, RankColumn]
     public class Poly1305Benchmark
     {
         private static Random rnd = new Random(42);
