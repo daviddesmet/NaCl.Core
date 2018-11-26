@@ -1,9 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp2.0</TargetFrameworks>
-    <TargetFrameworks Condition="'$(OS)' != 'Unix'">net47;netcoreapp2.0</TargetFrameworks>
+    <TargetFrameworks>netcoreapp1.0;netcoreapp2.0</TargetFrameworks>
+    <TargetFrameworks Condition="'$(OS)' != 'Unix'">net47;netcoreapp1.0;netcoreapp2.0</TargetFrameworks>
     <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
     <Version>1.0.0</Version>
     <Authors>David De Smet</Authors>
     <Copyright>Copyright © 2018 David De Smet</Copyright>

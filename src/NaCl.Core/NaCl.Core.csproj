@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard1.3;netstandard2.0</TargetFrameworks>
     <TargetFrameworks Condition="'$(OS)' != 'Unix'">net45;net47;netstandard1.3;netstandard2.0</TargetFrameworks>
-    <Version>1.0.2</Version>
+    <Version>1.0.3</Version>
     <Authors>David De Smet</Authors>
     <Company />
     <Description>A managed-only cryptography library for .NET which provides modern cryptographic primitives.</Description>
