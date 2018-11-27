@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard1.3;netstandard2.0</TargetFrameworks>
     <TargetFrameworks Condition="'$(OS)' != 'Unix'">net45;net47;netstandard1.3;netstandard2.0</TargetFrameworks>
-    <Version>1.0.3</Version>
+    <Version>1.1.0</Version>
     <Authors>David De Smet</Authors>
     <Company />
     <Description>A managed-only cryptography library for .NET which provides modern cryptographic primitives.</Description>
@@ -11,6 +11,9 @@
     <PackageLicenseUrl>https://opensource.org/licenses/MIT</PackageLicenseUrl>
     <PackageTags>NaCl cryptography dotnet dotnet-core netstandard</PackageTags>
     <PackageProjectUrl>https://github.com/idaviddesmet/NaCl.Core</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/idaviddesmet/NaCl.Core.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryBranch>master</RepositoryBranch>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
