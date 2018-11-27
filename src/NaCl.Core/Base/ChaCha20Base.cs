@@ -1,4 +1,4 @@
-﻿namespace NaCl.Core.Base
+namespace NaCl.Core.Base
 {
     using System;
     using Internal;
@@ -35,6 +35,8 @@
         /// <returns>System.Byte[].</returns>
         public override byte[] GetKeyStreamBlock(byte[] nonce, int counter)
         {
+            // https://tools.ietf.org/html/rfc8439#section-2.3.
+
             var state = CreateInitialState(nonce, counter);
 
             /*
@@ -94,6 +96,8 @@
 
         public static byte[] HChaCha20(byte[] key, byte[] nonce)
         {
+            // See https://tools.ietf.org/html/draft-arciszewski-xchacha-01#section-2.2.
+
             var state = new Array16<uint>();
 
             // Set ChaCha20 constant

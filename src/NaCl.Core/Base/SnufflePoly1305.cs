@@ -1,4 +1,4 @@
-﻿namespace NaCl.Core.Base
+namespace NaCl.Core.Base
 {
     using System;
     using System.Linq;
@@ -7,7 +7,7 @@
     using Internal;
 
     /// <summary>
-    /// An AEAD construction with a <see cref="Snuffle"/> and <see cref="Poly1305"/>, following RFC 7539, section 2.8.
+    /// An AEAD construction with a <see cref="Snuffle"/> and <see cref="Poly1305"/>, following RFC 8439, section 2.8.
     ///
     /// This implementation produces ciphertext with the following format: {nonce || actual_ciphertext || tag} and only decrypts the same format.
     /// </summary>
@@ -16,6 +16,7 @@
         private readonly byte[] _key;
         private Snuffle _snuffle;
         private Snuffle _macKeySnuffle;
+        public const string AEAD_EXCEPTION_INVALID_TAG = "AEAD Bad Tag Exception";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SnufflePoly1305"/> class.
@@ -69,7 +70,7 @@
             if (aad is null)
                 aad = new byte[0];
 
-            var tag = Poly1305.ComputeMac(GetMacKey(nonce), GetMacDataRfc7539(aad, ciphertext.Skip(nonce.Length).ToArray()));
+            var tag = Poly1305.ComputeMac(GetMacKey(nonce), GetMacDataRfc8439(aad, ciphertext.Skip(nonce.Length).ToArray()));
 
             Array.Resize(ref ciphertext, plaintext.Length + _snuffle.NonceSizeInBytes() + Poly1305.MAC_TAG_SIZE_IN_BYTES);
             var limit = ciphertext.Length - Poly1305.MAC_TAG_SIZE_IN_BYTES;
@@ -122,11 +123,11 @@
 
             try
             {
-                Poly1305.VerifyMac(GetMacKey(nonce), GetMacDataRfc7539(aad, ciphertext.Skip(randomNonce ? nonce.Length : 0).Take(limit).ToArray()), tag);
+                Poly1305.VerifyMac(GetMacKey(nonce), GetMacDataRfc8439(aad, ciphertext.Skip(randomNonce ? nonce.Length : 0).Take(limit).ToArray()), tag);
             }
             catch (Exception ex)
             {
-                throw new CryptographyException("AEAD Bad Tag Exception", ex);
+                throw new CryptographyException(AEAD_EXCEPTION_INVALID_TAG, ex);
             }
 
             if (!randomNonce)
@@ -151,12 +152,12 @@
         }
 
         /// <summary>
-        /// Prepares the input to MAC, following RFC 7539, section 2.8.
+        /// Prepares the input to MAC, following RFC 8439, section 2.8.
         /// </summary>
         /// <param name="aad">The aad.</param>
         /// <param name="ciphertext">The ciphertext.</param>
         /// <returns>System.Byte[].</returns>
-        private byte[] GetMacDataRfc7539(byte[] aad, byte[] ciphertext)
+        private byte[] GetMacDataRfc8439(byte[] aad, byte[] ciphertext)
         {
             var aadPaddedLen = (aad.Length % 16 == 0) ? aad.Length : (aad.Length + 16 - aad.Length % 16);
             var ciphertextLen = ciphertext.Length;

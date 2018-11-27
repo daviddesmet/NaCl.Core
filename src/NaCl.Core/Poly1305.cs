@@ -13,6 +13,7 @@
     {
         public static int MAC_TAG_SIZE_IN_BYTES = 16;
         public static int MAC_KEY_SIZE_IN_BYTES = 32;
+        public const string MAC_EXCEPTION_INVALID = "Invalid MAC";
 
         private Poly1305() { }
 
@@ -203,13 +204,13 @@
         public static void VerifyMac(byte[] key, byte[] data, byte[] mac)
         {
             //if (ComputeMac(key, data).SequenceEqual(mac))
-            //    throw new CryptographyException("Invalid MAC");
+            //    throw new CryptographyException(MAC_EXCEPTION_INVALID);
 
             //if (!Equal(ComputeMac(key, data), mac))
-            //    throw new CryptographyException("Invalid MAC");
+            //    throw new CryptographyException(MAC_EXCEPTION_INVALID);
 
             if (!CryptoBytes.ConstantTimeEquals(ComputeMac(key, data), mac))
-                throw new CryptographyException("Invalid MAC");
+                throw new CryptographyException(MAC_EXCEPTION_INVALID);
         }
     }
 }

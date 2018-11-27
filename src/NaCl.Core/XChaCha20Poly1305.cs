@@ -1,11 +1,11 @@
-﻿namespace NaCl.Core
+namespace NaCl.Core
 {
     using System;
 
     using Base;
 
     /// <summary>
-    /// XChaCha20-Poly1305 AEAD construction, compatible with <a href="https://tools.ietf.org/html/rfc7539#section-2.8">RFC 7539, section 2.8</a>.
+    /// XChaCha20-Poly1305 AEAD construction, as described in <a href="https://tools.ietf.org/html/draft-arciszewski-xchacha-01">draft</a>.
     /// </summary>
     /// <seealso cref="NaCl.Core.Base.SnufflePoly1305" />
     [Obsolete("Alpha release, requires more testing...")]

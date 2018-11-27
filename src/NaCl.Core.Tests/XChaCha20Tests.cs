@@ -1,4 +1,4 @@
-﻿namespace NaCl.Core.Tests.Crypto
+namespace NaCl.Core.Tests.Crypto
 {
     using System;
     using System.Collections.Generic;
@@ -81,6 +81,24 @@
                 // Assert
                 //Assert.That(output, Is.EqualTo(test.Output));
                 Assert.IsTrue(CryptoBytes.ConstantTimeEquals(test.Output, output));
+            }
+        }
+
+        [Test]
+        public void XChaCha20TestVectors()
+        {
+            // From libsodium's test/default/xchacha20.c (tv_stream_xchacha20) and https://tools.ietf.org/html/draft-arciszewski-xchacha-00.
+
+            // Arrange
+            foreach (var test in XChaCha20TestVector.XChaCha20TestVectors)
+            {
+                // Act
+                var cipher = new XChaCha20(test.Key, 0);
+                var output = cipher.Decrypt(CryptoBytes.Combine(test.Nonce, test.CipherText));
+
+                // Assert
+                //Assert.That(output, Is.EqualTo(test.Output));
+                Assert.IsTrue(CryptoBytes.ConstantTimeEquals(test.PlainText, output));
             }
         }
 

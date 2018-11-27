@@ -1,16 +1,12 @@
-﻿namespace NaCl.Core.Tests.Crypto
+namespace NaCl.Core.Tests.Crypto
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Text;
-
     using Internal;
 
     public class HChaCha20TestVector
     {
-        public byte[] Key;
-        public byte[] Input;
-        public byte[] Output;
+        public byte[] Key { get; private set; }
+        public byte[] Input { get; private set; }
+        public byte[] Output { get; private set; }
 
         public HChaCha20TestVector(string key, string input, string output)
         {
@@ -20,6 +16,7 @@
         }
 
         public static HChaCha20TestVector[] HChaCha20TestVectors = {
+            // From libsodium's test/default/xchacha20.c (tv_hchacha20).
             new HChaCha20TestVector(
                 "24f11cce8a1b3d61e441561a696c1c1b7e173d084fd4812425435a8896a013dc",
                 "d9660c5900ae19ddad28d6e06e45fe5e",
@@ -59,7 +56,12 @@
             new HChaCha20TestVector(
                 "c49758f00003714c38f1d4972bde57ee8271f543b91e07ebce56b554eb7fa6a7",
                 "31f0204e10cf4f2035f9e62bb5ba7303",
-                "0dd8cc400f702d2c06ed920be52048a287076b86480ae273c6d568a2e9e7518c")
+                "0dd8cc400f702d2c06ed920be52048a287076b86480ae273c6d568a2e9e7518c"),
+            // From https://tools.ietf.org/html/draft-arciszewski-xchacha-01#section-2.2.1.
+            new HChaCha20TestVector(
+                "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+                "000000090000004a0000000031415927",
+                "82413b4227b27bfed30e42508a877d73a0f9e4d58a74a853c12ec41326d3ecdc")
         };
     }
 }

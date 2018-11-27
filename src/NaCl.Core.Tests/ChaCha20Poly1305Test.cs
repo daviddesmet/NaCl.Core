@@ -14,8 +14,6 @@
     [TestFixture]
     public class ChaCha20Poly1305Test
     {
-        private const string AEADBadTagExceptionMessage = "AEAD Bad Tag Exception";
-
         [Test]
         public void CreateInstanceWhenKeyLengthIsGreaterThan32Fails()
         {
@@ -174,7 +172,7 @@
 
                     modified[b] ^= (byte)(1 << bit);
 
-                    Assert.Throws<CryptographyException>(() => aead.Decrypt(modified, aad), AEADBadTagExceptionMessage);
+                    Assert.Throws<CryptographyException>(() => aead.Decrypt(modified, aad), SnufflePoly1305.AEAD_EXCEPTION_INVALID_TAG);
                 }
             }
 
@@ -184,7 +182,7 @@
                 var modified = new byte[length];
                 Array.Copy(ciphertext, modified, length);
 
-                Assert.Throws<CryptographyException>(() => aead.Decrypt(modified, aad), AEADBadTagExceptionMessage);
+                Assert.Throws<CryptographyException>(() => aead.Decrypt(modified, aad), SnufflePoly1305.AEAD_EXCEPTION_INVALID_TAG);
             }
 
             // Modify AAD
@@ -197,7 +195,7 @@
 
                     modified[b] ^= (byte)(1 << bit);
 
-                    Assert.Throws<CryptographyException>(() => aead.Decrypt(modified, aad), AEADBadTagExceptionMessage);
+                    Assert.Throws<CryptographyException>(() => aead.Decrypt(modified, aad), SnufflePoly1305.AEAD_EXCEPTION_INVALID_TAG);
                 }
             }
         }
@@ -244,7 +242,7 @@
                 Assert.IsTrue(CryptoBytes.ConstantTimeEquals(message, decrypted2));
 
                 var badAad = new byte[] { 1, 2, 3 };
-                Assert.Throws<CryptographyException>(() => aead.Decrypt(ciphertext, badAad), AEADBadTagExceptionMessage);
+                Assert.Throws<CryptographyException>(() => aead.Decrypt(ciphertext, badAad), SnufflePoly1305.AEAD_EXCEPTION_INVALID_TAG);
 
                 // encrypting with aad equal to null
                 ciphertext = aead.Encrypt(message, null);
@@ -256,7 +254,7 @@
                 //Assert.AreEqual(message, decrypted2);
                 Assert.IsTrue(CryptoBytes.ConstantTimeEquals(message, decrypted2));
 
-                Assert.Throws<CryptographyException>(() => aead.Decrypt(ciphertext, badAad), AEADBadTagExceptionMessage);
+                Assert.Throws<CryptographyException>(() => aead.Decrypt(ciphertext, badAad), SnufflePoly1305.AEAD_EXCEPTION_INVALID_TAG);
             }
         }
 
