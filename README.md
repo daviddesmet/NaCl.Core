@@ -1,11 +1,17 @@
 # NaCl.Core, a cryptography library for .NET
 
 [![Build status](https://ci.appveyor.com/api/projects/status/2k3cxt2e1r2jyinx?svg=true)](https://ci.appveyor.com/project/idaviddesmet/nacl-core)
+
 [![Build Status](https://travis-ci.org/idaviddesmet/NaCl.Core.svg?branch=master)](https://travis-ci.org/idaviddesmet/NaCl.Core)
+
 [![NuGet](https://img.shields.io/nuget/v/NaCl.Core.svg)](https://www.nuget.org/packages/NaCl.Core/)
+
 [![MyGet](https://img.shields.io/myget/nacl-core/v/NaCl.Core.svg)](https://www.myget.org/feed/nacl-core/package/nuget/NaCl.Core)
+
 [![Maintenance](https://img.shields.io/maintenance/yes/2018.svg)](https://github.com/idaviddesmet/NaCl.Core)
+
 [![License](https://img.shields.io/github/license/idaviddesmet/NaCl.Core.svg)](https://github.com/idaviddesmet/NaCl.Core/blob/master/LICENSE)
+
 [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/idaviddesmet/NaCl.Core/issues)
 
 ## Introduction
@@ -15,13 +21,10 @@
 Currently supported:
 
 - **ChaCha20**, a high-speed stream cipher based on Salsa20.
+- **XChaCha20**, based on ChaCha20 IETF with extended nonce (192-bit instead of 96-bit).
 - **Poly1305**, a state-of-the-art secret-key message-authentication code (MAC).
 - **ChaCha20-Poly1305**, an Authenticated Encryption with Associated Data (AEAD) algorithm; IETF variant as defined in [RFC8439](https://tools.ietf.org/html/rfc8439) and in its predecessor [RFC7539](https://tools.ietf.org/html/rfc7539).
-
-Partially supported but requires more testing:
-
-- **XChaCha20**, based on ChaCha20 IETF with extended nonce (192-bit instead of 96-bit).
-- **XChaCha20-Poly1305**, a variant of ChaCha20-Poly1305 that utilizes the XChaCha20 construction in place of ChaCha20.
+- **XChaCha20-Poly1305**, a variant of ChaCha20-Poly1305 that utilizes the XChaCha20 construction in place of ChaCha20; as defined in the [RFC Draft](https://tools.ietf.org/html/draft-arciszewski-xchacha-02).
 
 ## Usage
 
@@ -59,3 +62,4 @@ Poly1305.VerifyMac(key, data, tag);
 - [The Poly1305-AES message-authentication code](http://cr.yp.to/mac/poly1305-20050329.pdf) by Daniel J. Bernstein.
 - [ChaCha20 and Poly1305 for IETF Protocols](https://tools.ietf.org/html/rfc8439) RFC.
 - [XSalsa20](https://cr.yp.to/snuffle/xsalsa-20110204.pdf), an extended-nonce Salsa20 variant used in [NaCl](https://nacl.cr.yp.to).
+- [XChaCha20-Poly1305](https://tools.ietf.org/html/draft-arciszewski-xchacha-02), an extended-nonce ChaCha20-Poly1305 IETF variant.

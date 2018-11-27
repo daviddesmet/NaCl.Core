@@ -4,7 +4,7 @@
     using Internal;
 
     /// <summary>
-    /// A stream cipher based on https://download.libsodium.org/doc/advanced/xchacha20.html and https://tools.ietf.org/html/draft-arciszewski-xchacha-01.
+    /// A stream cipher based on https://download.libsodium.org/doc/advanced/xchacha20.html and https://tools.ietf.org/html/draft-arciszewski-xchacha-02.
     ///
     /// This cipher is meant to be used to construct an AEAD with Poly1305.
     /// </summary>
