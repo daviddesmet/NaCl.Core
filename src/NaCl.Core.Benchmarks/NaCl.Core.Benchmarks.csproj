@@ -6,6 +6,7 @@
     <TargetFrameworks Condition="'$(OS)' != 'Unix'">net47;netcoreapp2.0</TargetFrameworks>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <IsPackable>false</IsPackable>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -13,6 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\NaCl.Core.Tests\NaCl.Core.Tests.csproj" />
     <ProjectReference Include="..\NaCl.Core\NaCl.Core.csproj" />
   </ItemGroup>
 

@@ -1,6 +1,5 @@
-namespace NaCl.Core.Base
+﻿namespace NaCl.Core.Base
 {
-    using System;
     using Internal;
 
     /// <summary>
@@ -25,7 +24,7 @@ namespace NaCl.Core.Base
         /// <param name="nonce">The nonce.</param>
         /// <param name="counter">The counter.</param>
         /// <returns>Array16&lt;System.UInt32&gt;.</returns>
-        protected abstract Array16<uint> CreateInitialState(byte[] nonce, int counter);
+        protected abstract Array16<uint> CreateInitialState(in byte[] nonce, int counter);
 
         /// <summary>
         /// Gets the key stream block.
@@ -33,7 +32,7 @@ namespace NaCl.Core.Base
         /// <param name="nonce">The nonce.</param>
         /// <param name="counter">The counter.</param>
         /// <returns>System.Byte[].</returns>
-        public override byte[] GetKeyStreamBlock(byte[] nonce, int counter)
+        public override byte[] GetKeyStreamBlock(in byte[] nonce, int counter)
         {
             // https://tools.ietf.org/html/rfc8439#section-2.3.
 
@@ -92,9 +91,9 @@ namespace NaCl.Core.Base
             return output;
         }
 
-        public static byte[] HChaCha20(byte[] key) => HChaCha20(key, ZERO_16_BYTES);
+        public static byte[] HChaCha20(in byte[] key) => HChaCha20(key, ZERO_16_BYTES);
 
-        public static byte[] HChaCha20(byte[] key, byte[] nonce)
+        public static byte[] HChaCha20(in byte[] key, in byte[] nonce)
         {
             // See https://tools.ietf.org/html/draft-arciszewski-xchacha-01#section-2.2.
 

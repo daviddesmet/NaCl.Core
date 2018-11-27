@@ -57,14 +57,14 @@
         {
             var copyCount = Math.Min(MAC_TAG_SIZE_IN_BYTES, buf.Length - idx);
             Array.Copy(buf, idx, output, 0, copyCount);
+
             output[copyCount] = 1;
+
             if (copyCount != MAC_TAG_SIZE_IN_BYTES)
-            {
                 Fill(output, copyCount + 1, output.Length, (byte)0);
-            }
         }
 
-        public static byte[] ComputeMac(byte[] key, byte[] data)
+        public static byte[] ComputeMac(in byte[] key, in byte[] data)
         {
             if (key.Length != MAC_KEY_SIZE_IN_BYTES)
                 throw new CryptographyException($"The key length in bytes must be {MAC_KEY_SIZE_IN_BYTES}.");
@@ -201,7 +201,7 @@
             return mac;
         }
 
-        public static void VerifyMac(byte[] key, byte[] data, byte[] mac)
+        public static void VerifyMac(in byte[] key, in byte[] data, in byte[] mac)
         {
             //if (ComputeMac(key, data).SequenceEqual(mac))
             //    throw new CryptographyException(MAC_EXCEPTION_INVALID);

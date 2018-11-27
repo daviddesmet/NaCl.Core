@@ -11,6 +11,7 @@
             // Execute following code:
             // $ dotnet run -c release --framework netcoreapp2.0
             BenchmarkRunner.Run<Poly1305Benchmark>();
+            BenchmarkRunner.Run<ChaCha20Benchmark>();
             BenchmarkRunner.Run<ChaCha20Poly1305Benchmark>();
 
             Console.ReadLine();

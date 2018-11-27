@@ -24,7 +24,7 @@
         /// <param name="nonce">The nonce.</param>
         /// <param name="counter">The counter.</param>
         /// <returns>Array16&lt;System.UInt32&gt;.</returns>
-        protected override Array16<uint> CreateInitialState(byte[] nonce, int counter)
+        protected override Array16<uint> CreateInitialState(in byte[] nonce, int counter)
         {
             if (nonce is null || nonce.Length != NonceSizeInBytes()) // The nonce is always 24 bytes.
                 throw new CryptographyException($"{nameof(XChaCha20)} uses 192-bit nonces, but got a {nonce.Length * 8}-bit nonce. The nonce length in bytes must be {NonceSizeInBytes()}.");

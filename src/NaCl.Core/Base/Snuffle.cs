@@ -55,7 +55,7 @@
         /// <param name="nonce">The nonce.</param>
         /// <param name="counter">The counter.</param>
         /// <returns>ByteBuffer.</returns>
-        public abstract byte[] GetKeyStreamBlock(byte[] nonce, int counter);
+        public abstract byte[] GetKeyStreamBlock(in byte[] nonce, int counter);
 
         /// <summary>
         /// The size of the randomly generated nonces.
@@ -91,7 +91,7 @@
             }
 
             Array.Copy(nonce, ciphertext, nonce.Length);
-            Process(nonce, ciphertext, plaintext, nonce.Length);
+            Process(nonce, ciphertext, plaintext.AsSpan(), nonce.Length);
 
             return ciphertext;
         }
@@ -111,7 +111,7 @@
             Array.Copy(ciphertext, nonce, nonce.Length);
             var plaintext = new byte[ciphertext.Length - NonceSizeInBytes()];
 
-            Process(nonce, plaintext, ciphertext.Skip(NonceSizeInBytes()).ToArray());
+            Process(nonce, plaintext, ciphertext.AsSpan().Slice(NonceSizeInBytes()));
 
             return plaintext;
         }
@@ -123,7 +123,7 @@
         /// <param name="output">The output.</param>
         /// <param name="input">The input.</param>
         /// <param name="offset">The output's starting offset.</param>
-        private void Process(byte[] nonce, byte[] output, byte[] input, int offset = 0)
+        private void Process(in byte[] nonce, byte[] output, ReadOnlySpan<byte> input, int offset = 0)
         {
             var length = input.Length;
             var numBlocks = (length / BLOCK_SIZE_IN_BYTES) + 1;
@@ -149,7 +149,7 @@
         /// <param name="offset">The output's starting offset.</param>
         /// <param name="curBlock">The current block number.</param>
         /// <exception cref="CryptographyException">The combination of blocks, offsets and length to be XORed is out-of-bonds.</exception>
-        private static void Xor(byte[] output, byte[] input, byte[] keyStream, int len, int offset, int curBlock)
+        private static void Xor(byte[] output, ReadOnlySpan<byte> input, byte[] keyStream, int len, int offset, int curBlock)
         {
             var blockOffset = curBlock * BLOCK_SIZE_IN_BYTES;
 
