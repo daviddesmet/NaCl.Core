@@ -8,7 +8,9 @@
 # build PRs, but you can't currently control that from the YAML directly
 # For details, see https://docs.microsoft.com/en-us/azure/devops/pipelines/build/triggers
 trigger:
-- master
+  branches:
+    include:
+    - master
   paths:
     include:
     - src/*
