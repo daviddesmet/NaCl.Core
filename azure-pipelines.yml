@@ -52,7 +52,7 @@ jobs:
   - script: dotnet restore src
     displayName: 'dotnet restore src'
   - script: dotnet build src --configuration $(buildConfiguration)
-    displayName: 'dotnet build src $(buildConfiguration)'
+    displayName: 'dotnet build $(buildConfiguration)'
     env:
       COREHOST_TRACE: 0
       DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
