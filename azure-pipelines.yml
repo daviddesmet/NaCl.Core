@@ -37,10 +37,10 @@ jobs:
   - script: dotnet build src --configuration $(buildConfiguration)
     displayName: 'dotnet build $(buildConfiguration)'
   - script: |
-    mkdir $(Build.SourcesDirectory)\results
-    dotnet test -f netcoreapp2.0 src/NaCl.Core.Tests --logger trx /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura
-    copy $(Build.SourcesDirectory)\NaCl.Core.Tests\coverage.cobertura.xml $(Build.SourcesDirectory)\results
-    dotnet tool install dotnet-reportgenerator-globaltool --tool-path . --version 4.0.4
+      mkdir $(Build.SourcesDirectory)\results
+      dotnet test -f netcoreapp2.0 src/NaCl.Core.Tests --logger trx /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura
+      copy $(Build.SourcesDirectory)\NaCl.Core.Tests\coverage.cobertura.xml $(Build.SourcesDirectory)\results
+      dotnet tool install dotnet-reportgenerator-globaltool --tool-path . --version 4.0.4
     displayName: 'Unit testing'
     # Set environment variables for the build.
     env:
