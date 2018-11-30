@@ -9,6 +9,9 @@
 # For details, see https://docs.microsoft.com/en-us/azure/devops/pipelines/build/triggers
 trigger:
 - master
+  paths:
+    include:
+    - src/*
 
 # We can run multiple jobs in parallel. For this project
 # we are running Linux, Windows, and macOS jobs. For syntax details
