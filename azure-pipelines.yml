@@ -39,7 +39,7 @@ jobs:
   - script: |
       mkdir $(Build.SourcesDirectory)\results
       dotnet test -f netcoreapp2.0 src/NaCl.Core.Tests --logger trx /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura
-      copy $(Build.SourcesDirectory)\NaCl.Core.Tests\coverage.cobertura.xml $(Build.SourcesDirectory)\results
+      cp $(Build.SourcesDirectory)\NaCl.Core.Tests\coverage.cobertura.xml $(Build.SourcesDirectory)\results
       dotnet tool install dotnet-reportgenerator-globaltool --tool-path . --version 4.0.4
     displayName: 'Unit testing'
     # Set environment variables for the build.
@@ -56,6 +56,15 @@ jobs:
       summaryFileLocation: $(Build.SourcesDirectory)\results\coverage.cobertura.xml
       reportDirectory: $(Build.SourcesDirectory)\results
       codecoverageTool: cobertura
+  - task: DotNetCoreCLI@2
+    inputs:
+      command: publish
+      arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)'
+      projects: src/NaCl.Core/NaCl.Core.csproj
+      publishWebProjects: false
+      modifyOutputPath: true
+      zipAfterPublish: true
+  - task: PublishBuildArtifacts@1
 
 # Run a build on macOS at the same time
 - job: macOS
@@ -66,7 +75,11 @@ jobs:
   steps:
   - script: dotnet build src --configuration $(buildConfiguration)
     displayName: 'dotnet build $(buildConfiguration)'
-  - script: dotnet test -f netcoreapp2.0 src/NaCl.Core.Tests
+  - script: |
+      mkdir $(Build.SourcesDirectory)\results
+      dotnet test -f netcoreapp2.0 src/NaCl.Core.Tests --logger trx /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura
+      cp $(Build.SourcesDirectory)\NaCl.Core.Tests\coverage.cobertura.xml $(Build.SourcesDirectory)\results
+      dotnet tool install dotnet-reportgenerator-globaltool --tool-path . --version 4.0.4
     displayName: 'Unit testing'
     env:
       COREHOST_TRACE: 0
@@ -76,6 +89,11 @@ jobs:
     inputs:
       testRunner: VSTest
       testResultsFiles: '**/*.trx'
+  - task: PublishCodeCoverageResults@1
+    inputs:
+      summaryFileLocation: $(Build.SourcesDirectory)\results\coverage.cobertura.xml
+      reportDirectory: $(Build.SourcesDirectory)\results
+      codecoverageTool: cobertura
 
 # Run a build on Windows at the same time
 - job: Windows
@@ -91,3 +109,6 @@ jobs:
       DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
       DOTNET_CLI_TELEMETRY_OPTOUT: 1
   - task: VSTest@2
+    displayName: 'Unit testing'
+    inputs:
+      codeCoverageEnabled: True
