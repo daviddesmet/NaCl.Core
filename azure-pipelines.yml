@@ -48,7 +48,7 @@ jobs:
   steps:
   - script: dotnet restore src
     displayName: 'dotnet restore src'
-  - script: dotnet build --configuration $(buildConfiguration)
+  - script: dotnet build src --configuration $(buildConfiguration)
     displayName: 'dotnet build src $(buildConfiguration)'
     env:
       COREHOST_TRACE: 0
