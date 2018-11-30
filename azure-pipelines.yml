@@ -37,9 +37,9 @@ jobs:
   - script: dotnet build src --configuration $(buildConfiguration)
     displayName: 'dotnet build $(buildConfiguration)'
   - script: |
-      mkdir $(Build.SourcesDirectory)\results
+      mkdir $(Build.SourcesDirectory)/results
       dotnet test -f netcoreapp2.0 src/NaCl.Core.Tests --logger trx /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura
-      cp $(Build.SourcesDirectory)\NaCl.Core.Tests\coverage.cobertura.xml $(Build.SourcesDirectory)\results
+      cp $(Build.SourcesDirectory)/NaCl.Core.Tests/coverage.cobertura.xml $(Build.SourcesDirectory)/results
       dotnet tool install dotnet-reportgenerator-globaltool --tool-path . --version 4.0.4
     displayName: 'Unit testing'
     # Set environment variables for the build.
@@ -53,13 +53,13 @@ jobs:
       testResultsFiles: '**/*.trx'
   - task: PublishCodeCoverageResults@1
     inputs:
-      summaryFileLocation: $(Build.SourcesDirectory)\results\coverage.cobertura.xml
-      reportDirectory: $(Build.SourcesDirectory)\results
+      summaryFileLocation: $(Build.SourcesDirectory)/results/coverage.cobertura.xml
+      reportDirectory: $(Build.SourcesDirectory)/results
       codecoverageTool: cobertura
   - task: DotNetCoreCLI@2
     inputs:
       command: publish
-      arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)'
+      arguments: '--configuration $(buildConfiguration) --framework netcoreapp2.0 --output $(Build.ArtifactStagingDirectory)'
       projects: src/NaCl.Core/NaCl.Core.csproj
       publishWebProjects: false
       modifyOutputPath: true
@@ -77,11 +77,7 @@ jobs:
     displayName: 'dotnet restore src'
   - script: dotnet build src --configuration $(buildConfiguration)
     displayName: 'dotnet build $(buildConfiguration)'
-  - script: |
-      mkdir $(Build.SourcesDirectory)\results
-      dotnet test -f netcoreapp2.0 src/NaCl.Core.Tests --logger trx /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura
-      cp $(Build.SourcesDirectory)\NaCl.Core.Tests\coverage.cobertura.xml $(Build.SourcesDirectory)\results
-      dotnet tool install dotnet-reportgenerator-globaltool --tool-path . --version 4.0.4
+  - script: dotnet test -f netcoreapp2.0 src/NaCl.Core.Tests --logger trx
     displayName: 'Unit testing'
     env:
       COREHOST_TRACE: 0
@@ -91,11 +87,6 @@ jobs:
     inputs:
       testRunner: VSTest
       testResultsFiles: '**/*.trx'
-  - task: PublishCodeCoverageResults@1
-    inputs:
-      summaryFileLocation: $(Build.SourcesDirectory)\results\coverage.cobertura.xml
-      reportDirectory: $(Build.SourcesDirectory)\results
-      codecoverageTool: cobertura
 
 # Run a build on Windows at the same time
 - job: Windows
