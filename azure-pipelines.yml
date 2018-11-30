@@ -59,7 +59,7 @@ jobs:
   - task: DotNetCoreCLI@2
     inputs:
       command: publish
-      arguments: '--configuration $(buildConfiguration) --framework netcoreapp2.0 --output $(Build.ArtifactStagingDirectory)'
+      arguments: '--configuration $(buildConfiguration) --framework netstandard2.0 --output $(Build.ArtifactStagingDirectory)'
       projects: src/NaCl.Core/NaCl.Core.csproj
       publishWebProjects: false
       modifyOutputPath: true
