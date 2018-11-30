@@ -41,6 +41,7 @@ jobs:
       dotnet test -f netcoreapp2.0 src/NaCl.Core.Tests --logger trx /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura
       cp src/NaCl.Core.Tests/coverage.cobertura.xml $(Build.SourcesDirectory)/results
       dotnet tool install dotnet-reportgenerator-globaltool --tool-path . --version 4.0.4
+      .\reportgenerator "-reports:src/NaCl.Core.Tests/coverage.cobertura.xml" "-targetdir:results" "-reporttypes:HTMLInline;HTMLChart"
     displayName: 'Unit testing'
     # Set environment variables for the build.
     env:
