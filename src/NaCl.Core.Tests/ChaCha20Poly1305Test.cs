@@ -14,6 +14,8 @@
     [TestFixture]
     public class ChaCha20Poly1305Test
     {
+        private const string EXCEPTION_MESSAGE_NONCE_LENGTH = "The nonce length in bytes must be 12.";
+
         [Test]
         public void CreateInstanceWhenKeyLengthIsGreaterThan32Fails()
         {
@@ -29,13 +31,45 @@
         }
 
         [Test]
+        public void EncryptWhenNonceLengthIsGreaterThanAllowedFails()
+        {
+            // Arrange, Act & Assert
+            var aead = new ChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES]);
+            Assert.Throws<CryptographyException>(() => aead.Encrypt(new byte[0], new byte[0], new byte[12 + 1]), EXCEPTION_MESSAGE_NONCE_LENGTH);
+        }
+
+        [Test]
+        public void EncryptWhenNonceLengthIsLowerThanAllowedFails()
+        {
+            // Arrange, Act & Assert
+            var aead = new ChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES]);
+            Assert.Throws<CryptographyException>(() => aead.Encrypt(new byte[0], new byte[0], new byte[12 - 1]), EXCEPTION_MESSAGE_NONCE_LENGTH);
+        }
+
+        [Test]
+        public void DecryptWhenNonceLengthIsGreaterThanAllowedFails()
+        {
+            // Arrange, Act & Assert
+            var aead = new ChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES]);
+            Assert.Throws<CryptographyException>(() => aead.Decrypt(new byte[50], new byte[0], new byte[12 + 1]), EXCEPTION_MESSAGE_NONCE_LENGTH);
+        }
+
+        [Test]
+        public void DecryptWhenNonceLengthIsLowerThanAllowedFails()
+        {
+            // Arrange, Act & Assert
+            var aead = new ChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES]);
+            Assert.Throws<CryptographyException>(() => aead.Decrypt(new byte[50], new byte[0], new byte[12 - 1]), EXCEPTION_MESSAGE_NONCE_LENGTH);
+        }
+
+        [Test]
         public void DecryptWhenCiphertextIsTooShortFails()
         {
             // Arrange & Act
-            var cipher = new ChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES]);
+            var aead = new ChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES]);
 
             // Assert
-            Assert.Throws<CryptographyException>(() => cipher.Decrypt(new byte[27], new byte[1]));
+            Assert.Throws<CryptographyException>(() => aead.Decrypt(new byte[27], new byte[1]));
         }
 
         [Test]

@@ -1,4 +1,4 @@
-namespace NaCl.Core.Tests.Crypto
+﻿namespace NaCl.Core.Tests.Crypto
 {
     using System;
     using System.Collections.Generic;
@@ -11,6 +11,8 @@ namespace NaCl.Core.Tests.Crypto
     [TestFixture]
     public class XChaCha20Poly1305Test
     {
+        private const string EXCEPTION_MESSAGE_NONCE_LENGTH = "The nonce length in bytes must be 24.";
+
         [Test]
         public void CreateInstanceWhenKeyLengthIsGreaterThan32Fails()
         {
@@ -23,6 +25,38 @@ namespace NaCl.Core.Tests.Crypto
         {
             // Arrange, Act & Assert
             Assert.Throws<CryptographyException>(() => new XChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES - 1]));
+        }
+
+        [Test]
+        public void EncryptWhenNonceLengthIsGreaterThanAllowedFails()
+        {
+            // Arrange, Act & Assert
+            var aead = new XChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES]);
+            Assert.Throws<CryptographyException>(() => aead.Encrypt(new byte[0], new byte[0], new byte[24 + 1]), EXCEPTION_MESSAGE_NONCE_LENGTH);
+        }
+
+        [Test]
+        public void EncryptWhenNonceLengthIsLowerThanAllowedFails()
+        {
+            // Arrange, Act & Assert
+            var aead = new XChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES]);
+            Assert.Throws<CryptographyException>(() => aead.Encrypt(new byte[0], new byte[0], new byte[24 - 1]), EXCEPTION_MESSAGE_NONCE_LENGTH);
+        }
+
+        [Test]
+        public void DecryptWhenNonceLengthIsGreaterThanAllowedFails()
+        {
+            // Arrange, Act & Assert
+            var aead = new XChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES]);
+            Assert.Throws<CryptographyException>(() => aead.Decrypt(new byte[50], new byte[0], new byte[24 + 1]), EXCEPTION_MESSAGE_NONCE_LENGTH);
+        }
+
+        [Test]
+        public void DecryptWhenNonceLengthIsLowerThanAllowedFails()
+        {
+            // Arrange, Act & Assert
+            var aead = new XChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES]);
+            Assert.Throws<CryptographyException>(() => aead.Decrypt(new byte[50], new byte[0], new byte[24 - 1]), EXCEPTION_MESSAGE_NONCE_LENGTH);
         }
 
         [Test]

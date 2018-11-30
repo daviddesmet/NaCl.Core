@@ -13,6 +13,8 @@
     [TestFixture]
     public class ChaCha20Tests
     {
+        private const string EXCEPTION_MESSAGE_NONCE_LENGTH = "The nonce length in bytes must be 12.";
+
         [Test]
         public void CreateInstanceWhenKeyLengthIsGreaterThan32Fails()
         {
@@ -25,6 +27,31 @@
         {
             // Arrange, Act & Assert
             Assert.Throws<CryptographyException>(() => new ChaCha20(new byte[Snuffle.KEY_SIZE_IN_BYTES - 1], 0));
+        }
+
+        //[Test]
+        //public void EncryptWhenPlaintextIsLongerFails()
+        //{
+        //    // Arrange, Act & Assert
+        //    var cipher = new ChaCha20(new byte[Snuffle.KEY_SIZE_IN_BYTES], 0);
+        //    var plaintext = new byte[int.MaxValue];
+        //    Assert.Throws<CryptographyException>(() => cipher.Encrypt(plaintext, new byte[cipher.NonceSizeInBytes()]));
+        //}
+
+        [Test]
+        public void EncryptWhenNonceLengthIsGreaterThanAllowedFails()
+        {
+            // Arrange, Act & Assert
+            var cipher = new ChaCha20(new byte[Snuffle.KEY_SIZE_IN_BYTES], 0);
+            Assert.Throws<CryptographyException>(() => cipher.Encrypt(new byte[0], new byte[cipher.NonceSizeInBytes() + 1]), EXCEPTION_MESSAGE_NONCE_LENGTH);
+        }
+
+        [Test]
+        public void EncryptWhenNonceLengthIsLowerThanAllowedFails()
+        {
+            // Arrange, Act & Assert
+            var cipher = new ChaCha20(new byte[Snuffle.KEY_SIZE_IN_BYTES], 0);
+            Assert.Throws<CryptographyException>(() => cipher.Encrypt(new byte[0], new byte[cipher.NonceSizeInBytes() - 1]), EXCEPTION_MESSAGE_NONCE_LENGTH);
         }
 
         [Test]
@@ -144,7 +171,7 @@
                 0xd19c12b5, 0xb94e16de, 0xe883d0cb, 0x4e3c50a2,
             };
 
-            Assert.AreEqual(expected, TestHelpers.ToUInt16Array(output));
+            Assert.AreEqual(expected, output.ToUInt16Array());
         }
 
         [Test]

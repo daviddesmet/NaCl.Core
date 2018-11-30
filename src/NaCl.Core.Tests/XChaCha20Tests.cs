@@ -1,4 +1,4 @@
-namespace NaCl.Core.Tests.Crypto
+﻿namespace NaCl.Core.Tests.Crypto
 {
     using System;
     using System.Collections.Generic;
@@ -12,6 +12,8 @@ namespace NaCl.Core.Tests.Crypto
     [TestFixture]
     public class XChaCha20Tests
     {
+        private const string EXCEPTION_MESSAGE_NONCE_LENGTH = "The nonce length in bytes must be 24.";
+
         [Test]
         public void CreateInstanceWhenKeyLengthIsGreaterThan32Fails()
         {
@@ -24,6 +26,22 @@ namespace NaCl.Core.Tests.Crypto
         {
             // Arrange, Act & Assert
             Assert.Throws<CryptographyException>(() => new XChaCha20(new byte[Snuffle.KEY_SIZE_IN_BYTES - 1], 0));
+        }
+
+        [Test]
+        public void EncryptWhenNonceLengthIsGreaterThanAllowedFails()
+        {
+            // Arrange, Act & Assert
+            var cipher = new XChaCha20(new byte[Snuffle.KEY_SIZE_IN_BYTES], 0);
+            Assert.Throws<CryptographyException>(() => cipher.Encrypt(new byte[0], new byte[cipher.NonceSizeInBytes() + 1]), EXCEPTION_MESSAGE_NONCE_LENGTH);
+        }
+
+        [Test]
+        public void EncryptWhenNonceLengthIsLowerThanAllowedFails()
+        {
+            // Arrange, Act & Assert
+            var cipher = new XChaCha20(new byte[Snuffle.KEY_SIZE_IN_BYTES], 0);
+            Assert.Throws<CryptographyException>(() => cipher.Encrypt(new byte[0], new byte[cipher.NonceSizeInBytes() - 1]), EXCEPTION_MESSAGE_NONCE_LENGTH);
         }
 
         [Test]
@@ -115,15 +133,28 @@ namespace NaCl.Core.Tests.Crypto
             var hex = CryptoBytes.ToHexStringLower(output); // is equal to 'expected' on the first and last rows
 
             // Assert
-            var expected = new uint[8]
+            //var expected = new uint[8]
+            //{
+            //    0x82413b42, 0x27b27bfe, 0xd30e4250, 0x8a877d73,
+            //    //0x4864a70a, 0xf3cd5479, 0x37cd6a84, 0xad583c7b,
+            //    //0x8355e377, 0x127ce783, 0x2d6a07e0, 0xe5d06cbc,
+            //    0xa0f9e4d5, 0x8a74a853, 0xc12ec413, 0x26d3ecdc
+            //};
+
+            var expected = new Array8<uint>
             {
-                0x82413b42, 0x27b27bfe, 0xd30e4250, 0x8a877d73,
-                //0x4864a70a, 0xf3cd5479, 0x37cd6a84, 0xad583c7b,
-                //0x8355e377, 0x127ce783, 0x2d6a07e0, 0xe5d06cbc,
-                0xa0f9e4d5, 0x8a74a853, 0xc12ec413, 0x26d3ecdc
+                x0 = 0x82413b42,
+                x1 = 0x27b27bfe,
+                x2 = 0xd30e4250,
+                x3 = 0x8a877d73,
+
+                x4 = 0xa0f9e4d5,
+                x5 = 0x8a74a853,
+                x6 = 0xc12ec413,
+                x7 = 0x26d3ecdc
             };
 
-            Assert.AreEqual(expected, TestHelpers.ToUInt16Array(output));
+            Assert.AreEqual(expected, output.ToArray8());
         }
         */
 

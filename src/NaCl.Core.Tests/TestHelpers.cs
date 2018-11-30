@@ -3,8 +3,9 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
-
     using NUnit.Framework;
+
+    using Internal;
 
     public static class TestHelpers
     {
@@ -82,7 +83,23 @@
             return result;
         }
 
-        public static uint[] ToUInt16Array(byte[] source)
+        public static Array8<uint> ToArray8(this byte[] source)
+        {
+            return new Array8<uint>
+            {
+                x0 = ByteIntegerConverter.LoadLittleEndian32(source, 0),
+                x1 = ByteIntegerConverter.LoadLittleEndian32(source, 4),
+                x2 = ByteIntegerConverter.LoadLittleEndian32(source, 8),
+                x3 = ByteIntegerConverter.LoadLittleEndian32(source, 12),
+
+                x4 = ByteIntegerConverter.LoadLittleEndian32(source, 16),
+                x5 = ByteIntegerConverter.LoadLittleEndian32(source, 20),
+                x6 = ByteIntegerConverter.LoadLittleEndian32(source, 24),
+                x7 = ByteIntegerConverter.LoadLittleEndian32(source, 28)
+            };
+        }
+
+        public static uint[] ToUInt16Array(this byte[] source)
         {
             var decoded = new uint[source.Length / 4];
             Buffer.BlockCopy(source, 0, decoded, 0, source.Length);
