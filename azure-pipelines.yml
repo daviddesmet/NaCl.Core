@@ -34,10 +34,11 @@ jobs:
 
   # The steps to run to execute the build.
   steps:
-  - script: dotnet restore src
-    displayName: 'dotnet restore src'
   - script: dotnet build src --configuration $(buildConfiguration)
     displayName: 'dotnet build $(buildConfiguration)'
+  - script: |
+    dotnet test -f netcoreapp2.0 src/NaCl.Core.Tests
+    displayName: 'Unit testing'
     # Set environment variables for the build.
     env:
       COREHOST_TRACE: 0
