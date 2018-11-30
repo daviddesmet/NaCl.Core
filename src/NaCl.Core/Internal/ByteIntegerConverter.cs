@@ -51,6 +51,7 @@
             StoreLittleEndian32(buf, offset + 4, (uint)(value >> 32));
         }
 
+        /*
         public static ulong LoadBigEndian64(byte[] buf, int offset)
         {
             return
@@ -75,6 +76,7 @@
             buf[offset + 1] = unchecked((byte)(value >> 48));
             buf[offset + 0] = unchecked((byte)(value >> 56));
         }
+        */
 
         /*public static void XorLittleEndian32(byte[] buf, int offset, uint value)
         {
@@ -136,6 +138,7 @@
 
         #region Array16
 
+        /*
         public static void Array16LoadBigEndian64(out Array16<ulong> output, byte[] input, int inputOffset)
         {
             output.x0 = LoadBigEndian64(input, inputOffset + 0);
@@ -155,6 +158,7 @@
             output.x14 = LoadBigEndian64(input, inputOffset + 112);
             output.x15 = LoadBigEndian64(input, inputOffset + 120);
         }
+        */
 
         // TODO: Only used in tests. Remove?
         public static void Array16LoadLittleEndian32(out Array16<uint> output, byte[] input, int inputOffset)

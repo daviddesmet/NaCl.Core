@@ -11,11 +11,6 @@
         /// <summary>
         /// Initializes a new instance of the <see cref="CryptographyException"/> class.
         /// </summary>
-        public CryptographyException() { }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="CryptographyException"/> class.
-        /// </summary>
         /// <param name="message">The message that describes the error.</param>
         public CryptographyException(string message) : base(message) { }
 
