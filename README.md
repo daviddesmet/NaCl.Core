@@ -1,5 +1,6 @@
 # NaCl.Core, a cryptography library for .NET
 
+[![Build Status](https://dev.azure.com/idaviddesmet/NaCl.Core/_apis/build/status/idaviddesmet.NaCl.Core)](https://dev.azure.com/idaviddesmet/NaCl.Core/_build/latest?definitionId=1)
 [![Build status](https://ci.appveyor.com/api/projects/status/2k3cxt2e1r2jyinx?svg=true)](https://ci.appveyor.com/project/idaviddesmet/nacl-core)
 [![Build Status](https://travis-ci.org/idaviddesmet/NaCl.Core.svg?branch=master)](https://travis-ci.org/idaviddesmet/NaCl.Core)
 [![NuGet](https://img.shields.io/nuget/v/NaCl.Core.svg)](https://www.nuget.org/packages/NaCl.Core/)
