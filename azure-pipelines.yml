@@ -1,0 +1,72 @@
+# .NET Core
+# Build and test projects targeting .NET Core.
+# Add steps that run tests, create a NuGet package, deploy, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/dotnet-core
+
+# Only trigger CI builds for the master branch, instead 
+# of every branch. You'll automatically be configured to 
+# build PRs, but you can't currently control that from the YAML directly
+# For details, see https://docs.microsoft.com/en-us/azure/devops/pipelines/build/triggers
+trigger:
+- master
+
+# We can run multiple jobs in parallel. For this project
+# we are running Linux, Windows, and macOS jobs. For syntax details
+# see https://docs.microsoft.com/en-us/azure/devops/pipelines/process/phases
+jobs:
+
+# Provide a name for the job
+- job: Linux
+
+  # The VM image to use for the hosted agent. For a list of possible agents
+  # see https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/hosted
+  # You can see the software installed on each agent at the same link.
+  pool:
+    vmImage: 'ubuntu-16.04'
+
+  variables:
+    buildConfiguration: 'Release'
+
+  # The steps to run to execute the build.
+  steps:
+  - script: dotnet restore src
+    displayName: 'dotnet restore src'
+  - script: dotnet build src --configuration $(buildConfiguration)
+    displayName: 'dotnet build $(buildConfiguration)'
+    # Set environment variables for the build.
+    env:
+      COREHOST_TRACE: 0
+      DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
+      DOTNET_CLI_TELEMETRY_OPTOUT: 1
+
+# Run a build on macOS at the same time
+- job: macOS
+  pool:
+    vmImage: 'xcode9-macos10.13'
+  variables:
+    buildConfiguration: 'Release'
+  steps:
+  - script: dotnet restore src
+    displayName: 'dotnet restore src'
+  - script: dotnet build --configuration $(buildConfiguration)
+    displayName: 'dotnet build src $(buildConfiguration)'
+    env:
+      COREHOST_TRACE: 0
+      DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
+      DOTNET_CLI_TELEMETRY_OPTOUT: 1
+
+# Run a build on Windows at the same time
+- job: Windows
+  pool:
+    vmImage: 'vs2017-win2016'
+  variables:
+    buildConfiguration: 'Release'
+  steps:
+  - script: dotnet restore src
+    displayName: 'dotnet restore src'
+  - script: dotnet build src --configuration $(buildConfiguration)
+    displayName: 'dotnet build $(buildConfiguration)'
+    env:
+      COREHOST_TRACE: 0
+      DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
+      DOTNET_CLI_TELEMETRY_OPTOUT: 1
