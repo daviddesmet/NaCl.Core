@@ -1,4 +1,4 @@
-﻿namespace NaCl.Core.Tests.Crypto
+﻿namespace NaCl.Core.Tests
 {
     using System;
     using System.Linq;

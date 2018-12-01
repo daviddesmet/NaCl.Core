@@ -12,14 +12,15 @@
     [CoreJob(baseline: true), ClrJob/*, MonoJob*/]
     [MemoryDiagnoser]
     [RPlotExporter, RankColumn]
-    public class ChaCha20Poly1305Benchmark
+    public class XChaCha20Poly1305Benchmark
     {
         private static Random rnd = new Random(42);
 
         private byte[] key;
+        private byte[] nonce;
         private byte[] aad;
         private byte[] message;
-        private ChaCha20Poly1305 aead;
+        private XChaCha20Poly1305 aead;
 
         [Params(
             (int)1E+2,  // 100 bytes
@@ -36,25 +37,28 @@
             key = new byte[Snuffle.KEY_SIZE_IN_BYTES];
             rnd.NextBytes(key);
 
+            nonce = new byte[24];
+            rnd.NextBytes(nonce);
+
             message = new byte[Size];
             rnd.NextBytes(message);
 
-            aad = new byte[16];
+            aad = new byte[24];
             rnd.NextBytes(aad);
 
-            aead = new ChaCha20Poly1305(key);
+            aead = new XChaCha20Poly1305(key);
         }
 
         [Benchmark]
         [BenchmarkCategory("Encryption")]
-        public byte[] Encrypt() => aead.Encrypt(message, aad);
+        public byte[] Encrypt() => aead.Encrypt(message, aad, nonce);
 
         [Benchmark]
         [BenchmarkCategory("Decryption")]
         [ArgumentsSource(nameof(TestVectors))]
-        public byte[] Decrypt(Tests.Vectors.Rfc8439TestVector test)
+        public byte[] Decrypt(Tests.Vectors.XChaCha20Poly1305TestVector test)
         {
-            var aead = new ChaCha20Poly1305(test.Key);
+            var aead = new XChaCha20Poly1305(test.Key);
             return aead.Decrypt(CryptoBytes.Combine(test.Nonce, test.CipherText, test.Tag), test.Aad);
         }
 
@@ -63,10 +67,9 @@
             //foreach (var test in Tests.Rfc8439TestVector.Rfc7634AeadTestVectors)
             //    yield return test;
 
-            yield return Tests.Vectors.Rfc8439TestVector.Rfc8439AeadTestVectors[0];
-            yield return Tests.Vectors.Rfc8439TestVector.Rfc8439AeadTestVectors[1];
-            yield return Tests.Vectors.Rfc8439TestVector.Rfc7634AeadTestVectors[0];
-            yield return Tests.Vectors.Rfc8439TestVector.Rfc7634AeadTestVectors[1];
+            yield return Tests.Vectors.XChaCha20Poly1305TestVector.TestVectors[0];
+            yield return Tests.Vectors.XChaCha20Poly1305TestVector.TestVectors[1];
+            yield return Tests.Vectors.XChaCha20Poly1305TestVector.TestVectors[2];
         }
 
         // TODO: Use the encrypt value (from Encrypt method) to benchmark decryption

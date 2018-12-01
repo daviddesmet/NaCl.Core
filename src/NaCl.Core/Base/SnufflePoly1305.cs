@@ -70,6 +70,7 @@ namespace NaCl.Core.Base
             if (aad is null)
                 aad = new byte[0];
 
+            //var tag = Poly1305.ComputeMac(GetMacKey(nonce), GetMacDataRfc8439(aad, ciphertext.AsSpan().Slice(nonce.Length)));
             var tag = Poly1305.ComputeMac(GetMacKey(nonce), GetMacDataRfc8439(aad, ciphertext.Skip(nonce.Length).ToArray()));
 
             Array.Resize(ref ciphertext, plaintext.Length + _snuffle.NonceSizeInBytes() + Poly1305.MAC_TAG_SIZE_IN_BYTES);
@@ -123,6 +124,7 @@ namespace NaCl.Core.Base
 
             try
             {
+                //Poly1305.VerifyMac(GetMacKey(nonce), GetMacDataRfc8439(aad, ciphertext.AsSpan().Slice(randomNonce ? nonce.Length : 0, limit)), tag);
                 Poly1305.VerifyMac(GetMacKey(nonce), GetMacDataRfc8439(aad, ciphertext.Skip(randomNonce ? nonce.Length : 0).Take(limit).ToArray()), tag);
             }
             catch (Exception ex)
@@ -143,9 +145,11 @@ namespace NaCl.Core.Base
         /// </summary>
         /// <param name="nonce">The nonce.</param>
         /// <returns>System.Byte[].</returns>
-        private byte[] GetMacKey(byte[] nonce)
+        private byte[] GetMacKey(in byte[] nonce)
         {
-            var firstBlock = _macKeySnuffle.GetKeyStreamBlock(nonce, 0);
+            var firstBlock = new byte[Snuffle.BLOCK_SIZE_IN_BYTES];
+            _macKeySnuffle.ProcessKeyStreamBlock(nonce, 0, firstBlock);
+
             var result = new byte[Poly1305.MAC_KEY_SIZE_IN_BYTES];
             Array.Copy(firstBlock, result, result.Length);
             return result;

@@ -1,5 +1,6 @@
 ﻿namespace NaCl.Core.Base
 {
+    using System;
     using Internal;
 
     /// <summary>
@@ -24,48 +25,21 @@
         /// <param name="nonce">The nonce.</param>
         /// <param name="counter">The counter.</param>
         /// <returns>Array16&lt;System.UInt32&gt;.</returns>
-        protected abstract Array16<uint> CreateInitialState(in byte[] nonce, int counter);
+        protected abstract Array16<uint> CreateInitialState(ReadOnlySpan<byte> nonce, int counter);
 
-        /// <summary>
-        /// Gets the key stream block.
-        /// </summary>
-        /// <param name="nonce">The nonce.</param>
-        /// <param name="counter">The counter.</param>
-        /// <returns>System.Byte[].</returns>
-        public override byte[] GetKeyStreamBlock(in byte[] nonce, int counter)
+        /// <inheritdoc />
+        public override void ProcessKeyStreamBlock(ReadOnlySpan<byte> nonce, int counter, Span<byte> block)
         {
+            // Creates the initial state.
             // https://tools.ietf.org/html/rfc8439#section-2.3.
-
             var state = CreateInitialState(nonce, counter);
 
-            /*
-            ByteIntegerConverter.Array16Copy(out var workingState, state);
-            ShuffleState(ref workingState);
-
-            unchecked
-            {
-                state.x0 += workingState.x0;
-                state.x1 += workingState.x1;
-                state.x2 += workingState.x2;
-                state.x3 += workingState.x3;
-                state.x4 += workingState.x4;
-                state.x5 += workingState.x5;
-                state.x6 += workingState.x6;
-                state.x7 += workingState.x7;
-                state.x8 += workingState.x8;
-                state.x9 += workingState.x9;
-                state.x10 += workingState.x10;
-                state.x11 += workingState.x11;
-                state.x12 += workingState.x12;
-                state.x13 += workingState.x13;
-                state.x14 += workingState.x14;
-                state.x15 += workingState.x15;
-            }
-            */
-
+            // Create a copy of the state and then
+            // run 20 rounds on it, alternating between "column rounds" and "diagonal rounds"; each round consisting of four quarter-rounds.
             var workingState = ByteIntegerConverter.Array16ToArray(state);
             ShuffleState(ref workingState);
 
+            // At the end of the rounds, add the result to the original state.
             unchecked
             {
                 state.x0 += workingState[0];
@@ -86,14 +60,43 @@
                 state.x15 += workingState[15];
             }
 
-            var output = new byte[BLOCK_SIZE_IN_BYTES]; // TODO: Remove allocation ...
-            ByteIntegerConverter.Array16StoreLittleEndian32(output, 0, ref state);
-            return output;
+            ByteIntegerConverter.WriteLittleEndian32(block, 0, ref state);
         }
 
         public static byte[] HChaCha20(in byte[] key) => HChaCha20(key, ZERO_16_BYTES);
 
         public static byte[] HChaCha20(in byte[] key, in byte[] nonce)
+        {
+            // See https://tools.ietf.org/html/draft-arciszewski-xchacha-01#section-2.2.
+
+            var state = new Array16<uint>();
+
+            // Set ChaCha20 constant
+            SetSigma(ref state);
+
+            // Set 256-bit Key
+            SetKey(ref state, key);
+
+            // Set 128-bit Nonce
+            state.x12 = ByteIntegerConverter.LoadLittleEndian32(nonce, 0);
+            state.x13 = ByteIntegerConverter.LoadLittleEndian32(nonce, 4);
+            state.x14 = ByteIntegerConverter.LoadLittleEndian32(nonce, 8);
+            state.x15 = ByteIntegerConverter.LoadLittleEndian32(nonce, 12);
+
+            // Block function
+            ShuffleState(ref state);
+
+            state.x4 = state.x12;
+            state.x5 = state.x13;
+            state.x6 = state.x14;
+            state.x7 = state.x15;
+
+            var output = new byte[KEY_SIZE_IN_BYTES]; // TODO: Remove allocation
+            ByteIntegerConverter.Array8StoreLittleEndian32(output, 0, ref state);
+            return output;
+        }
+
+        public static byte[] HChaCha20(in byte[] key, ReadOnlySpan<byte> nonce)
         {
             // See https://tools.ietf.org/html/draft-arciszewski-xchacha-01#section-2.2.
 

@@ -1,5 +1,7 @@
 ﻿namespace NaCl.Core.Internal
 {
+    using System;
+
     // Loops? Arrays? Never heard of that stuff
     // Library avoids unnecessary heap allocations and unsafe code
     // so this ugly code becomes necessary :(
@@ -24,6 +26,21 @@
         }
 
         /// <summary>
+        /// Loads 4 bytes of the input buffer into an unsigned 32-bit integer, beginning at the input offset.
+        /// </summary>
+        /// <param name="buf">The input buffer.</param>
+        /// <param name="offset">The input offset.</param>
+        /// <returns>System.UInt32.</returns>
+        public static uint LoadLittleEndian32(ReadOnlySpan<byte> buf, int offset)
+        {
+            return
+                (uint)(buf[offset + 0])
+                | (((uint)(buf[offset + 1])) << 8)
+                | (((uint)(buf[offset + 2])) << 16)
+                | (((uint)(buf[offset + 3])) << 24);
+        }
+
+        /// <summary>
         /// Stores the value into the buffer.
         /// The value will be split into 4 bytes and put into four sequential places in the output buffer, starting at the specified offset.
         /// </summary>
@@ -31,6 +48,21 @@
         /// <param name="offset">The output offset.</param>
         /// <param name="value">The input value.</param>
         public static void StoreLittleEndian32(byte[] buf, int offset, uint value)
+        {
+            buf[offset + 0] = unchecked((byte)value);
+            buf[offset + 1] = unchecked((byte)(value >> 8));
+            buf[offset + 2] = unchecked((byte)(value >> 16));
+            buf[offset + 3] = unchecked((byte)(value >> 24));
+        }
+
+        /// <summary>
+        /// Stores the value into the buffer.
+        /// The value will be split into 4 bytes and put into four sequential places in the output buffer, starting at the specified offset.
+        /// </summary>
+        /// <param name="buf">The output buffer.</param>
+        /// <param name="offset">The output offset.</param>
+        /// <param name="value">The input value.</param>
+        public static void StoreLittleEndian32(Span<byte> buf, int offset, uint value)
         {
             buf[offset + 0] = unchecked((byte)value);
             buf[offset + 1] = unchecked((byte)(value >> 8));
@@ -97,7 +129,7 @@
         #endregion
 
         #region Array8
-        
+
         public static void Array8LoadLittleEndian32(out Array8<uint> output, byte[] input, int inputOffset)
         {
             output.x0 = LoadLittleEndian32(input, inputOffset + 0);
@@ -123,6 +155,18 @@
         }
 
         public static void Array8StoreLittleEndian32(byte[] output, int outputOffset, ref Array16<uint> input)
+        {
+            StoreLittleEndian32(output, outputOffset + 0, input.x0);
+            StoreLittleEndian32(output, outputOffset + 4, input.x1);
+            StoreLittleEndian32(output, outputOffset + 8, input.x2);
+            StoreLittleEndian32(output, outputOffset + 12, input.x3);
+            StoreLittleEndian32(output, outputOffset + 16, input.x4);
+            StoreLittleEndian32(output, outputOffset + 20, input.x5);
+            StoreLittleEndian32(output, outputOffset + 24, input.x6);
+            StoreLittleEndian32(output, outputOffset + 28, input.x7);
+        }
+
+        public static void Array8StoreLittleEndian32(Span<byte> output, int outputOffset, ref Array16<uint> input)
         {
             StoreLittleEndian32(output, outputOffset + 0, input.x0);
             StoreLittleEndian32(output, outputOffset + 4, input.x1);
@@ -182,6 +226,46 @@
         }
 
         public static void Array16StoreLittleEndian32(byte[] output, int outputOffset, ref Array16<uint> input)
+        {
+            StoreLittleEndian32(output, outputOffset + 0, input.x0);
+            StoreLittleEndian32(output, outputOffset + 4, input.x1);
+            StoreLittleEndian32(output, outputOffset + 8, input.x2);
+            StoreLittleEndian32(output, outputOffset + 12, input.x3);
+            StoreLittleEndian32(output, outputOffset + 16, input.x4);
+            StoreLittleEndian32(output, outputOffset + 20, input.x5);
+            StoreLittleEndian32(output, outputOffset + 24, input.x6);
+            StoreLittleEndian32(output, outputOffset + 28, input.x7);
+            StoreLittleEndian32(output, outputOffset + 32, input.x8);
+            StoreLittleEndian32(output, outputOffset + 36, input.x9);
+            StoreLittleEndian32(output, outputOffset + 40, input.x10);
+            StoreLittleEndian32(output, outputOffset + 44, input.x11);
+            StoreLittleEndian32(output, outputOffset + 48, input.x12);
+            StoreLittleEndian32(output, outputOffset + 52, input.x13);
+            StoreLittleEndian32(output, outputOffset + 56, input.x14);
+            StoreLittleEndian32(output, outputOffset + 60, input.x15);
+        }
+
+        public static void WriteLittleEndian32(Span<byte> output, int outputOffset, Span<uint> input)
+        {
+            StoreLittleEndian32(output, outputOffset + 0, input[0]);
+            StoreLittleEndian32(output, outputOffset + 4, input[1]);
+            StoreLittleEndian32(output, outputOffset + 8, input[2]);
+            StoreLittleEndian32(output, outputOffset + 12, input[3]);
+            StoreLittleEndian32(output, outputOffset + 16, input[4]);
+            StoreLittleEndian32(output, outputOffset + 20, input[5]);
+            StoreLittleEndian32(output, outputOffset + 24, input[6]);
+            StoreLittleEndian32(output, outputOffset + 28, input[7]);
+            StoreLittleEndian32(output, outputOffset + 32, input[8]);
+            StoreLittleEndian32(output, outputOffset + 36, input[9]);
+            StoreLittleEndian32(output, outputOffset + 40, input[10]);
+            StoreLittleEndian32(output, outputOffset + 44, input[11]);
+            StoreLittleEndian32(output, outputOffset + 48, input[12]);
+            StoreLittleEndian32(output, outputOffset + 52, input[13]);
+            StoreLittleEndian32(output, outputOffset + 56, input[14]);
+            StoreLittleEndian32(output, outputOffset + 60, input[15]);
+        }
+
+        public static void WriteLittleEndian32(Span<byte> output, int outputOffset, ref Array16<uint> input)
         {
             StoreLittleEndian32(output, outputOffset + 0, input.x0);
             StoreLittleEndian32(output, outputOffset + 4, input.x1);

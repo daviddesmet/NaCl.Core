@@ -1,6 +1,7 @@
 ﻿namespace NaCl.Core.Base
 {
     using System;
+    using System.Buffers;
     using System.Linq;
     using System.Security.Cryptography;
 
@@ -36,7 +37,7 @@
         /// <param name="key">The key.</param>
         /// <param name="initialCounter">The initial counter.</param>
         /// <exception cref="CryptographyException"></exception>
-        public Snuffle(byte[] key, int initialCounter)
+        public Snuffle(in byte[] key, int initialCounter)
         {
             if (key.Length != KEY_SIZE_IN_BYTES)
                 throw new CryptographyException($"The key length in bytes must be {KEY_SIZE_IN_BYTES}.");
@@ -46,16 +47,17 @@
         }
 
         /// <summary>
-        /// Returns a key stream block from <paramref name="nonce"> and <paramref name="counter">.
+        /// Process the key stream block <paramref name="block"> from <paramref name="nonce"> and <paramref name="counter">.
         ///
         /// From this function, the Snuffle encryption function can be constructed using the counter
         /// mode of operation. For example, the ChaCha20 block function and how it can be used to
-        /// construct the ChaCha20 encryption function are described in section 2.3 and 2.4 of RFC 7539.
+        /// construct the ChaCha20 encryption function are described in section 2.3 and 2.4 of RFC 8439.
         /// </summary>
         /// <param name="nonce">The nonce.</param>
         /// <param name="counter">The counter.</param>
+        /// <param name="block">The stream block.</param>
         /// <returns>ByteBuffer.</returns>
-        public abstract byte[] GetKeyStreamBlock(in byte[] nonce, int counter);
+        public abstract void ProcessKeyStreamBlock(ReadOnlySpan<byte> nonce, int counter, Span<byte> block);
 
         /// <summary>
         /// The size of the randomly generated nonces.
@@ -71,15 +73,19 @@
         /// <param name="nonce">The optional nonce.</param>
         /// <returns>System.Byte[].</returns>
         /// <exception cref="CryptographyException">plaintext or ciphertext</exception>
-        public virtual byte[] Encrypt(byte[] plaintext, byte[] nonce = null)
+        public virtual byte[] Encrypt(byte[] plaintext, byte[] nonce = null) => Encrypt(plaintext.AsSpan(), nonce);
+
+        /// <summary>
+        /// Encrypts the specified plaintext.
+        /// </summary>
+        /// <param name="plaintext">The plaintext.</param>
+        /// <param name="nonce">The optional nonce.</param>
+        /// <returns>System.Byte[].</returns>
+        /// <exception cref="CryptographyException">plaintext or ciphertext</exception>
+        public virtual byte[] Encrypt(ReadOnlySpan<byte> plaintext, byte[] nonce = null)
         {
             if (plaintext.Length > int.MaxValue - NonceSizeInBytes())
                 throw new CryptographyException($"The {nameof(plaintext)} is too long.");
-
-            var ciphertext = new byte[plaintext.Length + NonceSizeInBytes()];
-
-            if (ciphertext.Length - NonceSizeInBytes() < plaintext.Length)
-                throw new CryptographyException($"The {nameof(ciphertext)} is too short.");
 
             if (nonce != null && nonce.Length != NonceSizeInBytes())
                 throw new CryptographyException($"The nonce length in bytes must be {NonceSizeInBytes()}.");
@@ -90,8 +96,10 @@
                 RandomNumberGenerator.Create().GetBytes(nonce);
             }
 
+            var ciphertext = new byte[plaintext.Length + NonceSizeInBytes()];
+
             Array.Copy(nonce, ciphertext, nonce.Length);
-            Process(nonce, ciphertext, plaintext.AsSpan(), nonce.Length);
+            Process(nonce.AsSpan(), ciphertext, plaintext, nonce.Length);
 
             return ciphertext;
         }
@@ -102,16 +110,22 @@
         /// <param name="ciphertext">The ciphertext.</param>
         /// <returns>System.Byte[].</returns>
         /// <exception cref="CryptographyException">ciphertext</exception>
-        public virtual byte[] Decrypt(byte[] ciphertext)
+        public virtual byte[] Decrypt(byte[] ciphertext) => Decrypt(ciphertext.AsSpan());
+
+        /// <summary>
+        /// Decrypts the specified ciphertext.
+        /// </summary>
+        /// <param name="ciphertext">The ciphertext.</param>
+        /// <returns>System.Byte[].</returns>
+        /// <exception cref="CryptographyException">ciphertext</exception>
+        public virtual byte[] Decrypt(ReadOnlySpan<byte> ciphertext)
         {
             if (ciphertext.Length < NonceSizeInBytes())
                 throw new CryptographyException($"The {nameof(ciphertext)} is too short.");
 
-            var nonce = new byte[NonceSizeInBytes()];
-            Array.Copy(ciphertext, nonce, nonce.Length);
             var plaintext = new byte[ciphertext.Length - NonceSizeInBytes()];
 
-            Process(nonce, plaintext, ciphertext.AsSpan().Slice(NonceSizeInBytes()));
+            Process(ciphertext.Slice(0, NonceSizeInBytes()), plaintext, ciphertext.Slice(NonceSizeInBytes()));
 
             return plaintext;
         }
@@ -123,17 +137,41 @@
         /// <param name="output">The output.</param>
         /// <param name="input">The input.</param>
         /// <param name="offset">The output's starting offset.</param>
-        private void Process(in byte[] nonce, byte[] output, ReadOnlySpan<byte> input, int offset = 0)
+        private void Process(ReadOnlySpan<byte> nonce, byte[] output, ReadOnlySpan<byte> input, int offset = 0)
         {
             var length = input.Length;
             var numBlocks = (length / BLOCK_SIZE_IN_BYTES) + 1;
+
+            /*
+             * Allocates 64 bytes more than below impl as per the benchmarks...
+             * 
+            var block = new byte[BLOCK_SIZE_IN_BYTES];
             for (var i = 0; i < numBlocks; i++)
             {
-                var keyStream = GetKeyStreamBlock(nonce, i + InitialCounter);
+                ProcessKeyStreamBlock(nonce, i + InitialCounter, block);
+
                 if (i == numBlocks - 1)
-                    Xor(output, input, keyStream, length % BLOCK_SIZE_IN_BYTES, offset, i); // last block
+                    Xor(output, input, block, length % BLOCK_SIZE_IN_BYTES, offset, i); // last block
                 else
-                    Xor(output, input, keyStream, BLOCK_SIZE_IN_BYTES, offset, i);
+                    Xor(output, input, block, BLOCK_SIZE_IN_BYTES, offset, i);
+
+                Array.Clear(block, 0, block.Length);
+            }
+            */
+
+            using (var owner = MemoryPool<byte>.Shared.Rent(BLOCK_SIZE_IN_BYTES))
+            {
+                for (var i = 0; i < numBlocks; i++)
+                {
+                    ProcessKeyStreamBlock(nonce, i + InitialCounter, owner.Memory.Span);
+
+                    if (i == numBlocks - 1)
+                        Xor(output, input, owner.Memory.Span, length % BLOCK_SIZE_IN_BYTES, offset, i); // last block
+                    else
+                        Xor(output, input, owner.Memory.Span, BLOCK_SIZE_IN_BYTES, offset, i);
+
+                    owner.Memory.Span.Clear();
+                }
             }
         }
 
@@ -144,20 +182,20 @@
         /// </summary>
         /// <param name="output">The output.</param>
         /// <param name="input">The input.</param>
-        /// <param name="keyStream">The key stream block.</param>
+        /// <param name="block">The key stream block.</param>
         /// <param name="len">The length.</param>
         /// <param name="offset">The output's starting offset.</param>
         /// <param name="curBlock">The current block number.</param>
         /// <exception cref="CryptographyException">The combination of blocks, offsets and length to be XORed is out-of-bonds.</exception>
-        private static void Xor(byte[] output, ReadOnlySpan<byte> input, byte[] keyStream, int len, int offset, int curBlock)
+        private static void Xor(byte[] output, ReadOnlySpan<byte> input, ReadOnlySpan<byte> block, int len, int offset, int curBlock)
         {
             var blockOffset = curBlock * BLOCK_SIZE_IN_BYTES;
 
-            if (len < 0 || offset < 0 || curBlock < 0 || output.Length < len || (input.Length - blockOffset) < len || keyStream.Length < len)
+            if (len < 0 || offset < 0 || curBlock < 0 || output.Length < len || (input.Length - blockOffset) < len || block.Length < len)
                 throw new CryptographyException("The combination of blocks, offsets and length to be XORed is out-of-bonds.");
 
             for (var i = 0; i < len; i++)
-                output[i + offset + blockOffset] = (byte)(input[i + blockOffset] ^ keyStream[i]);
+                output[i + offset + blockOffset] = (byte)(input[i + blockOffset] ^ block[i]);
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿namespace NaCl.Core.Tests.Crypto
+﻿namespace NaCl.Core.Tests
 {
     using System;
     using System.Collections.Generic;
@@ -9,6 +9,7 @@
 
     using Base;
     using Internal;
+    using Vectors;
 
     [TestFixture]
     public class ChaCha20Tests
@@ -160,7 +161,8 @@
 
             // Act
             var chacha20 = new ChaCha20(key, 1);
-            var output = chacha20.GetKeyStreamBlock(nonce, counter);
+            var output = new byte[Snuffle.BLOCK_SIZE_IN_BYTES];
+            chacha20.ProcessKeyStreamBlock(nonce, counter, output);
 
             // Assert
             var expected = new uint[16]
@@ -217,8 +219,10 @@
 
             // Act
             var cipher = new ChaCha20(key, 0);
-            var block0 = cipher.GetKeyStreamBlock(nonce, 0);
-            var block1 = cipher.GetKeyStreamBlock(nonce, 1);
+            var block0 = new byte[Snuffle.BLOCK_SIZE_IN_BYTES];
+            var block1 = new byte[Snuffle.BLOCK_SIZE_IN_BYTES];
+            cipher.ProcessKeyStreamBlock(nonce, 0, block0);
+            cipher.ProcessKeyStreamBlock(nonce, 1, block1);
 
             // Assert
             var expected = new byte[128]

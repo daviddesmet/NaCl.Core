@@ -1,4 +1,4 @@
-namespace NaCl.Core.Tests
+namespace NaCl.Core.Tests.Vectors
 {
     using Internal;
 
@@ -9,7 +9,9 @@ namespace NaCl.Core.Tests
         public byte[] CipherText { get; private set; }
         public byte[] PlainText { get; private set; }
 
-        public XChaCha20TestVector(string key, string nonce, string ciphertext, string plaintext)
+        public string Id { get; private set; } // used to identify the benchmark test
+
+        public XChaCha20TestVector(string key, string nonce, string ciphertext, string plaintext, string id)
         {
             Key = CryptoBytes.FromHexString(key);
             Nonce = CryptoBytes.FromHexString(nonce);
@@ -18,7 +20,11 @@ namespace NaCl.Core.Tests
 
             if (plaintext.Length == 0)
                 PlainText = new byte[CipherText.Length];
+
+            Id = id;
         }
+
+        public override string ToString() => $"Test Vector {Id}";
 
         public static XChaCha20TestVector[] XChaCha20TestVectors = {
             // From libsodium's test/default/xchacha20.c (tv_stream_xchacha20)
@@ -26,58 +32,58 @@ namespace NaCl.Core.Tests
                "79c99798ac67300bbb2704c95c341e3245f3dcb21761b98e52ff45b24f304fc4",
                "b33ffd3096479bcfbc9aee49417688a0a2554f8d95389419",
                "c6e9758160083ac604ef90e712ce6e75d7797590744e0cf060f013739c",
-               ""),
+               "", "#1"),
             new XChaCha20TestVector(
                "ddf7784fee099612c40700862189d0397fcc4cc4b3cc02b5456b3a97d1186173",
                "a9a04491e7bf00c3ca91ac7c2d38a777d88993a7047dfcc4",
                "2f289d371f6f0abc3cb60d11d9b7b29adf6bc5ad843e8493e928448d",
-               ""),
+               "", "#2"),
             new XChaCha20TestVector(
                "3d12800e7b014e88d68a73f0a95b04b435719936feba60473f02a9e61ae60682",
                "56bed2599eac99fb27ebf4ffcb770a64772dec4d5849ea2d",
                "a2c3c1406f33c054a92760a8e0666b84f84fa3a618f0",
-               ""),
+               "", "#3"),
             new XChaCha20TestVector(
                "5f5763ff9a30c95da5c9f2a8dfd7cc6efd9dfb431812c075aa3e4f32e04f53e4",
                "a5fa890efa3b9a034d377926ce0e08ee6d7faccaee41b771",
                "8a1a5ba898bdbcff602b1036e469a18a5e45789d0e8d9837d81a2388a52b0b6a0f51891528f424c4a7f492"
                    + "a8dd7bce8bac19fbdbe1fb379ac0",
-               ""),
+               "", "#4"),
             new XChaCha20TestVector(
                "eadc0e27f77113b5241f8ca9d6f9a5e7f09eee68d8a5cf30700563bf01060b4e",
                "a171a4ef3fde7c4794c5b86170dc5a099b478f1b852f7b64",
                "23839f61795c3cdbcee2c749a92543baeeea3cbb721402aa42e6cae140447575f2916c5d71108e3b13357e"
                    + "af86f060cb",
-               ""),
+               "", "#5"),
             new XChaCha20TestVector(
                "91319c9545c7c804ba6b712e22294c386fe31c4ff3d278827637b959d3dbaab2",
                "410e854b2a911f174aaf1a56540fc3855851f41c65967a4e",
                "cbe7d24177119b7fdfa8b06ee04dade4256ba7d35ffda6b89f014e479faef6",
-               ""),
+               "", "#6"),
             new XChaCha20TestVector(
                "6a6d3f412fc86c4450fc31f89f64ed46baa3256ffcf8616e8c23a06c422842b6",
                "6b7773fce3c2546a5db4829f53a9165f41b08faae2fb72d5",
                "8b23e35b3cdd5f3f75525fc37960ec2b68918e8c046d8a832b9838f1546be662e54feb1203e2",
-               ""),
+               "", "#7"),
             new XChaCha20TestVector(
                "d45e56368ebc7ba9be7c55cfd2da0feb633c1d86cab67cd5627514fd20c2b391",
                "fd37da2db31e0c738754463edadc7dafb0833bd45da497fc",
                "47950efa8217e3dec437454bd6b6a80a287e2570f0a48b3fa1ea3eb868be3d486f6516606d85e5643becc4"
                    + "73b370871ab9ef8e2a728f73b92bd98e6e26ea7c8ff96ec5a9e8de95e1eee9300c",
-               ""),
+               "", "#8"),
             new XChaCha20TestVector(
                "aface41a64a9a40cbc604d42bd363523bd762eb717f3e08fe2e0b4611eb4dcf3",
                "6906e0383b895ab9f1cf3803f42f27c79ad47b681c552c63",
                "a5fa7c0190792ee17675d52ad7570f1fb0892239c76d6e802c26b5b3544d13151e67513b8aaa1ac5af2d7f"
                    + "d0d5e4216964324838",
-               ""),
+               "", "#9"),
             new XChaCha20TestVector(
                "9d23bd4149cb979ccf3c5c94dd217e9808cb0e50cd0f67812235eaaf601d6232",
                "c047548266b7c370d33566a2425cbf30d82d1eaf5294109e",
                "a21209096594de8c5667b1d13ad93f744106d054df210e4782cd396fec692d3515a20bf351eec011a92c36"
                    + "7888bc464c32f0807acd6c203a247e0db854148468e9f96bee4cf718d68d5f637cbd5a376457788e"
                    + "6fae90fc31097cfc",
-               ""),
+               "", "#10"),
             // https://tools.ietf.org/html/draft-arciszewski-xchacha-00.
             new XChaCha20TestVector(
                 "808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9f",
@@ -97,7 +103,8 @@ namespace NaCl.Core.Tests
                     + "2d6c656767656420666f782e205468697320686967686c7920656c757369766520616e6420736b696"
                     + "c6c6564206a756d70657220697320636c6173736966696564207769746820776f6c7665732c20636f"
                     + "796f7465732c206a61636b616c732c20616e6420666f78657320696e20746865207461786f6e6f6d6"
-                    + "9632066616d696c792043616e696461652e")
+                    + "9632066616d696c792043616e696461652e",
+                "#11")
         };
     }
 }

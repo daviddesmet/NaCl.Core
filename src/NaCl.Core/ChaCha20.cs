@@ -1,5 +1,7 @@
 ﻿namespace NaCl.Core
 {
+    using System;
+
     using Base;
     using Internal;
 
@@ -20,15 +22,10 @@
         /// <param name="initialCounter">The initial counter.</param>
         public ChaCha20(byte[] key, int initialCounter) : base(key, initialCounter) { }
 
-        /// <summary>
-        /// Creates the initial state.
-        /// </summary>
-        /// <param name="nonce">The nonce.</param>
-        /// <param name="counter">The counter.</param>
-        /// <returns>Array16&lt;System.UInt32&gt;.</returns>
-        protected override Array16<uint> CreateInitialState(in byte[] nonce, int counter)
+        /// <inheritdoc />
+        protected override Array16<uint> CreateInitialState(ReadOnlySpan<byte> nonce, int counter)
         {
-            if (nonce is null || nonce.Length != NonceSizeInBytes()) // The nonce is always 12 bytes.
+            if (nonce.IsEmpty || nonce.Length != NonceSizeInBytes()) // The nonce is always 12 bytes.
                 throw new CryptographyException($"{nameof(ChaCha20)} uses 96-bit nonces, but got a {nonce.Length * 8}-bit nonce. The nonce length in bytes must be {NonceSizeInBytes()}.");
 
             // Set the initial state based on https://tools.ietf.org/html/rfc8439#section-2.3

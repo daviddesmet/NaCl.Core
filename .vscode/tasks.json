@@ -49,10 +49,10 @@
             "label": "run benchmarks",
             "command": "dotnet run",
             "linux": {
-                "command": "TERM=xterm dotnet run NaCl.Core.Benchmarks/ -c release -f netcoreapp2.0"
+                "command": "TERM=xterm dotnet run NaCl.Core.Benchmarks/ -c release --framework netcoreapp2.0"
             },
             "osx": {
-                "command": "dotnet run src/NaCl.Core.Benchmarks/ -c release -f netcoreapp2.0"
+                "command": "dotnet run src/NaCl.Core.Benchmarks/ -c release --framework netcoreapp2.0"
             },
             "type": "shell",
             "group": {

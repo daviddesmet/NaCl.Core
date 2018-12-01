@@ -1,4 +1,4 @@
-﻿namespace NaCl.Core.Tests.Crypto
+﻿namespace NaCl.Core.Tests
 {
     using System;
     using System.Collections.Generic;
@@ -8,6 +8,7 @@
 
     using Base;
     using Internal;
+    using Vectors;
 
     [TestFixture]
     public class XChaCha20Tests

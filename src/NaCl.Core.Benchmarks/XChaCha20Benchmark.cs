@@ -13,14 +13,14 @@
     [CoreJob(baseline: true), ClrJob/*, MonoJob*/]
     [MemoryDiagnoser]
     [RPlotExporter, RankColumn]
-    public class ChaCha20Benchmark
+    public class XChaCha20Benchmark
     {
         private static Random rnd = new Random(42);
 
         private byte[] key;
         private byte[] nonce;
         private byte[] message;
-        private ChaCha20 cipher;
+        private XChaCha20 cipher;
 
         [Params(
             (int)1E+2,  // 100 bytes
@@ -37,13 +37,13 @@
             key = new byte[Snuffle.KEY_SIZE_IN_BYTES];
             rnd.NextBytes(key);
 
-            nonce = new byte[12];
+            nonce = new byte[24];
             rnd.NextBytes(nonce);
 
             message = new byte[Size];
             rnd.NextBytes(message);
 
-            cipher = new ChaCha20(key, 0);
+            cipher = new XChaCha20(key, 0);
         }
 
         [Benchmark]
@@ -53,25 +53,28 @@
         [Benchmark]
         [BenchmarkCategory("Decryption")]
         [ArgumentsSource(nameof(TestVectors))]
-        public byte[] Decrypt(Tests.Vectors.Rfc8439TestVector test)
+        public byte[] Decrypt(Tests.Vectors.XChaCha20TestVector test)
         {
-            var cipher = new ChaCha20(test.Key, test.InitialCounter);
-            return cipher.Decrypt(CryptoBytes.Combine(test.Nonce, test.CipherText).AsSpan());
+            var cipher = new XChaCha20(test.Key, 0);
+            return cipher.Decrypt(CryptoBytes.Combine(test.Nonce, test.CipherText));
         }
 
         public IEnumerable<object> TestVectors()
         {
-            //foreach (var test in Tests.Rfc8439TestVector.Rfc8439TestVectors)
+            //foreach (var test in Tests.XChaCha20TestVector.XChaCha20TestVectors)
             //    yield return test;
 
-            yield return Tests.Vectors.Rfc8439TestVector.Rfc8439TestVectors[0];
-            yield return Tests.Vectors.Rfc8439TestVector.Rfc8439TestVectors[1];
-            yield return Tests.Vectors.Rfc8439TestVector.Rfc8439TestVectors[2];
-            yield return Tests.Vectors.Rfc8439TestVector.Rfc8439TestVectors[3];
-            yield return Tests.Vectors.Rfc8439TestVector.Rfc8439TestVectors[4];
-            yield return Tests.Vectors.Rfc8439TestVector.Rfc8439TestVectors[5];
-            yield return Tests.Vectors.Rfc8439TestVector.Rfc8439TestVectors[6];
-            yield return Tests.Vectors.Rfc8439TestVector.Rfc8439TestVectors[7];
+            yield return Tests.Vectors.XChaCha20TestVector.XChaCha20TestVectors[0];
+            yield return Tests.Vectors.XChaCha20TestVector.XChaCha20TestVectors[1];
+            yield return Tests.Vectors.XChaCha20TestVector.XChaCha20TestVectors[2];
+            yield return Tests.Vectors.XChaCha20TestVector.XChaCha20TestVectors[3];
+            yield return Tests.Vectors.XChaCha20TestVector.XChaCha20TestVectors[4];
+            yield return Tests.Vectors.XChaCha20TestVector.XChaCha20TestVectors[5];
+            yield return Tests.Vectors.XChaCha20TestVector.XChaCha20TestVectors[6];
+            yield return Tests.Vectors.XChaCha20TestVector.XChaCha20TestVectors[7];
+            yield return Tests.Vectors.XChaCha20TestVector.XChaCha20TestVectors[8];
+            yield return Tests.Vectors.XChaCha20TestVector.XChaCha20TestVectors[9];
+            yield return Tests.Vectors.XChaCha20TestVector.XChaCha20TestVectors[10];
         }
 
         // TODO: Use the encrypt value (from Encrypt method) to benchmark decryption
