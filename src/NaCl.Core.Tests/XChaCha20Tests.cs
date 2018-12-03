@@ -16,33 +16,18 @@
         private const string EXCEPTION_MESSAGE_NONCE_LENGTH = "The nonce length in bytes must be 24.";
 
         [Test]
-        public void CreateInstanceWhenKeyLengthIsGreaterThan32Fails()
+        public void CreateInstanceWhenKeyLengthIsInvalidFails()
         {
             // Arrange, Act & Assert
-            Assert.Throws<CryptographyException>(() => new XChaCha20(new byte[Snuffle.KEY_SIZE_IN_BYTES + 1], 0));
+            Assert.Throws<CryptographyException>(() => new XChaCha20(new byte[Snuffle.KEY_SIZE_IN_BYTES + TestHelpers.ReturnRandomPositiveNegative()], 0));
         }
 
         [Test]
-        public void CreateInstanceWhenKeyLengthIsLessThan32Fails()
-        {
-            // Arrange, Act & Assert
-            Assert.Throws<CryptographyException>(() => new XChaCha20(new byte[Snuffle.KEY_SIZE_IN_BYTES - 1], 0));
-        }
-
-        [Test]
-        public void EncryptWhenNonceLengthIsGreaterThanAllowedFails()
+        public void EncryptWhenNonceLengthIsInvalidFails()
         {
             // Arrange, Act & Assert
             var cipher = new XChaCha20(new byte[Snuffle.KEY_SIZE_IN_BYTES], 0);
-            Assert.Throws<CryptographyException>(() => cipher.Encrypt(new byte[0], new byte[cipher.NonceSizeInBytes() + 1]), EXCEPTION_MESSAGE_NONCE_LENGTH);
-        }
-
-        [Test]
-        public void EncryptWhenNonceLengthIsLowerThanAllowedFails()
-        {
-            // Arrange, Act & Assert
-            var cipher = new XChaCha20(new byte[Snuffle.KEY_SIZE_IN_BYTES], 0);
-            Assert.Throws<CryptographyException>(() => cipher.Encrypt(new byte[0], new byte[cipher.NonceSizeInBytes() - 1]), EXCEPTION_MESSAGE_NONCE_LENGTH);
+            Assert.Throws<CryptographyException>(() => cipher.Encrypt(new byte[0], new byte[cipher.NonceSizeInBytes() + TestHelpers.ReturnRandomPositiveNegative()]), EXCEPTION_MESSAGE_NONCE_LENGTH);
         }
 
         [Test]
@@ -86,6 +71,20 @@
                     Assert.IsTrue(CryptoBytes.ConstantTimeEquals(expectedInput, actualInput));
                 }
             }
+        }
+
+        [Test]
+        public void XChaCha20BlockWhenNonceLengthIsInvalidFails()
+        {
+            // Arrange
+            var key = new byte[Snuffle.KEY_SIZE_IN_BYTES];
+
+            var cipher = new XChaCha20(key, 0);
+            var nonce = new byte[cipher.NonceSizeInBytes() + TestHelpers.ReturnRandomPositiveNegative()];
+            var block = new byte[Snuffle.BLOCK_SIZE_IN_BYTES];
+
+            // Act & Assert
+            Assert.Throws<CryptographyException>(() => cipher.ProcessKeyStreamBlock(nonce, 0, block));
         }
 
         [Test]

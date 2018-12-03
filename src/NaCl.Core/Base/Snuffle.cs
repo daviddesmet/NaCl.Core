@@ -155,7 +155,7 @@
                 else
                     Xor(output, input, block, BLOCK_SIZE_IN_BYTES, offset, i);
 
-                Array.Clear(block, 0, block.Length);
+                CryptoBytes.Wipe(block); // Array.Clear(block, 0, block.Length);
             }
             */
 

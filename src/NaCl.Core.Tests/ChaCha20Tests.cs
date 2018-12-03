@@ -17,17 +17,10 @@
         private const string EXCEPTION_MESSAGE_NONCE_LENGTH = "The nonce length in bytes must be 12.";
 
         [Test]
-        public void CreateInstanceWhenKeyLengthIsGreaterThan32Fails()
+        public void CreateInstanceWhenKeyLengthIsInvalidFails()
         {
             // Arrange, Act & Assert
-            Assert.Throws<CryptographyException>(() => new ChaCha20(new byte[Snuffle.KEY_SIZE_IN_BYTES + 1], 0));
-        }
-
-        [Test]
-        public void CreateInstanceWhenKeyLengthIsLessThan32Fails()
-        {
-            // Arrange, Act & Assert
-            Assert.Throws<CryptographyException>(() => new ChaCha20(new byte[Snuffle.KEY_SIZE_IN_BYTES - 1], 0));
+            Assert.Throws<CryptographyException>(() => new ChaCha20(new byte[Snuffle.KEY_SIZE_IN_BYTES + TestHelpers.ReturnRandomPositiveNegative()], 0));
         }
 
         //[Test]
@@ -40,19 +33,11 @@
         //}
 
         [Test]
-        public void EncryptWhenNonceLengthIsGreaterThanAllowedFails()
+        public void EncryptWhenNonceLengthIsInvalidFails()
         {
             // Arrange, Act & Assert
             var cipher = new ChaCha20(new byte[Snuffle.KEY_SIZE_IN_BYTES], 0);
-            Assert.Throws<CryptographyException>(() => cipher.Encrypt(new byte[0], new byte[cipher.NonceSizeInBytes() + 1]), EXCEPTION_MESSAGE_NONCE_LENGTH);
-        }
-
-        [Test]
-        public void EncryptWhenNonceLengthIsLowerThanAllowedFails()
-        {
-            // Arrange, Act & Assert
-            var cipher = new ChaCha20(new byte[Snuffle.KEY_SIZE_IN_BYTES], 0);
-            Assert.Throws<CryptographyException>(() => cipher.Encrypt(new byte[0], new byte[cipher.NonceSizeInBytes() - 1]), EXCEPTION_MESSAGE_NONCE_LENGTH);
+            Assert.Throws<CryptographyException>(() => cipher.Encrypt(new byte[0], new byte[cipher.NonceSizeInBytes() + TestHelpers.ReturnRandomPositiveNegative()]), EXCEPTION_MESSAGE_NONCE_LENGTH);
         }
 
         [Test]
@@ -147,6 +132,20 @@
 
             // Assert
             Assert.AreEqual(new uint[] { 0x879531e0, 0xc5ecf37d, 0xbdb886dc, 0xc9a62f8a, 0x44c20ef3, 0x3390af7f, 0xd9fc690b, 0xcfacafd2, 0xe46bea80, 0xb00a5631, 0x974c541a, 0x359e9963, 0x5c971061, 0xccc07c79, 0x2098d9d6, 0x91dbd320 }, x);
+        }
+
+        [Test]
+        public void ChaCha20BlockWhenNonceLengthIsInvalidFails()
+        {
+            // Arrange
+            var key = new byte[Snuffle.KEY_SIZE_IN_BYTES];
+
+            var chacha20 = new ChaCha20(key, 0);
+            var nonce = new byte[chacha20.NonceSizeInBytes() + TestHelpers.ReturnRandomPositiveNegative()];
+            var block = new byte[Snuffle.BLOCK_SIZE_IN_BYTES];
+
+            // Act & Assert
+            Assert.Throws<CryptographyException>(() => chacha20.ProcessKeyStreamBlock(nonce, 0, block));
         }
 
         [Test]

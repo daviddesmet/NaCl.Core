@@ -63,6 +63,8 @@
             return paddedData.ToArray();
         }
 
+        public static int ReturnRandomPositiveNegative() => Random(0, 2) * 2 - 1;
+
         public static IEnumerable<byte[]> WithChangedBit(this byte[] array)
         {
             for (var i = 0; i < array.Length; i++)

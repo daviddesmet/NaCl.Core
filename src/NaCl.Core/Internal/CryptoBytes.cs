@@ -20,10 +20,10 @@
 
         public static bool ConstantTimeEquals(byte[] x, byte[] y)
         {
-            if (x == null)
+            if (x is null)
                 throw new ArgumentNullException(nameof(x));
 
-            if (y == null)
+            if (y is null)
                 throw new ArgumentNullException(nameof(y));
 
             if (x.Length != y.Length)
@@ -34,10 +34,10 @@
 
         public static bool ConstantTimeEquals(ArraySegment<byte> x, ArraySegment<byte> y)
         {
-            if (x.Array == null)
+            if (x.Array is null)
                 throw new ArgumentNullException("x.Array");
 
-            if (y.Array == null)
+            if (y.Array is null)
                 throw new ArgumentNullException("y.Array");
 
             if (x.Count != y.Count)
@@ -48,7 +48,7 @@
 
         public static bool ConstantTimeEquals(byte[] x, int xOffset, byte[] y, int yOffset, int length)
         {
-            if (x == null)
+            if (x is null)
                 throw new ArgumentNullException(nameof(x));
 
             if (xOffset < 0)
@@ -82,7 +82,7 @@
 
         public static void Wipe(byte[] data)
         {
-            if (data == null)
+            if (data is null)
                 throw new ArgumentNullException(nameof(data));
 
             InternalWipe(data, 0, data.Length);
@@ -90,7 +90,7 @@
 
         public static void Wipe(byte[] data, int offset, int count)
         {
-            if (data == null)
+            if (data is null)
                 throw new ArgumentNullException(nameof(data));
 
             if (offset < 0)
@@ -107,7 +107,7 @@
 
         public static void Wipe(ArraySegment<byte> data)
         {
-            if (data.Array == null)
+            if (data.Array is null)
                 throw new ArgumentNullException("data.Array");
 
             InternalWipe(data.Array, data.Offset, data.Count);
@@ -122,17 +122,11 @@
         //   I hope this is enough, suppressing inlining
         //   but perhaps `RtlSecureZeroMemory` is needed
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void InternalWipe(byte[] data, int offset, int count)
-        {
-            Array.Clear(data, offset, count);
-        }
+        internal static void InternalWipe(byte[] data, int offset, int count) => Array.Clear(data, offset, count);
 
         // shallow wipe of structs
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void InternalWipe<T>(ref T data) where T : struct
-        {
-            data = default(T);
-        }
+        //[MethodImpl(MethodImplOptions.NoInlining)]
+        //internal static void InternalWipe<T>(ref T data) where T : struct => data = default;
 
         // constant time hex conversion
         // see http://stackoverflow.com/a/14333437/445517
@@ -158,7 +152,7 @@
         // * Making `b` an int avoids unnecessary conversions from and to byte.
         public static string ToHexStringUpper(byte[] data)
         {
-            if (data == null)
+            if (data is null)
                 return null;
 
             var c = new char[data.Length * 2];
@@ -178,7 +172,7 @@
         // constant 55 -> 87 and -7 -> -39 to compensate for the offset 32 between lowercase and uppercase letters
         public static string ToHexStringLower(byte[] data)
         {
-            if (data == null)
+            if (data is null)
                 return null;
 
             var c = new char[data.Length * 2];
@@ -196,7 +190,7 @@
 
         public static byte[] FromHexString(string hexString)
         {
-            if (hexString == null)
+            if (hexString is null)
                 return null;
 
             if (hexString.Length % 2 != 0)
@@ -211,7 +205,7 @@
 
         public static string ToBase64String(byte[] data)
         {
-            if (data == null)
+            if (data is null)
                 return null;
 
             return Convert.ToBase64String(data);
@@ -219,7 +213,7 @@
 
         public static byte[] FromBase64String(string s)
         {
-            if (s == null)
+            if (s is null)
                 return null;
 
             return Convert.FromBase64String(s);

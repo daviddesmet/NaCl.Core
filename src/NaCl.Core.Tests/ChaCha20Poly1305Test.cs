@@ -18,49 +18,26 @@
         private const string EXCEPTION_MESSAGE_NONCE_LENGTH = "The nonce length in bytes must be 12.";
 
         [Test]
-        public void CreateInstanceWhenKeyLengthIsGreaterThan32Fails()
+        public void CreateInstanceWhenKeyLengthIsInvalidFails()
         {
             // Arrange, Act & Assert
-            Assert.Throws<CryptographyException>(() => new ChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES + 1]));
+            Assert.Throws<CryptographyException>(() => new ChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES + TestHelpers.ReturnRandomPositiveNegative()]));
         }
 
         [Test]
-        public void CreateInstanceWhenKeyLengthIsLessThan32Fails()
-        {
-            // Arrange, Act & Assert
-            Assert.Throws<CryptographyException>(() => new ChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES - 1]));
-        }
-
-        [Test]
-        public void EncryptWhenNonceLengthIsGreaterThanAllowedFails()
+        public void EncryptWhenNonceLengthIsInvalidFails()
         {
             // Arrange, Act & Assert
             var aead = new ChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES]);
-            Assert.Throws<CryptographyException>(() => aead.Encrypt(new byte[0], new byte[0], new byte[12 + 1]), EXCEPTION_MESSAGE_NONCE_LENGTH);
+            Assert.Throws<CryptographyException>(() => aead.Encrypt(new byte[0], new byte[0], new byte[12 + TestHelpers.ReturnRandomPositiveNegative()]), EXCEPTION_MESSAGE_NONCE_LENGTH);
         }
 
         [Test]
-        public void EncryptWhenNonceLengthIsLowerThanAllowedFails()
+        public void DecryptWhenNonceLengthIsInvalidFails()
         {
             // Arrange, Act & Assert
             var aead = new ChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES]);
-            Assert.Throws<CryptographyException>(() => aead.Encrypt(new byte[0], new byte[0], new byte[12 - 1]), EXCEPTION_MESSAGE_NONCE_LENGTH);
-        }
-
-        [Test]
-        public void DecryptWhenNonceLengthIsGreaterThanAllowedFails()
-        {
-            // Arrange, Act & Assert
-            var aead = new ChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES]);
-            Assert.Throws<CryptographyException>(() => aead.Decrypt(new byte[50], new byte[0], new byte[12 + 1]), EXCEPTION_MESSAGE_NONCE_LENGTH);
-        }
-
-        [Test]
-        public void DecryptWhenNonceLengthIsLowerThanAllowedFails()
-        {
-            // Arrange, Act & Assert
-            var aead = new ChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES]);
-            Assert.Throws<CryptographyException>(() => aead.Decrypt(new byte[50], new byte[0], new byte[12 - 1]), EXCEPTION_MESSAGE_NONCE_LENGTH);
+            Assert.Throws<CryptographyException>(() => aead.Decrypt(new byte[50], new byte[0], new byte[12 + TestHelpers.ReturnRandomPositiveNegative()]), EXCEPTION_MESSAGE_NONCE_LENGTH);
         }
 
         [Test]

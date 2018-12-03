@@ -27,10 +27,7 @@
                     & 0xffffffffL;
         }
 
-        private static long Load26(byte[] buf, int idx, int shift)
-        {
-            return (Load32(buf, idx) >> shift) & 0x3ffffff;
-        }
+        private static long Load26(byte[] buf, int idx, int shift) => (Load32(buf, idx) >> shift) & 0x3ffffff;
 
         private static void ToByteArray(byte[] output, long num, int idx)
         {
@@ -40,7 +37,7 @@
 
         private static void Fill<T>(T[] array, int start, int end, T value)
         {
-            if (array == null)
+            if (array is null)
                 throw new ArgumentNullException(nameof(array));
 
             if (start < 0 || start >= end)
