@@ -1,4 +1,4 @@
-namespace NaCl.Core.Base
+﻿namespace NaCl.Core.Base
 {
     using System;
     using System.Linq;
@@ -13,7 +13,7 @@ namespace NaCl.Core.Base
     /// </summary>
     public abstract class SnufflePoly1305
     {
-        private readonly byte[] _key;
+        //private readonly byte[] Key;
         private Snuffle _snuffle;
         private Snuffle _macKeySnuffle;
         public const string AEAD_EXCEPTION_INVALID_TAG = "AEAD Bad Tag Exception";
@@ -22,9 +22,9 @@ namespace NaCl.Core.Base
         /// Initializes a new instance of the <see cref="SnufflePoly1305"/> class.
         /// </summary>
         /// <param name="key">The key.</param>
-        public SnufflePoly1305(byte[] key)
+        public SnufflePoly1305(in byte[] key)
         {
-            _key = key.ToArray();
+            //Key = key;
             _snuffle = CreateSnuffleInstance(key, 1);
             _macKeySnuffle = CreateSnuffleInstance(key, 0);
         }
@@ -35,7 +35,7 @@ namespace NaCl.Core.Base
         /// <param name="key">The key.</param>
         /// <param name="initialCounter">The initial counter.</param>
         /// <returns>Snuffle.</returns>
-        protected abstract Snuffle CreateSnuffleInstance(byte[] key, int initialCounter);
+        protected abstract Snuffle CreateSnuffleInstance(in byte[] key, int initialCounter);
 
         /// <summary>
         /// Encrypts the <paramref name="plaintext"> with <see cref="Poly1305"/> authentication based on an optional <paramref name="associatedData"> and an optional <paramref name="nonce">.
@@ -70,14 +70,16 @@ namespace NaCl.Core.Base
             if (aad is null)
                 aad = new byte[0];
 
-            //var tag = Poly1305.ComputeMac(GetMacKey(nonce), GetMacDataRfc8439(aad, ciphertext.AsSpan().Slice(nonce.Length)));
-            var tag = Poly1305.ComputeMac(GetMacKey(nonce), GetMacDataRfc8439(aad, ciphertext.Skip(nonce.Length).ToArray()));
+            //var tag = Poly1305.ComputeMac(GetMacKey(nonce), GetMacDataRfc8439(aad, ciphertext.AsSpan()));
+            var tag = Poly1305.ComputeMac(GetMacKey(nonce), GetMacDataRfc8439(aad, ciphertext));
 
-            Array.Resize(ref ciphertext, plaintext.Length + _snuffle.NonceSizeInBytes() + Poly1305.MAC_TAG_SIZE_IN_BYTES);
-            var limit = ciphertext.Length - Poly1305.MAC_TAG_SIZE_IN_BYTES;
-            Array.Copy(tag, 0, ciphertext, limit, tag.Length);
+            Array.Resize(ref ciphertext, plaintext.Length + Poly1305.MAC_TAG_SIZE_IN_BYTES);
+            Array.Copy(tag, 0, ciphertext, plaintext.Length, tag.Length);
 
-            return randomNonce ? ciphertext : ciphertext.Skip(nonce.Length).ToArray();
+            if (randomNonce)
+                ciphertext = CryptoBytes.Combine(nonce, ciphertext);
+
+            return ciphertext;
         }
 
         /// <summary>
@@ -132,12 +134,7 @@ namespace NaCl.Core.Base
                 throw new CryptographyException(AEAD_EXCEPTION_INVALID_TAG, ex);
             }
 
-            if (!randomNonce)
-                ciphertext = CryptoBytes.Combine(nonce, ciphertext);
-
-            limit += nonce.Length;
-
-            return _snuffle.Decrypt(ciphertext.Take(limit).ToArray());
+            return _snuffle.Decrypt(ciphertext.Skip(randomNonce ? nonce.Length : 0).Take(limit).ToArray(), nonce);
         }
 
         /// <summary>
@@ -145,7 +142,7 @@ namespace NaCl.Core.Base
         /// </summary>
         /// <param name="nonce">The nonce.</param>
         /// <returns>System.Byte[].</returns>
-        private byte[] GetMacKey(in byte[] nonce)
+        private byte[] GetMacKey(ReadOnlySpan<byte> nonce)
         {
             var firstBlock = new byte[Snuffle.BLOCK_SIZE_IN_BYTES];
             _macKeySnuffle.ProcessKeyStreamBlock(nonce, 0, firstBlock);

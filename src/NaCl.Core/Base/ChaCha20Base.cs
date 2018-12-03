@@ -16,7 +16,7 @@
         /// </summary>
         /// <param name="key">The key.</param>
         /// <param name="initialCounter">The initial counter.</param>
-        public ChaCha20Base(byte[] key, int initialCounter) : base(key, initialCounter) { }
+        public ChaCha20Base(in byte[] key, int initialCounter) : base(key, initialCounter) { }
 
         /// <summary>
         /// Returns the initial state from <paramref name="nonce"/> and <paramref name="counter">.
@@ -30,6 +30,9 @@
         /// <inheritdoc />
         public override void ProcessKeyStreamBlock(ReadOnlySpan<byte> nonce, int counter, Span<byte> block)
         {
+            if (block.Length != BLOCK_SIZE_IN_BYTES)
+                throw new CryptographyException($"The keystream block length is not valid. The length in bytes must be {BLOCK_SIZE_IN_BYTES}.");
+
             // Creates the initial state.
             // https://tools.ietf.org/html/rfc8439#section-2.3.
             var state = CreateInitialState(nonce, counter);

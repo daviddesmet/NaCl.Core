@@ -9,13 +9,11 @@
     /// This is not an implementation of the MAC interface on purpose and it is not equivalent to HMAC.
     /// The implementation is based on poly1305 implementation by Andrew Moon (https://github.com/floodyberry/poly1305-donna) and released as public domain.
     /// </summary>
-    public class Poly1305
+    public static class Poly1305
     {
         public static int MAC_TAG_SIZE_IN_BYTES = 16;
         public static int MAC_KEY_SIZE_IN_BYTES = 32;
         public const string MAC_EXCEPTION_INVALID = "Invalid MAC";
-
-        private Poly1305() { }
 
         private static long Load32(byte[] buf, int idx)
         {
@@ -61,6 +59,13 @@
                 Fill(output, copyCount + 1, output.Length, (byte)0);
         }
 
+        /// <summary>
+        /// Computes the mac value using the specified key and data.
+        /// </summary>
+        /// <param name="key">The key.</param>
+        /// <param name="data">The data.</param>
+        /// <returns>System.Byte[].</returns>
+        /// <exception cref="CryptographyException">The key length in bytes must be {MAC_KEY_SIZE_IN_BYTES}</exception>
         public static byte[] ComputeMac(in byte[] key, in byte[] data)
         {
             if (key.Length != MAC_KEY_SIZE_IN_BYTES)
@@ -198,6 +203,13 @@
             return mac;
         }
 
+        /// <summary>
+        /// Verifies the mac value using the specified key and data.
+        /// </summary>
+        /// <param name="key">The key.</param>
+        /// <param name="data">The data.</param>
+        /// <param name="mac">The mac.</param>
+        /// <exception cref="CryptographyException"></exception>
         public static void VerifyMac(in byte[] key, in byte[] data, in byte[] mac)
         {
             //if (ComputeMac(key, data).SequenceEqual(mac))

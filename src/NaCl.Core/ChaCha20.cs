@@ -20,13 +20,13 @@
         /// </summary>
         /// <param name="key">The key.</param>
         /// <param name="initialCounter">The initial counter.</param>
-        public ChaCha20(byte[] key, int initialCounter) : base(key, initialCounter) { }
+        public ChaCha20(in byte[] key, int initialCounter) : base(key, initialCounter) { }
 
         /// <inheritdoc />
         protected override Array16<uint> CreateInitialState(ReadOnlySpan<byte> nonce, int counter)
         {
-            if (nonce.IsEmpty || nonce.Length != NonceSizeInBytes()) // The nonce is always 12 bytes.
-                throw new CryptographyException($"{nameof(ChaCha20)} uses 96-bit nonces, but got a {nonce.Length * 8}-bit nonce. The nonce length in bytes must be {NonceSizeInBytes()}.");
+            if (nonce.IsEmpty || nonce.Length != NonceSizeInBytes())
+                throw new CryptographyException(FormatNonceLengthExceptionMessage(GetType().Name, nonce.Length, NonceSizeInBytes()));
 
             // Set the initial state based on https://tools.ietf.org/html/rfc8439#section-2.3
             var state = new Array16<uint>();

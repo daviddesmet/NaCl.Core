@@ -105,6 +105,59 @@
         }
 
         [Test]
+        public void EncryptDecryptLongMessagesTest()
+        {
+            var rnd = new Random();
+
+            var dataSize = 16;
+            while (dataSize <= (1 << 24))
+            {
+                var plaintext = new byte[dataSize];
+                rnd.NextBytes(plaintext);
+
+                var key = new byte[Snuffle.KEY_SIZE_IN_BYTES];
+                rnd.NextBytes(key);
+
+                var cipher = new ChaCha20(key, 0);
+
+                var ciphertext = cipher.Encrypt(plaintext);
+                var decrypted = cipher.Decrypt(ciphertext);
+
+                //Assert.AreEqual(plaintext, decrypted);
+                Assert.IsTrue(CryptoBytes.ConstantTimeEquals(plaintext, decrypted));
+                dataSize += 5 * dataSize / 11;
+            }
+        }
+
+        [Test]
+        public void EncryptDecryptLongMessagesWithNonceTest()
+        {
+            var rnd = new Random();
+
+            var dataSize = 16;
+            while (dataSize <= (1 << 24))
+            {
+                var plaintext = new byte[dataSize];
+                rnd.NextBytes(plaintext);
+
+                var key = new byte[Snuffle.KEY_SIZE_IN_BYTES];
+                rnd.NextBytes(key);
+
+                var cipher = new ChaCha20(key, 0);
+
+                var nonce = new byte[cipher.NonceSizeInBytes()];
+                rnd.NextBytes(nonce);
+
+                var ciphertext = cipher.Encrypt(plaintext, nonce);
+                var decrypted = cipher.Decrypt(ciphertext, nonce);
+
+                //Assert.AreEqual(plaintext, decrypted);
+                Assert.IsTrue(CryptoBytes.ConstantTimeEquals(plaintext, decrypted));
+                dataSize += 5 * dataSize / 11;
+            }
+        }
+
+        [Test]
         public void QuarterRoundTest()
         {
             // https://tools.ietf.org/html/rfc8439#section-2.1.1
@@ -135,6 +188,20 @@
         }
 
         [Test]
+        public void ChaCha20BlockWhenNonceLengthIsEmptyFails()
+        {
+            // Arrange
+            var key = new byte[Snuffle.KEY_SIZE_IN_BYTES];
+
+            var chacha20 = new ChaCha20(key, 0);
+            var nonce = new byte[0];
+            var block = new byte[Snuffle.BLOCK_SIZE_IN_BYTES];
+
+            // Act & Assert
+            Assert.Throws<CryptographyException>(() => chacha20.ProcessKeyStreamBlock(nonce, 0, block));
+        }
+
+        [Test]
         public void ChaCha20BlockWhenNonceLengthIsInvalidFails()
         {
             // Arrange
@@ -143,6 +210,20 @@
             var chacha20 = new ChaCha20(key, 0);
             var nonce = new byte[chacha20.NonceSizeInBytes() + TestHelpers.ReturnRandomPositiveNegative()];
             var block = new byte[Snuffle.BLOCK_SIZE_IN_BYTES];
+
+            // Act & Assert
+            Assert.Throws<CryptographyException>(() => chacha20.ProcessKeyStreamBlock(nonce, 0, block));
+        }
+
+        [Test]
+        public void ChaCha20BlockWhenLengthIsInvalidFails()
+        {
+            // Arrange
+            var key = new byte[Snuffle.KEY_SIZE_IN_BYTES];
+
+            var chacha20 = new ChaCha20(key, 0);
+            var nonce = new byte[chacha20.NonceSizeInBytes() + TestHelpers.ReturnRandomPositiveNegative()];
+            var block = new byte[0];
 
             // Act & Assert
             Assert.Throws<CryptographyException>(() => chacha20.ProcessKeyStreamBlock(nonce, 0, block));

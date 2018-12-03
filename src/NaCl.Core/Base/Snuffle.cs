@@ -70,47 +70,45 @@
         /// Encrypts the specified plaintext.
         /// </summary>
         /// <param name="plaintext">The plaintext.</param>
-        /// <param name="nonce">The optional nonce.</param>
         /// <returns>System.Byte[].</returns>
         /// <exception cref="CryptographyException">plaintext or ciphertext</exception>
-        public virtual byte[] Encrypt(byte[] plaintext, byte[] nonce = null) => Encrypt(plaintext.AsSpan(), nonce);
-
-        /// <summary>
-        /// Encrypts the specified plaintext.
-        /// </summary>
-        /// <param name="plaintext">The plaintext.</param>
-        /// <param name="nonce">The optional nonce.</param>
-        /// <returns>System.Byte[].</returns>
-        /// <exception cref="CryptographyException">plaintext or ciphertext</exception>
-        public virtual byte[] Encrypt(ReadOnlySpan<byte> plaintext, byte[] nonce = null)
+        public virtual byte[] Encrypt(ReadOnlySpan<byte> plaintext)
         {
             if (plaintext.Length > int.MaxValue - NonceSizeInBytes())
                 throw new CryptographyException($"The {nameof(plaintext)} is too long.");
 
-            if (nonce != null && nonce.Length != NonceSizeInBytes())
-                throw new CryptographyException($"The nonce length in bytes must be {NonceSizeInBytes()}.");
-
-            if (nonce is null)
-            {
-                nonce = new byte[NonceSizeInBytes()];
-                RandomNumberGenerator.Create().GetBytes(nonce);
-            }
+            var nonce = new byte[NonceSizeInBytes()];
+            RandomNumberGenerator.Create().GetBytes(nonce);
 
             var ciphertext = new byte[plaintext.Length + NonceSizeInBytes()];
 
             Array.Copy(nonce, ciphertext, nonce.Length);
-            Process(nonce.AsSpan(), ciphertext, plaintext, nonce.Length);
+            Process(nonce, ciphertext, plaintext, nonce.Length);
 
             return ciphertext;
         }
 
         /// <summary>
-        /// Decrypts the specified ciphertext.
+        /// Encrypts the specified plaintext using the supplied nonce.
         /// </summary>
-        /// <param name="ciphertext">The ciphertext.</param>
+        /// <param name="plaintext">The plaintext.</param>
+        /// <param name="nonce">The nonce.</param>
         /// <returns>System.Byte[].</returns>
-        /// <exception cref="CryptographyException">ciphertext</exception>
-        public virtual byte[] Decrypt(byte[] ciphertext) => Decrypt(ciphertext.AsSpan());
+        /// <exception cref="CryptographyException">plaintext or nonce</exception>
+        public virtual byte[] Encrypt(ReadOnlySpan<byte> plaintext, ReadOnlySpan<byte> nonce)
+        {
+            if (plaintext.Length > int.MaxValue - NonceSizeInBytes())
+                throw new CryptographyException($"The {nameof(plaintext)} is too long.");
+
+            if (nonce.IsEmpty || nonce.Length != NonceSizeInBytes())
+                throw new CryptographyException(FormatNonceLengthExceptionMessage(GetType().Name, nonce.Length, NonceSizeInBytes()));
+
+            var ciphertext = new byte[plaintext.Length];
+
+            Process(nonce, ciphertext, plaintext);
+
+            return ciphertext;
+        }
 
         /// <summary>
         /// Decrypts the specified ciphertext.
@@ -126,6 +124,25 @@
             var plaintext = new byte[ciphertext.Length - NonceSizeInBytes()];
 
             Process(ciphertext.Slice(0, NonceSizeInBytes()), plaintext, ciphertext.Slice(NonceSizeInBytes()));
+
+            return plaintext;
+        }
+
+        /// <summary>
+        /// Decrypts the specified ciphertext using the supplied nonce.
+        /// </summary>
+        /// <param name="ciphertext">The ciphertext.</param>
+        /// <param name="nonce">The nonce.</param>
+        /// <returns>System.Byte[].</returns>
+        /// <exception cref="CryptographyException">ciphertext or nonce</exception>
+        public virtual byte[] Decrypt(ReadOnlySpan<byte> ciphertext, ReadOnlySpan<byte> nonce)
+        {
+            if (nonce.IsEmpty || nonce.Length != NonceSizeInBytes())
+                throw new CryptographyException(FormatNonceLengthExceptionMessage(GetType().Name, nonce.Length, NonceSizeInBytes()));
+
+            var plaintext = new byte[ciphertext.Length];
+
+            Process(nonce, plaintext, ciphertext);
 
             return plaintext;
         }
@@ -176,6 +193,15 @@
         }
 
         protected static uint RotateLeft(uint x, int y) => (x << y) | (x >> (32 - y));
+
+        /// <summary>
+        /// Formats the nonce length exception message.
+        /// </summary>
+        /// <param name="name">The crypto primitive name.</param>
+        /// <param name="actual">The actual nonce length.</param>
+        /// <param name="expected">The expected nonce length.</param>
+        /// <returns>System.String.</returns>
+        internal string FormatNonceLengthExceptionMessage(string name, int actual, int expected) => $"{name} uses {expected * 8}-bit nonces, but got a {actual * 8}-bit nonce. The nonce length in bytes must be {expected}.";
 
         /// <summary>
         /// XOR the specified output.
