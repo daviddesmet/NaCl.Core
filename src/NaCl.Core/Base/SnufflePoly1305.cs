@@ -50,8 +50,8 @@
             if (plaintext is null)
                 throw new ArgumentNullException(nameof(plaintext));
 
-            if (plaintext.Length > int.MaxValue - _snuffle.NonceSizeInBytes() - Poly1305.MAC_TAG_SIZE_IN_BYTES)
-                throw new CryptographyException($"The {nameof(plaintext)} is too long.");
+            //if (plaintext.Length > int.MaxValue - _snuffle.NonceSizeInBytes() - Poly1305.MAC_TAG_SIZE_IN_BYTES)
+            //    throw new CryptographyException($"The {nameof(plaintext)} is too long.");
 
             if (nonce != null && nonce.Length != _snuffle.NonceSizeInBytes())
                 throw new CryptographyException($"The nonce length in bytes must be {_snuffle.NonceSizeInBytes()}.");

@@ -74,8 +74,8 @@
         /// <exception cref="CryptographyException">plaintext or ciphertext</exception>
         public virtual byte[] Encrypt(ReadOnlySpan<byte> plaintext)
         {
-            if (plaintext.Length > int.MaxValue - NonceSizeInBytes())
-                throw new CryptographyException($"The {nameof(plaintext)} is too long.");
+            //if (plaintext.Length > int.MaxValue - NonceSizeInBytes())
+            //    throw new CryptographyException($"The {nameof(plaintext)} is too long.");
 
             var nonce = new byte[NonceSizeInBytes()];
             RandomNumberGenerator.Create().GetBytes(nonce);
@@ -97,8 +97,8 @@
         /// <exception cref="CryptographyException">plaintext or nonce</exception>
         public virtual byte[] Encrypt(ReadOnlySpan<byte> plaintext, ReadOnlySpan<byte> nonce)
         {
-            if (plaintext.Length > int.MaxValue - NonceSizeInBytes())
-                throw new CryptographyException($"The {nameof(plaintext)} is too long.");
+            //if (plaintext.Length > int.MaxValue - NonceSizeInBytes())
+            //    throw new CryptographyException($"The {nameof(plaintext)} is too long.");
 
             if (nonce.IsEmpty || nonce.Length != NonceSizeInBytes())
                 throw new CryptographyException(FormatNonceLengthExceptionMessage(GetType().Name, nonce.Length, NonceSizeInBytes()));
