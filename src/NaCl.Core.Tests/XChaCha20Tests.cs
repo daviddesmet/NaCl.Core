@@ -25,9 +25,21 @@
         [Test]
         public void EncryptWhenNonceLengthIsInvalidFails()
         {
-            // Arrange, Act & Assert
+            // Arrange
             var cipher = new XChaCha20(new byte[Snuffle.KEY_SIZE_IN_BYTES], 0);
+
+            // Act & Assert
             Assert.Throws<CryptographyException>(() => cipher.Encrypt(new byte[0], new byte[cipher.NonceSizeInBytes() + TestHelpers.ReturnRandomPositiveNegative()]), EXCEPTION_MESSAGE_NONCE_LENGTH);
+        }
+
+        [Test]
+        public void DecryptWhenNonceLengthIsInvalidFails()
+        {
+            // Arrange
+            var cipher = new XChaCha20(new byte[Snuffle.KEY_SIZE_IN_BYTES], 0);
+
+            // Act & Assert
+            Assert.Throws<CryptographyException>(() => cipher.Decrypt(new byte[0], new byte[cipher.NonceSizeInBytes() + TestHelpers.ReturnRandomPositiveNegative()]), EXCEPTION_MESSAGE_NONCE_LENGTH);
         }
 
         [Test]

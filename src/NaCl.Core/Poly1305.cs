@@ -35,6 +35,9 @@
 
         private static void Fill<T>(T[] array, int start, int end, T value)
         {
+            /*
+             * Shouldn't run into any exception since is not exposed to public
+             * 
             if (array is null)
                 throw new ArgumentNullException(nameof(array));
 
@@ -43,6 +46,7 @@
 
             if (end > array.Length)
                 throw new ArgumentOutOfRangeException(nameof(end));
+            */
 
             for (var i = start; i < end; i++)
                 array[i] = value;
