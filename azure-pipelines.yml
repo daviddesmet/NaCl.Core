@@ -49,14 +49,20 @@ jobs:
       DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
       DOTNET_CLI_TELEMETRY_OPTOUT: 1
   - task: PublishTestResults@2
+    displayName: 'Publish Test Results'
     inputs:
       testRunner: VSTest
       testResultsFiles: '**/*.trx'
+    continueOnError: true
+    condition: always()
   - task: PublishCodeCoverageResults@1
+    displayName: 'Publish Coverage Results'
     inputs:
       summaryFileLocation: $(Build.SourcesDirectory)/results/coverage.cobertura.xml
       reportDirectory: $(Build.SourcesDirectory)/results
       codecoverageTool: cobertura
+    continueOnError: true
+    condition: always()
   - task: DotNetCoreCLI@2
     inputs:
       command: publish
@@ -66,6 +72,9 @@ jobs:
       modifyOutputPath: true
       zipAfterPublish: true
   - task: PublishBuildArtifacts@1
+    displayName: 'Publish Logs'
+    continueOnError: true
+    condition: always()
 
 # Run a build on macOS at the same time
 - job: macOS
@@ -85,9 +94,12 @@ jobs:
       DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
       DOTNET_CLI_TELEMETRY_OPTOUT: 1
   - task: PublishTestResults@2
+    displayName: 'Publish Test Results'
     inputs:
       testRunner: VSTest
       testResultsFiles: '**/*.trx'
+    continueOnError: true
+    condition: always()
 
 # Run a build on Windows at the same time
 - job: Windows
