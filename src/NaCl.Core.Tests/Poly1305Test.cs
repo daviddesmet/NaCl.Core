@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Security.Cryptography;
     using System.Text;
 
     using NUnit.Framework;
@@ -16,28 +17,28 @@
         public void ComputeMacWhenKeyLengthIsGreaterThan32Fails()
         {
             // Arrange, Act & Assert
-            Assert.Throws<CryptographyException>(() => Poly1305.ComputeMac(new byte[Poly1305.MAC_KEY_SIZE_IN_BYTES + 1], new byte[0]));
+            Assert.Throws<CryptographicException>(() => Poly1305.ComputeMac(new byte[Poly1305.MAC_KEY_SIZE_IN_BYTES + 1], new byte[0]));
         }
 
         [Test]
         public void ComputeMacWhenKeyLengthIsLessThan32Fails()
         {
             // Arrange, Act & Assert
-            Assert.Throws<CryptographyException>(() => Poly1305.ComputeMac(new byte[Poly1305.MAC_KEY_SIZE_IN_BYTES - 1], new byte[0]));
+            Assert.Throws<CryptographicException>(() => Poly1305.ComputeMac(new byte[Poly1305.MAC_KEY_SIZE_IN_BYTES - 1], new byte[0]));
         }
 
         [Test]
         public void VerifyMacWhenKeyLengthIsGreaterThan32Fails()
         {
             // Arrange, Act & Assert
-            Assert.Throws<CryptographyException>(() => Poly1305.VerifyMac(new byte[Poly1305.MAC_KEY_SIZE_IN_BYTES + 1], new byte[0], new byte[0]));
+            Assert.Throws<CryptographicException>(() => Poly1305.VerifyMac(new byte[Poly1305.MAC_KEY_SIZE_IN_BYTES + 1], new byte[0], new byte[0]));
         }
 
         [Test]
         public void VerifyMacWhenKeyLengthIsLessThan32Fails()
         {
             // Arrange, Act & Assert
-            Assert.Throws<CryptographyException>(() => Poly1305.VerifyMac(new byte[Poly1305.MAC_KEY_SIZE_IN_BYTES - 1], new byte[0], new byte[0]));
+            Assert.Throws<CryptographicException>(() => Poly1305.VerifyMac(new byte[Poly1305.MAC_KEY_SIZE_IN_BYTES - 1], new byte[0], new byte[0]));
         }
 
         [Test]
@@ -68,7 +69,7 @@
             key[0] = 1;
 
             // Act & Assert
-            Assert.Throws<CryptographyException>(() => Poly1305.VerifyMac(key, new byte[] { 1 }, new byte[Poly1305.MAC_TAG_SIZE_IN_BYTES]));
+            Assert.Throws<CryptographicException>(() => Poly1305.VerifyMac(key, new byte[] { 1 }, new byte[Poly1305.MAC_TAG_SIZE_IN_BYTES]));
         }
 
         [Test]

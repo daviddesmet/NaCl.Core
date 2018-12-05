@@ -1,6 +1,8 @@
 ﻿namespace NaCl.Core.Base
 {
     using System;
+    using System.Security.Cryptography;
+
     using Internal;
 
     /// <summary>
@@ -31,7 +33,7 @@
         public override void ProcessKeyStreamBlock(ReadOnlySpan<byte> nonce, int counter, Span<byte> block)
         {
             if (block.Length != BLOCK_SIZE_IN_BYTES)
-                throw new CryptographyException($"The keystream block length is not valid. The length in bytes must be {BLOCK_SIZE_IN_BYTES}.");
+                throw new CryptographicException($"The keystream block length is not valid. The length in bytes must be {BLOCK_SIZE_IN_BYTES}.");
 
             // Creates the initial state.
             // https://tools.ietf.org/html/rfc8439#section-2.3.

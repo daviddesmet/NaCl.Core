@@ -1,6 +1,8 @@
 ﻿namespace NaCl.Core
 {
     using System;
+    using System.Security.Cryptography;
+
     using Internal;
 
     /// <summary>
@@ -69,11 +71,11 @@
         /// <param name="key">The key.</param>
         /// <param name="data">The data.</param>
         /// <returns>System.Byte[].</returns>
-        /// <exception cref="CryptographyException">The key length in bytes must be {MAC_KEY_SIZE_IN_BYTES}</exception>
+        /// <exception cref="CryptographicException">The key length in bytes must be {MAC_KEY_SIZE_IN_BYTES}</exception>
         public static byte[] ComputeMac(in byte[] key, in byte[] data)
         {
             if (key.Length != MAC_KEY_SIZE_IN_BYTES)
-                throw new CryptographyException($"The key length in bytes must be {MAC_KEY_SIZE_IN_BYTES}.");
+                throw new CryptographicException($"The key length in bytes must be {MAC_KEY_SIZE_IN_BYTES}.");
 
             long h0 = 0;
             long h1 = 0;
@@ -213,17 +215,17 @@
         /// <param name="key">The key.</param>
         /// <param name="data">The data.</param>
         /// <param name="mac">The mac.</param>
-        /// <exception cref="CryptographyException"></exception>
+        /// <exception cref="CryptographicException"></exception>
         public static void VerifyMac(in byte[] key, in byte[] data, in byte[] mac)
         {
             //if (ComputeMac(key, data).SequenceEqual(mac))
-            //    throw new CryptographyException(MAC_EXCEPTION_INVALID);
+            //    throw new CryptographicException(MAC_EXCEPTION_INVALID);
 
             //if (!Equal(ComputeMac(key, data), mac))
-            //    throw new CryptographyException(MAC_EXCEPTION_INVALID);
+            //    throw new CryptographicException(MAC_EXCEPTION_INVALID);
 
             if (!CryptoBytes.ConstantTimeEquals(ComputeMac(key, data), mac))
-                throw new CryptographyException(MAC_EXCEPTION_INVALID);
+                throw new CryptographicException(MAC_EXCEPTION_INVALID);
         }
     }
 }

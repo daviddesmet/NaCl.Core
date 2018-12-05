@@ -4,6 +4,7 @@
     using System.Collections.Generic;
     using System.Linq;
     using System.Net.Http;
+    using System.Security.Cryptography;
 
     using NUnit.Framework;
     using Newtonsoft.Json;
@@ -21,7 +22,7 @@
         public void CreateInstanceWhenKeyLengthIsInvalidFails()
         {
             // Arrange, Act & Assert
-            Assert.Throws<CryptographyException>(() => new ChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES + TestHelpers.ReturnRandomPositiveNegative()]));
+            Assert.Throws<CryptographicException>(() => new ChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES + TestHelpers.ReturnRandomPositiveNegative()]));
         }
 
         [Test]
@@ -29,7 +30,7 @@
         {
             // Arrange, Act & Assert
             var aead = new ChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES]);
-            Assert.Throws<CryptographyException>(() => aead.Encrypt(new byte[0], new byte[0], new byte[12 + TestHelpers.ReturnRandomPositiveNegative()]), EXCEPTION_MESSAGE_NONCE_LENGTH);
+            Assert.Throws<CryptographicException>(() => aead.Encrypt(new byte[0], new byte[0], new byte[12 + TestHelpers.ReturnRandomPositiveNegative()]), EXCEPTION_MESSAGE_NONCE_LENGTH);
         }
 
         [Test]
@@ -37,7 +38,7 @@
         {
             // Arrange, Act & Assert
             var aead = new ChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES]);
-            Assert.Throws<CryptographyException>(() => aead.Decrypt(new byte[50], new byte[0], new byte[12 + TestHelpers.ReturnRandomPositiveNegative()]), EXCEPTION_MESSAGE_NONCE_LENGTH);
+            Assert.Throws<CryptographicException>(() => aead.Decrypt(new byte[50], new byte[0], new byte[12 + TestHelpers.ReturnRandomPositiveNegative()]), EXCEPTION_MESSAGE_NONCE_LENGTH);
         }
 
         [Test]
@@ -47,7 +48,7 @@
             var aead = new ChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES]);
 
             // Assert
-            Assert.Throws<CryptographyException>(() => aead.Decrypt(new byte[27], new byte[1]));
+            Assert.Throws<CryptographicException>(() => aead.Decrypt(new byte[27], new byte[1]));
         }
 
         [Test]
@@ -184,7 +185,7 @@
 
                     modified[b] ^= (byte)(1 << bit);
 
-                    Assert.Throws<CryptographyException>(() => aead.Decrypt(modified, aad), SnufflePoly1305.AEAD_EXCEPTION_INVALID_TAG);
+                    Assert.Throws<CryptographicException>(() => aead.Decrypt(modified, aad), SnufflePoly1305.AEAD_EXCEPTION_INVALID_TAG);
                 }
             }
 
@@ -194,7 +195,7 @@
                 var modified = new byte[length];
                 Array.Copy(ciphertext, modified, length);
 
-                Assert.Throws<CryptographyException>(() => aead.Decrypt(modified, aad), SnufflePoly1305.AEAD_EXCEPTION_INVALID_TAG);
+                Assert.Throws<CryptographicException>(() => aead.Decrypt(modified, aad), SnufflePoly1305.AEAD_EXCEPTION_INVALID_TAG);
             }
 
             // Modify AAD
@@ -207,7 +208,7 @@
 
                     modified[b] ^= (byte)(1 << bit);
 
-                    Assert.Throws<CryptographyException>(() => aead.Decrypt(modified, aad), SnufflePoly1305.AEAD_EXCEPTION_INVALID_TAG);
+                    Assert.Throws<CryptographicException>(() => aead.Decrypt(modified, aad), SnufflePoly1305.AEAD_EXCEPTION_INVALID_TAG);
                 }
             }
         }
@@ -254,7 +255,7 @@
                 Assert.IsTrue(CryptoBytes.ConstantTimeEquals(message, decrypted2));
 
                 var badAad = new byte[] { 1, 2, 3 };
-                Assert.Throws<CryptographyException>(() => aead.Decrypt(ciphertext, badAad), SnufflePoly1305.AEAD_EXCEPTION_INVALID_TAG);
+                Assert.Throws<CryptographicException>(() => aead.Decrypt(ciphertext, badAad), SnufflePoly1305.AEAD_EXCEPTION_INVALID_TAG);
 
                 // encrypting with aad equal to null
                 ciphertext = aead.Encrypt(message, null);
@@ -266,7 +267,7 @@
                 //Assert.AreEqual(message, decrypted2);
                 Assert.IsTrue(CryptoBytes.ConstantTimeEquals(message, decrypted2));
 
-                Assert.Throws<CryptographyException>(() => aead.Decrypt(ciphertext, badAad), SnufflePoly1305.AEAD_EXCEPTION_INVALID_TAG);
+                Assert.Throws<CryptographicException>(() => aead.Decrypt(ciphertext, badAad), SnufflePoly1305.AEAD_EXCEPTION_INVALID_TAG);
             }
         }
 
@@ -343,7 +344,7 @@
         {
             var json = GetWycheproofTestVector();
 
-            var vector = JsonConvert.DeserializeObject<WycheproofVector>(json);
+            var vector = JsonConvert.DeserializeObject<WycheproofVector>(json); //Utf8Json.JsonSerializer.Deserialize<WycheproofVector>(json);
 
             var errors = 0;
             foreach (var group in vector.TestGroups)

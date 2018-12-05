@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Security.Cryptography;
 
     using NUnit.Framework;
 
@@ -19,7 +20,7 @@
         public void CreateInstanceWhenKeyLengthIsInvalidFails()
         {
             // Arrange, Act & Assert
-            Assert.Throws<CryptographyException>(() => new XChaCha20(new byte[Snuffle.KEY_SIZE_IN_BYTES + TestHelpers.ReturnRandomPositiveNegative()], 0));
+            Assert.Throws<CryptographicException>(() => new XChaCha20(new byte[Snuffle.KEY_SIZE_IN_BYTES + TestHelpers.ReturnRandomPositiveNegative()], 0));
         }
 
         [Test]
@@ -29,7 +30,7 @@
             var cipher = new XChaCha20(new byte[Snuffle.KEY_SIZE_IN_BYTES], 0);
 
             // Act & Assert
-            Assert.Throws<CryptographyException>(() => cipher.Encrypt(new byte[0], new byte[cipher.NonceSizeInBytes() + TestHelpers.ReturnRandomPositiveNegative()]), EXCEPTION_MESSAGE_NONCE_LENGTH);
+            Assert.Throws<CryptographicException>(() => cipher.Encrypt(new byte[0], new byte[cipher.NonceSizeInBytes() + TestHelpers.ReturnRandomPositiveNegative()]), EXCEPTION_MESSAGE_NONCE_LENGTH);
         }
 
         [Test]
@@ -39,7 +40,7 @@
             var cipher = new XChaCha20(new byte[Snuffle.KEY_SIZE_IN_BYTES], 0);
 
             // Act & Assert
-            Assert.Throws<CryptographyException>(() => cipher.Decrypt(new byte[0], new byte[cipher.NonceSizeInBytes() + TestHelpers.ReturnRandomPositiveNegative()]), EXCEPTION_MESSAGE_NONCE_LENGTH);
+            Assert.Throws<CryptographicException>(() => cipher.Decrypt(new byte[0], new byte[cipher.NonceSizeInBytes() + TestHelpers.ReturnRandomPositiveNegative()]), EXCEPTION_MESSAGE_NONCE_LENGTH);
         }
 
         [Test]
@@ -53,7 +54,7 @@
             var cipher = new XChaCha20(key, 0);
 
             // Assert
-            Assert.Throws<CryptographyException>(() => cipher.Decrypt(new byte[2]));
+            Assert.Throws<CryptographicException>(() => cipher.Decrypt(new byte[2]));
         }
 
         [Test]
@@ -149,7 +150,7 @@
             var block = new byte[Snuffle.BLOCK_SIZE_IN_BYTES];
 
             // Act & Assert
-            Assert.Throws<CryptographyException>(() => cipher.ProcessKeyStreamBlock(nonce, 0, block));
+            Assert.Throws<CryptographicException>(() => cipher.ProcessKeyStreamBlock(nonce, 0, block));
         }
 
         [Test]
@@ -163,7 +164,7 @@
             var block = new byte[Snuffle.BLOCK_SIZE_IN_BYTES];
 
             // Act & Assert
-            Assert.Throws<CryptographyException>(() => cipher.ProcessKeyStreamBlock(nonce, 0, block));
+            Assert.Throws<CryptographicException>(() => cipher.ProcessKeyStreamBlock(nonce, 0, block));
         }
 
         [Test]
@@ -177,7 +178,7 @@
             var block = new byte[0];
 
             // Act & Assert
-            Assert.Throws<CryptographyException>(() => cipher.ProcessKeyStreamBlock(nonce, 0, block));
+            Assert.Throws<CryptographicException>(() => cipher.ProcessKeyStreamBlock(nonce, 0, block));
         }
 
         [Test]

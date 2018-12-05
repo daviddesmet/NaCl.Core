@@ -1,6 +1,7 @@
 ﻿namespace NaCl.Core
 {
     using System;
+    using System.Security.Cryptography;
 
     using Base;
     using Internal;
@@ -24,7 +25,7 @@
         protected override Array16<uint> CreateInitialState(ReadOnlySpan<byte> nonce, int counter)
         {
             if (nonce.IsEmpty || nonce.Length != NonceSizeInBytes())
-                throw new CryptographyException(FormatNonceLengthExceptionMessage(GetType().Name, nonce.Length, NonceSizeInBytes()));
+                throw new CryptographicException(FormatNonceLengthExceptionMessage(GetType().Name, nonce.Length, NonceSizeInBytes()));
 
             // Set the initial state based on https://tools.ietf.org/html/draft-arciszewski-xchacha-01#section-2.3.
             var state = new Array16<uint>();

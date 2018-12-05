@@ -36,11 +36,11 @@
         /// </summary>
         /// <param name="key">The key.</param>
         /// <param name="initialCounter">The initial counter.</param>
-        /// <exception cref="CryptographyException"></exception>
+        /// <exception cref="CryptographicException"></exception>
         public Snuffle(in byte[] key, int initialCounter)
         {
             if (key.Length != KEY_SIZE_IN_BYTES)
-                throw new CryptographyException($"The key length in bytes must be {KEY_SIZE_IN_BYTES}.");
+                throw new CryptographicException($"The key length in bytes must be {KEY_SIZE_IN_BYTES}.");
 
             Key = key;
             InitialCounter = initialCounter;
@@ -71,7 +71,15 @@
         /// </summary>
         /// <param name="plaintext">The plaintext.</param>
         /// <returns>System.Byte[].</returns>
-        /// <exception cref="CryptographyException">plaintext or ciphertext</exception>
+        /// <exception cref="CryptographicException">plaintext or ciphertext</exception>
+        public virtual byte[] Encrypt(byte[] plaintext) => Encrypt((ReadOnlySpan<byte>)plaintext);
+
+        /// <summary>
+        /// Encrypts the specified plaintext.
+        /// </summary>
+        /// <param name="plaintext">The plaintext.</param>
+        /// <returns>System.Byte[].</returns>
+        /// <exception cref="CryptographicException">plaintext or ciphertext</exception>
         public virtual byte[] Encrypt(ReadOnlySpan<byte> plaintext)
         {
             //if (plaintext.Length > int.MaxValue - NonceSizeInBytes())
@@ -94,14 +102,23 @@
         /// <param name="plaintext">The plaintext.</param>
         /// <param name="nonce">The nonce.</param>
         /// <returns>System.Byte[].</returns>
-        /// <exception cref="CryptographyException">plaintext or nonce</exception>
+        /// <exception cref="CryptographicException">plaintext or nonce</exception>
+        public virtual byte[] Encrypt(byte[] plaintext, byte[] nonce) => Encrypt((ReadOnlySpan<byte>)plaintext, (ReadOnlySpan<byte>)nonce);
+
+        /// <summary>
+        /// Encrypts the specified plaintext using the supplied nonce.
+        /// </summary>
+        /// <param name="plaintext">The plaintext.</param>
+        /// <param name="nonce">The nonce.</param>
+        /// <returns>System.Byte[].</returns>
+        /// <exception cref="CryptographicException">plaintext or nonce</exception>
         public virtual byte[] Encrypt(ReadOnlySpan<byte> plaintext, ReadOnlySpan<byte> nonce)
         {
             //if (plaintext.Length > int.MaxValue - NonceSizeInBytes())
             //    throw new CryptographyException($"The {nameof(plaintext)} is too long.");
 
             if (nonce.IsEmpty || nonce.Length != NonceSizeInBytes())
-                throw new CryptographyException(FormatNonceLengthExceptionMessage(GetType().Name, nonce.Length, NonceSizeInBytes()));
+                throw new CryptographicException(FormatNonceLengthExceptionMessage(GetType().Name, nonce.Length, NonceSizeInBytes()));
 
             var ciphertext = new byte[plaintext.Length];
 
@@ -115,11 +132,11 @@
         /// </summary>
         /// <param name="ciphertext">The ciphertext.</param>
         /// <returns>System.Byte[].</returns>
-        /// <exception cref="CryptographyException">ciphertext</exception>
+        /// <exception cref="CryptographicException">ciphertext</exception>
         public virtual byte[] Decrypt(ReadOnlySpan<byte> ciphertext)
         {
             if (ciphertext.Length < NonceSizeInBytes())
-                throw new CryptographyException($"The {nameof(ciphertext)} is too short.");
+                throw new CryptographicException($"The {nameof(ciphertext)} is too short.");
 
             var plaintext = new byte[ciphertext.Length - NonceSizeInBytes()];
 
@@ -134,11 +151,11 @@
         /// <param name="ciphertext">The ciphertext.</param>
         /// <param name="nonce">The nonce.</param>
         /// <returns>System.Byte[].</returns>
-        /// <exception cref="CryptographyException">ciphertext or nonce</exception>
+        /// <exception cref="CryptographicException">ciphertext or nonce</exception>
         public virtual byte[] Decrypt(ReadOnlySpan<byte> ciphertext, ReadOnlySpan<byte> nonce)
         {
             if (nonce.IsEmpty || nonce.Length != NonceSizeInBytes())
-                throw new CryptographyException(FormatNonceLengthExceptionMessage(GetType().Name, nonce.Length, NonceSizeInBytes()));
+                throw new CryptographicException(FormatNonceLengthExceptionMessage(GetType().Name, nonce.Length, NonceSizeInBytes()));
 
             var plaintext = new byte[ciphertext.Length];
 
@@ -154,7 +171,7 @@
         /// <param name="output">The output.</param>
         /// <param name="input">The input.</param>
         /// <param name="offset">The output's starting offset.</param>
-        private void Process(ReadOnlySpan<byte> nonce, byte[] output, ReadOnlySpan<byte> input, int offset = 0)
+        private void Process(ReadOnlySpan<byte> nonce, Span<byte> output, ReadOnlySpan<byte> input, int offset = 0)
         {
             var length = input.Length;
             var numBlocks = (length / BLOCK_SIZE_IN_BYTES) + 1;
@@ -212,13 +229,13 @@
         /// <param name="len">The length.</param>
         /// <param name="offset">The output's starting offset.</param>
         /// <param name="curBlock">The current block number.</param>
-        /// <exception cref="CryptographyException">The combination of blocks, offsets and length to be XORed is out-of-bonds.</exception>
-        private static void Xor(byte[] output, ReadOnlySpan<byte> input, ReadOnlySpan<byte> block, int len, int offset, int curBlock)
+        /// <exception cref="CryptographicException">The combination of blocks, offsets and length to be XORed is out-of-bonds.</exception>
+        private static void Xor(Span<byte> output, ReadOnlySpan<byte> input, ReadOnlySpan<byte> block, int len, int offset, int curBlock)
         {
             var blockOffset = curBlock * BLOCK_SIZE_IN_BYTES;
 
             if (len < 0 || offset < 0 || curBlock < 0 || output.Length < len || (input.Length - blockOffset) < len || block.Length < len)
-                throw new CryptographyException("The combination of blocks, offsets and length to be XORed is out-of-bonds.");
+                throw new CryptographicException("The combination of blocks, offsets and length to be XORed is out-of-bonds.");
 
             for (var i = 0; i < len; i++)
                 output[i + offset + blockOffset] = (byte)(input[i + blockOffset] ^ block[i]);

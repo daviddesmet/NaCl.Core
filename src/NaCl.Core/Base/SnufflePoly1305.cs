@@ -44,17 +44,17 @@
         /// <param name="associatedData">The optional associated data.</param>
         /// <param name="nonce">The optional nonce.</param>
         /// <returns>System.Byte[].</returns>
-        /// <exception cref="CryptographyException">plaintext</exception>
+        /// <exception cref="CryptographicException">plaintext</exception>
         public virtual byte[] Encrypt(byte[] plaintext, byte[] associatedData = null, byte[] nonce = null)
         {
             if (plaintext is null)
                 throw new ArgumentNullException(nameof(plaintext));
 
             //if (plaintext.Length > int.MaxValue - _snuffle.NonceSizeInBytes() - Poly1305.MAC_TAG_SIZE_IN_BYTES)
-            //    throw new CryptographyException($"The {nameof(plaintext)} is too long.");
+            //    throw new CryptographicException($"The {nameof(plaintext)} is too long.");
 
             if (nonce != null && nonce.Length != _snuffle.NonceSizeInBytes())
-                throw new CryptographyException($"The nonce length in bytes must be {_snuffle.NonceSizeInBytes()}.");
+                throw new CryptographicException($"The nonce length in bytes must be {_snuffle.NonceSizeInBytes()}.");
 
             var randomNonce = false;
             if (nonce is null)
@@ -90,7 +90,7 @@
         /// <param name="nonce">The optional nonce.</param>
         /// <returns>System.Byte[].</returns>
         /// <exception cref="ArgumentNullException">ciphertext</exception>
-        /// <exception cref="CryptographyException">
+        /// <exception cref="CryptographicException">
         /// ciphertext
         /// or
         /// AEAD Bad Tag Exception
@@ -101,7 +101,7 @@
                 throw new ArgumentNullException(nameof(ciphertext));
 
             if (ciphertext.Length + (nonce is null ? 0 : nonce.Length) < _snuffle.NonceSizeInBytes() + Poly1305.MAC_TAG_SIZE_IN_BYTES)
-                throw new CryptographyException($"The {nameof(ciphertext)} is too short.");
+                throw new CryptographicException($"The {nameof(ciphertext)} is too short.");
 
             var limit = ciphertext.Length - Poly1305.MAC_TAG_SIZE_IN_BYTES;
 
@@ -109,7 +109,7 @@
             Array.Copy(ciphertext, limit, tag, 0, tag.Length);
 
             if (nonce != null && nonce.Length != _snuffle.NonceSizeInBytes())
-                throw new CryptographyException($"The nonce length in bytes must be {_snuffle.NonceSizeInBytes()}.");
+                throw new CryptographicException($"The nonce length in bytes must be {_snuffle.NonceSizeInBytes()}.");
 
             var randomNonce = false;
             if (nonce is null)
@@ -131,7 +131,7 @@
             }
             catch (Exception ex)
             {
-                throw new CryptographyException(AEAD_EXCEPTION_INVALID_TAG, ex);
+                throw new CryptographicException(AEAD_EXCEPTION_INVALID_TAG, ex);
             }
 
             return _snuffle.Decrypt(ciphertext.Skip(randomNonce ? nonce.Length : 0).Take(limit).ToArray(), nonce);
