@@ -15,6 +15,11 @@ trigger:
     include:
     - src/*
 
+# To be added in the future when Azure DevOps supports this feature
+# only trigger pull request builds for the master branch
+# pr:
+# - master
+
 # We can run multiple jobs in parallel. For this project
 # we are running Linux, Windows, and macOS jobs. For syntax details
 # see https://docs.microsoft.com/en-us/azure/devops/pipelines/process/phases
