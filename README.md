@@ -43,7 +43,7 @@ Daily NuGet builds of the project are also available in the [MyGet](https://www.
 
 ## Usage
 
-### Symmetric Key Encryption
+#### Symmetric Key Encryption
 
 ```csharp
 // Create the primitive
@@ -56,7 +56,7 @@ var ciphertext = aead.Encrypt(plaintext, aad, nonce);
 var output = aead.Decrypt(ciphertext, aad, nonce);
 ```
 
-### MAC (Message Authentication Code)
+#### MAC (Message Authentication Code)
 
 ```csharp
 // Use the primitive to compute a tag
