@@ -10,7 +10,7 @@
 
 **NaCl.Core** is a managed-only cryptography library for [.NET](https://dot.net) which provides modern cryptographic _primitives_.
 
-Currently supported:
+#### Currently supported:
 
 | Crypto | Description |
 |--------|-------------|
@@ -71,7 +71,7 @@ Poly1305.VerifyMac(key, data, tag);
 [![Azure DevOps tests](https://img.shields.io/azure-devops/tests/idaviddesmet/NaCl.Core/1.svg?compact_message=)](https://dev.azure.com/idaviddesmet/NaCl.Core/_build/latest?definitionId=1)
 [![Azure DevOps coverage](https://img.shields.io/azure-devops/coverage/idaviddesmet/NaCl.Core/1.svg)](https://dev.azure.com/idaviddesmet/NaCl.Core/_build/latest?definitionId=1)
 
-- Includes the mandatory RFC test vectors.
+- Includes the mandatory RFC [test vectors](https://github.com/idaviddesmet/NaCl.Core/tree/master/src/NaCl.Core.Tests).
 - [Project Wycheproof](https://github.com/google/wycheproof) by members of Google Security Team, for testing against known attacks (when applicable).
 
 ## Learn More
