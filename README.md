@@ -43,7 +43,7 @@ Daily NuGet builds of the project are also available in the [MyGet](https://www.
 
 ## Usage
 
-![](https://img.shields.io/nuget/dt/NaCl.Core.svg)
+[![](https://img.shields.io/nuget/dt/NaCl.Core.svg)](https://www.nuget.org/packages/NaCl.Core/)
 
 #### Symmetric Key Encryption
 
