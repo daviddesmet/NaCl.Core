@@ -3,7 +3,6 @@
 [![Build Status](https://dev.azure.com/idaviddesmet/NaCl.Core/_apis/build/status/idaviddesmet.NaCl.Core)](https://dev.azure.com/idaviddesmet/NaCl.Core/_build/latest?definitionId=1)
 [![Build status](https://ci.appveyor.com/api/projects/status/2k3cxt2e1r2jyinx?svg=true)](https://ci.appveyor.com/project/idaviddesmet/nacl-core)
 [![Build Status](https://travis-ci.org/idaviddesmet/NaCl.Core.svg?branch=master)](https://travis-ci.org/idaviddesmet/NaCl.Core)
-[![License](https://img.shields.io/github/license/idaviddesmet/NaCl.Core.svg)](https://github.com/idaviddesmet/NaCl.Core/blob/master/LICENSE)
 [![Maintenance](https://img.shields.io/maintenance/yes/2019.svg)](https://github.com/idaviddesmet/NaCl.Core)
 [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/idaviddesmet/NaCl.Core/issues)
 
@@ -76,6 +75,8 @@ Poly1305.VerifyMac(key, data, tag);
 - [Project Wycheproof](https://github.com/google/wycheproof) by members of Google Security Team, for testing against known attacks (when applicable).
 
 ## Learn More
+
+[![License](https://img.shields.io/github/license/idaviddesmet/NaCl.Core.svg)](https://github.com/idaviddesmet/NaCl.Core/blob/master/LICENSE)
 
 - [ChaCha, a variant of Salsa20](http://cr.yp.to/chacha/chacha-20080128.pdf) by Daniel J. Bernstein.
 - [The Poly1305-AES message-authentication code](http://cr.yp.to/mac/poly1305-20050329.pdf) by Daniel J. Bernstein.
