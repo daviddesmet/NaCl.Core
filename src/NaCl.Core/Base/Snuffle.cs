@@ -47,7 +47,7 @@
         }
 
         /// <summary>
-        /// Process the key stream block <paramref name="block"> from <paramref name="nonce"> and <paramref name="counter">.
+        /// Process the keystream block <paramref name="block"> from <paramref name="nonce"> and <paramref name="counter">.
         ///
         /// From this function, the Snuffle encryption function can be constructed using the counter
         /// mode of operation. For example, the ChaCha20 block function and how it can be used to

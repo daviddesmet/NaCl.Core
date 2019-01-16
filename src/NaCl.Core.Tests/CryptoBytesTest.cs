@@ -237,6 +237,7 @@
 
         #region Argument Validation
 
+        /*
         [Test]
         public void ConstantTimeEqualsXMustNotBeNull()
         {
@@ -248,6 +249,7 @@
         {
             Assert.Throws<ArgumentNullException>(() => CryptoBytes.ConstantTimeEquals(new byte[1], null));
         }
+        */
 
         [Test]
         public void ConstantTimeEqualsXAndYMustHaveSameLength()

@@ -18,6 +18,7 @@
 
         private byte[] key;
         private byte[] aad;
+        private byte[] nonce;
         private byte[] message;
         private ChaCha20Poly1305 aead;
 
@@ -42,6 +43,9 @@
             aad = new byte[16];
             rnd.NextBytes(aad);
 
+            nonce = new byte[12];
+            rnd.NextBytes(nonce);
+
             aead = new ChaCha20Poly1305(key);
         }
 
@@ -50,13 +54,17 @@
         public byte[] Encrypt() => aead.Encrypt(message, aad);
 
         [Benchmark]
-        [BenchmarkCategory("Decryption")]
-        [ArgumentsSource(nameof(TestVectors))]
-        public byte[] Decrypt(Tests.Vectors.Rfc8439TestVector test)
-        {
-            var aead = new ChaCha20Poly1305(test.Key);
-            return aead.Decrypt(CryptoBytes.Combine(test.Nonce, test.CipherText, test.Tag), test.Aad);
-        }
+        [BenchmarkCategory("Encryption with Nonce")]
+        public byte[] EncryptWithNonce() => aead.Encrypt(message, aad, nonce);
+
+        // [Benchmark]
+        // [BenchmarkCategory("Decryption")]
+        // [ArgumentsSource(nameof(TestVectors))]
+        // public byte[] Decrypt(Tests.Vectors.Rfc8439TestVector test)
+        // {
+        //     var aead = new ChaCha20Poly1305(test.Key);
+        //     return aead.Decrypt(CryptoBytes.Combine(test.Nonce, test.CipherText, test.Tag), test.Aad);
+        // }
 
         public IEnumerable<object> TestVectors()
         {

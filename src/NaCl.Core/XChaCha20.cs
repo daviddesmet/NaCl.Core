@@ -1,4 +1,4 @@
-﻿namespace NaCl.Core
+namespace NaCl.Core
 {
     using System;
     using System.Security.Cryptography;
@@ -33,7 +33,7 @@
             // The first four words (0-3) are constants: 0x61707865, 0x3320646e, 0x79622d32, 0x6b206574.
             // The next eight words (4-11) are taken from the 256-bit key in little-endian order, in 4-byte chunks; and the first 16 bytes of the 24-byte nonce to obtain the subkey.
             SetSigma(ref state);
-            SetKey(ref state, HChaCha20(Key, nonce));
+            SetKey(ref state, HChaCha20(nonce));
 
             // Word 12 is a block counter.
             state.x12 = (uint)counter;

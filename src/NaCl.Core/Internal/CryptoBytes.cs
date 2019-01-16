@@ -18,14 +18,10 @@
             return rv;
         }
 
-        public static bool ConstantTimeEquals(byte[] x, byte[] y)
+        public static bool ConstantTimeEquals(byte[] x, byte[] y) => ConstantTimeEquals((ReadOnlySpan<byte>)x, (ReadOnlySpan<byte>)y);
+
+        public static bool ConstantTimeEquals(ReadOnlySpan<byte> x, ReadOnlySpan<byte> y)
         {
-            if (x is null)
-                throw new ArgumentNullException(nameof(x));
-
-            if (y is null)
-                throw new ArgumentNullException(nameof(y));
-
             if (x.Length != y.Length)
                 throw new ArgumentException("x.Length must equal y.Length");
 
@@ -71,7 +67,7 @@
             return InternalConstantTimeEquals(x, xOffset, y, yOffset, length) != 0;
         }
 
-        private static uint InternalConstantTimeEquals(byte[] x, int xOffset, byte[] y, int yOffset, int length)
+        private static uint InternalConstantTimeEquals(ReadOnlySpan<byte> x, int xOffset, ReadOnlySpan<byte> y, int yOffset, int length)
         {
             var differentbits = 0;
             for (var i = 0; i < length; i++)

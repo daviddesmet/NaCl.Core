@@ -1,4 +1,4 @@
-﻿namespace NaCl.Core.Tests
+namespace NaCl.Core.Tests
 {
     using System;
     using System.Collections.Generic;
@@ -210,6 +210,7 @@
             }
         }
 
+        /*
         [Test]
         public void NullPlaintextOrCiphertextFails()
         {
@@ -225,9 +226,10 @@
             Assert.Throws<ArgumentNullException>(() => aead.Decrypt(null, aad));
             Assert.Throws<ArgumentNullException>(() => aead.Decrypt(null, null));
         }
+        */
 
         [Test]
-        public void EmptyAssociatedDataFails()
+        public void ModifiedAssociatedDataFails()
         {
             var rnd = new Random();
             var key = new byte[Snuffle.KEY_SIZE_IN_BYTES];

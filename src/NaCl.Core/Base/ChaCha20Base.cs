@@ -11,7 +11,7 @@
     /// <seealso cref="NaCl.Core.Internal.Snuffle" />
     public abstract class ChaCha20Base : Snuffle
     {
-        private static readonly byte[] ZERO_16_BYTES = new byte[16];
+        private readonly byte[] ZERO_16_BYTES = new byte[16];
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ChaCha20Base"/> class.
@@ -68,9 +68,18 @@
             ByteIntegerConverter.WriteLittleEndian32(block, 0, ref state);
         }
 
-        public static byte[] HChaCha20(in byte[] key) => HChaCha20(key, ZERO_16_BYTES);
+        /// <summary>
+        /// Process a pseudorandom keystream block, converting the key and part of the nonce into a subkey, and the remainder of the nonce.
+        /// </summary>
+        /// <returns>System.Byte[].</returns>
+        public byte[] HChaCha20() => HChaCha20(ZERO_16_BYTES);
 
-        public static byte[] HChaCha20(in byte[] key, in byte[] nonce)
+        /// <summary>
+        /// Process a pseudorandom keystream block, converting the key and part of the <paramref name="nonce"> into a subkey, and the remainder of the nonce.
+        /// </summary>
+        /// <param name="nonce">The nonce.</param>
+        /// <returns>System.Byte[].</returns>
+        public byte[] HChaCha20(ReadOnlySpan<byte> nonce)
         {
             // See https://tools.ietf.org/html/draft-arciszewski-xchacha-01#section-2.2.
 
@@ -78,40 +87,9 @@
 
             // Set ChaCha20 constant
             SetSigma(ref state);
-
+            
             // Set 256-bit Key
-            SetKey(ref state, key);
-
-            // Set 128-bit Nonce
-            state.x12 = ByteIntegerConverter.LoadLittleEndian32(nonce, 0);
-            state.x13 = ByteIntegerConverter.LoadLittleEndian32(nonce, 4);
-            state.x14 = ByteIntegerConverter.LoadLittleEndian32(nonce, 8);
-            state.x15 = ByteIntegerConverter.LoadLittleEndian32(nonce, 12);
-
-            // Block function
-            ShuffleState(ref state);
-
-            state.x4 = state.x12;
-            state.x5 = state.x13;
-            state.x6 = state.x14;
-            state.x7 = state.x15;
-
-            var output = new byte[KEY_SIZE_IN_BYTES]; // TODO: Remove allocation
-            ByteIntegerConverter.Array8StoreLittleEndian32(output, 0, ref state);
-            return output;
-        }
-
-        public static byte[] HChaCha20(in byte[] key, ReadOnlySpan<byte> nonce)
-        {
-            // See https://tools.ietf.org/html/draft-arciszewski-xchacha-01#section-2.2.
-
-            var state = new Array16<uint>();
-
-            // Set ChaCha20 constant
-            SetSigma(ref state);
-
-            // Set 256-bit Key
-            SetKey(ref state, key);
+            SetKey(ref state, Key);
 
             // Set 128-bit Nonce
             state.x12 = ByteIntegerConverter.LoadLittleEndian32(nonce, 0);
@@ -285,7 +263,7 @@
             state.x3 = SIGMA[3];
         }
 
-        protected static void SetKey(ref Array16<uint> state, byte[] key)
+        protected static void SetKey(ref Array16<uint> state, ReadOnlySpan<byte> key)
         {
             state.x4 = ByteIntegerConverter.LoadLittleEndian32(key, 0);
             state.x5 = ByteIntegerConverter.LoadLittleEndian32(key, 4);

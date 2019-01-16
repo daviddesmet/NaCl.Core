@@ -1,4 +1,4 @@
-﻿namespace NaCl.Core.Internal
+namespace NaCl.Core.Internal
 {
     using System;
 
@@ -19,10 +19,10 @@
         public static uint LoadLittleEndian32(byte[] buf, int offset)
         {
             return
-                (uint)(buf[offset + 0])
-                | (((uint)(buf[offset + 1])) << 8)
-                | (((uint)(buf[offset + 2])) << 16)
-                | (((uint)(buf[offset + 3])) << 24);
+                (uint)buf[offset + 0]
+                | (((uint)buf[offset + 1]) << 8)
+                | (((uint)buf[offset + 2]) << 16)
+                | (((uint)buf[offset + 3]) << 24);
         }
 
         /// <summary>
@@ -34,10 +34,10 @@
         public static uint LoadLittleEndian32(ReadOnlySpan<byte> buf, int offset)
         {
             return
-                (uint)(buf[offset + 0])
-                | (((uint)(buf[offset + 1])) << 8)
-                | (((uint)(buf[offset + 2])) << 16)
-                | (((uint)(buf[offset + 3])) << 24);
+                (uint)buf[offset + 0]
+                | (((uint)buf[offset + 1]) << 8)
+                | (((uint)buf[offset + 2]) << 16)
+                | (((uint)buf[offset + 3]) << 24);
         }
 
         /// <summary>

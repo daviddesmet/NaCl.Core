@@ -1,4 +1,4 @@
-﻿namespace NaCl.Core.Benchmarks
+namespace NaCl.Core.Benchmarks
 {
     using System;
     using System.Collections.Generic;
@@ -56,7 +56,7 @@
         public byte[] Decrypt(Tests.Vectors.Rfc8439TestVector test)
         {
             var cipher = new ChaCha20(test.Key, test.InitialCounter);
-            return cipher.Decrypt(CryptoBytes.Combine(test.Nonce, test.CipherText).AsSpan());
+            return cipher.Decrypt(CryptoBytes.Combine(test.Nonce, test.CipherText));
         }
 
         public IEnumerable<object> TestVectors()

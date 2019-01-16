@@ -1,4 +1,4 @@
-﻿namespace NaCl.Core.Tests
+namespace NaCl.Core.Tests
 {
     using System;
     using System.Collections.Generic;
@@ -187,8 +187,10 @@
             // Arrange
             foreach (var test in HChaCha20TestVector.HChaCha20TestVectors)
             {
+                var cipher = new XChaCha20(test.Key, 0);
+
                 // Act
-                var output = XChaCha20.HChaCha20(test.Key, test.Input);
+                var output = cipher.HChaCha20(test.Input);
 
                 // Assert
                 //Assert.That(output, Is.EqualTo(test.Output));
