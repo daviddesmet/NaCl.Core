@@ -246,7 +246,7 @@ namespace NaCl.Core.Tests
 
             // Act
             var output = XChaCha20.HChaCha20(key, nonce);
-            var hex = CryptoBytes.ToHexStringLower(output); // is equal to 'expected' on the first and last rows
+            var hex = CryptoBytes.ToHexStringLower(output); // is equal to 'expected' on the first and last rows...
 
             // Assert
             //var expected = new uint[8]
