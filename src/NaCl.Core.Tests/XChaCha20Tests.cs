@@ -34,6 +34,16 @@ namespace NaCl.Core.Tests
         }
 
         [Test]
+        public void EncryptWhenNonceIsEmptyFails()
+        {
+            // Arrange
+            var cipher = new XChaCha20(new byte[Snuffle.KEY_SIZE_IN_BYTES], 0);
+
+            // Act & Assert
+            Assert.Throws<CryptographicException>(() => cipher.Encrypt(new byte[0], new byte[0]), EXCEPTION_MESSAGE_NONCE_LENGTH);
+        }
+
+        [Test]
         public void DecryptWhenNonceLengthIsInvalidFails()
         {
             // Arrange
@@ -41,6 +51,16 @@ namespace NaCl.Core.Tests
 
             // Act & Assert
             Assert.Throws<CryptographicException>(() => cipher.Decrypt(new byte[0], new byte[cipher.NonceSizeInBytes() + TestHelpers.ReturnRandomPositiveNegative()]), EXCEPTION_MESSAGE_NONCE_LENGTH);
+        }
+
+        [Test]
+        public void DecryptWhenNonceIsEmptyFails()
+        {
+            // Arrange
+            var cipher = new XChaCha20(new byte[Snuffle.KEY_SIZE_IN_BYTES], 0);
+
+            // Act & Assert
+            Assert.Throws<CryptographicException>(() => cipher.Decrypt(new byte[0], new byte[0]), EXCEPTION_MESSAGE_NONCE_LENGTH);
         }
 
         [Test]

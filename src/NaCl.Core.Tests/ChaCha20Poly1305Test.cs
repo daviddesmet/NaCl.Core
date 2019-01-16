@@ -34,11 +34,27 @@ namespace NaCl.Core.Tests
         }
 
         [Test]
+        public void EncryptWhenNonceIsEmptyFails()
+        {
+            // Arrange, Act & Assert
+            var aead = new ChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES]);
+            Assert.Throws<CryptographicException>(() => aead.Encrypt(new byte[0], new byte[0], new byte[0]), EXCEPTION_MESSAGE_NONCE_LENGTH);
+        }
+
+        [Test]
         public void DecryptWhenNonceLengthIsInvalidFails()
         {
             // Arrange, Act & Assert
             var aead = new ChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES]);
             Assert.Throws<CryptographicException>(() => aead.Decrypt(new byte[50], new byte[0], new byte[12 + TestHelpers.ReturnRandomPositiveNegative()]), EXCEPTION_MESSAGE_NONCE_LENGTH);
+        }
+
+        [Test]
+        public void DecryptWhenNonceIsEmptyFails()
+        {
+            // Arrange, Act & Assert
+            var aead = new ChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES]);
+            Assert.Throws<CryptographicException>(() => aead.Decrypt(new byte[50], new byte[0], new byte[0]), EXCEPTION_MESSAGE_NONCE_LENGTH);
         }
 
         [Test]
@@ -49,6 +65,16 @@ namespace NaCl.Core.Tests
 
             // Assert
             Assert.Throws<CryptographicException>(() => aead.Decrypt(new byte[27], new byte[1]));
+        }
+
+        [Test]
+        public void DecryptWithNonceWhenCiphertextIsTooShortFails()
+        {
+            // Arrange & Act
+            var aead = new ChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES]);
+
+            // Assert
+            Assert.Throws<CryptographicException>(() => aead.Decrypt(new byte[27], new byte[1], new byte[1]));
         }
 
         [Test]

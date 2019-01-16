@@ -57,14 +57,23 @@
         [BenchmarkCategory("Encryption with Nonce")]
         public byte[] EncryptWithNonce() => aead.Encrypt(message, aad, nonce);
 
-        // [Benchmark]
-        // [BenchmarkCategory("Decryption")]
-        // [ArgumentsSource(nameof(TestVectors))]
-        // public byte[] Decrypt(Tests.Vectors.Rfc8439TestVector test)
-        // {
-        //     var aead = new ChaCha20Poly1305(test.Key);
-        //     return aead.Decrypt(CryptoBytes.Combine(test.Nonce, test.CipherText, test.Tag), test.Aad);
-        // }
+        [Benchmark]
+        [BenchmarkCategory("Decryption")]
+        [ArgumentsSource(nameof(TestVectors))]
+        public byte[] Decrypt(Tests.Vectors.Rfc8439TestVector test)
+        {
+            var aead = new ChaCha20Poly1305(test.Key);
+            return aead.Decrypt(CryptoBytes.Combine(test.Nonce, test.CipherText, test.Tag), test.Aad);
+        }
+
+        [Benchmark]
+        [BenchmarkCategory("Decryption with Nonce")]
+        [ArgumentsSource(nameof(TestVectors))]
+        public byte[] DecryptWithNonce(Tests.Vectors.Rfc8439TestVector test)
+        {
+            var aead = new ChaCha20Poly1305(test.Key);
+            return aead.Decrypt(CryptoBytes.Combine(test.CipherText, test.Tag), test.Aad, test.Nonce);
+        }
 
         public IEnumerable<object> TestVectors()
         {
