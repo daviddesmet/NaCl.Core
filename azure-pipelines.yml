@@ -126,5 +126,5 @@ jobs:
       runInParallel: true
       codeCoverageEnabled: True
       runSettingsFile: 'src/CodeCoverage.runsettings'
-      platform: '$(buildPlatform)'
+#      platform: '$(buildPlatform)'
       configuration: '$(buildConfiguration)'
