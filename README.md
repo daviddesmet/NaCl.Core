@@ -18,7 +18,7 @@
 | **XChaCha20** | Based on ChaCha20 IETF with extended nonce (192-bit instead of 96-bit) |
 | **Poly1305** | A state-of-the-art secret-key message-authentication code (MAC) based on [RFC7539](https://tools.ietf.org/html/rfc7539) |
 | **ChaCha20Poly1305** | An Authenticated Encryption with Associated Data (AEAD) algorithm; IETF variant as defined in [RFC8439](https://tools.ietf.org/html/rfc8439) and in its predecessor [RFC7539](https://tools.ietf.org/html/rfc7539) |
-| **XChaCha20Poly1305** | A variant of ChaCha20-Poly1305 that utilizes the XChaCha20 construction in place of ChaCha20; as defined in the [RFC Draft](https://tools.ietf.org/html/draft-arciszewski-xchacha-02) |
+| **XChaCha20Poly1305** | A variant of ChaCha20-Poly1305 that utilizes the XChaCha20 construction in place of ChaCha20; as defined in the [RFC Draft](https://tools.ietf.org/html/draft-arciszewski-xchacha-03) |
 
 ## Installation
 
