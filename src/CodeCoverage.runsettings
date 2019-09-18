@@ -13,6 +13,8 @@
               <Exclude>
                 <ModulePath>.*Tests.dll$</ModulePath>
                 <ModulePath>.*TestAdapter.dll$</ModulePath>
+                <!-- Exclude methods in a class or namespace named Tests: -->
+                <ModulePath>.*\.Tests\..*</ModulePath>
               </Exclude>
             </ModulePaths>
             <!-- We recommend you do not change the following values: -->
