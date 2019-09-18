@@ -36,6 +36,7 @@ jobs:
 
   variables:
     buildConfiguration: 'Release'
+    disable.coverage.autogenerate: 'true'
 
   # The steps to run to execute the build.
   steps:
@@ -79,8 +80,6 @@ jobs:
       reportDirectory: '$(Build.SourcesDirectory)/TestResults'
     continueOnError: true
     condition: always()
-    env:
-      disable.coverage.autogenerate: 'true'
   - task: DotNetCoreCLI@2
     inputs:
       command: publish
