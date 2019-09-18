@@ -39,6 +39,12 @@ jobs:
 
   # The steps to run to execute the build.
   steps:
+  - task: UseDotNet@2
+    displayName: 'Use .NET Core sdk'
+    inputs:
+      packageType: sdk
+      version: 2.2.301
+      installationPath: $(Agent.ToolsDirectory)/dotnet
   - script: dotnet build src --configuration $(buildConfiguration)
     displayName: 'dotnet build $(buildConfiguration)'
   - script: |
