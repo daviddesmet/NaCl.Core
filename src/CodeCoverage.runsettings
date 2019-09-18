@@ -15,6 +15,8 @@
                 <ModulePath>.*TestAdapter.dll$</ModulePath>
                 <!-- Exclude methods in a class or namespace named Tests: -->
                 <ModulePath>.*\.Tests\..*</ModulePath>
+                <!-- Exclude assemblies with "test" in their file name, ignoring their path: -->
+                <ModulePath>.*\\[^\\]*Test[^\\]*\.dll</ModulePath>
               </Exclude>
             </ModulePaths>
             <!-- We recommend you do not change the following values: -->
