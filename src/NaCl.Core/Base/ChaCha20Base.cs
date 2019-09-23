@@ -68,6 +68,18 @@
             ByteIntegerConverter.WriteLittleEndian32(block, 0, ref state);
         }
 
+#if NETCOREAPP3_0
+        public override unsafe void ProcessStream(ReadOnlySpan<byte> nonce, Span<byte> output, ReadOnlySpan<byte> input, int initialCounter, int offset = 0)
+        {
+            var state = ByteIntegerConverter.Array16ToArray(CreateInitialState(nonce, initialCounter));
+            fixed(uint* x = state)
+            fixed (byte* m = input, c = output.Slice(offset))
+            {
+                ChaCha20BaseIntrinsics.ChaCha20(x, m, c, (ulong)input.Length);
+            }
+        }
+#endif
+
         /// <summary>
         /// Process a pseudorandom keystream block, converting the key and part of the nonce into a subkey, and the remainder of the nonce.
         /// </summary>
@@ -87,7 +99,7 @@
 
             // Set ChaCha20 constant
             SetSigma(ref state);
-            
+
             // Set 256-bit Key
             SetKey(ref state, Key);
 

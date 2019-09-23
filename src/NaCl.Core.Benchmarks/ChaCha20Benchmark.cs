@@ -1,4 +1,4 @@
-namespace NaCl.Core.Benchmarks
+﻿namespace NaCl.Core.Benchmarks
 {
     using System;
     using System.Collections.Generic;
@@ -10,7 +10,7 @@ namespace NaCl.Core.Benchmarks
     using BenchmarkDotNet.Attributes;
 
     [BenchmarkCategory("Stream Cipher")]
-    [CoreJob(baseline: true), ClrJob/*, MonoJob*/]
+    [Config(typeof(MultipleRuntimes))]
     [MemoryDiagnoser]
     [RPlotExporter, RankColumn]
     public class ChaCha20Benchmark
@@ -23,12 +23,12 @@ namespace NaCl.Core.Benchmarks
         private ChaCha20 cipher;
 
         [Params(
-            (int)1E+2,  // 100 bytes
-            (int)1E+3,  // 1 000 bytes = 1 KB
-            (int)1E+4,  // 10 000 bytes = 10 KB
-            (int)1E+5,  // 100 000 bytes = 100 KB
-            (int)1E+6,  // 1 000 000 bytes = 1 MB
-            (int)1E+7)] // 10 000 000 bytes = 10 MB
+            (int)1E+2)]  // 100 bytes
+            //(int)1E+3,  // 1 000 bytes = 1 KB
+            //(int)1E+4)]  // 10 000 bytes = 10 KB
+            //(int)1E+5,  // 100 000 bytes = 100 KB
+            //(int)1E+6,  // 1 000 000 bytes = 1 MB
+            //(int)1E+7)] // 10 000 000 bytes = 10 MB
         public int Size { get; set; }
 
         [GlobalSetup]
@@ -50,14 +50,14 @@ namespace NaCl.Core.Benchmarks
         [BenchmarkCategory("Encryption")]
         public byte[] Encrypt() => cipher.Encrypt(message, nonce);
 
-        [Benchmark]
-        [BenchmarkCategory("Decryption")]
-        [ArgumentsSource(nameof(TestVectors))]
-        public byte[] Decrypt(Tests.Vectors.Rfc8439TestVector test)
-        {
-            var cipher = new ChaCha20(test.Key, test.InitialCounter);
-            return cipher.Decrypt(CryptoBytes.Combine(test.Nonce, test.CipherText));
-        }
+        //[Benchmark]
+        //[BenchmarkCategory("Decryption")]
+        //[ArgumentsSource(nameof(TestVectors))]
+        //public byte[] Decrypt(Tests.Vectors.Rfc8439TestVector test)
+        //{
+        //    var cipher = new ChaCha20(test.Key, test.InitialCounter);
+        //    return cipher.Decrypt(CryptoBytes.Combine(test.Nonce, test.CipherText));
+        //}
 
         public IEnumerable<object> TestVectors()
         {
