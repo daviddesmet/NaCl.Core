@@ -502,43 +502,45 @@ namespace NaCl.Core.Base
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static unsafe void OneQuad(ref Vector128<uint> x_A, ref Vector128<uint> x_B, ref Vector128<uint> x_C, ref Vector128<uint> x_D, ref Vector128<uint> origA, ref Vector128<uint> origB, ref Vector128<uint> origC, ref Vector128<uint> origD, byte* m, byte* c)
         {
+            Vector128<uint> t_A, t_B, t_C, t_D, t0, t1, t2, t3;
             x_A = Sse2.Add(x_A, origA);
             x_B = Sse2.Add(x_B, origB);
             x_C = Sse2.Add(x_C, origC);
             x_D = Sse2.Add(x_D, origD);
-            Vector128<uint> vector128 = Sse2.UnpackLow(x_A, x_B);
-            Vector128<uint> vector1281 = Sse2.UnpackLow(x_C, x_D);
-            Vector128<uint> vector1282 = Sse2.UnpackHigh(x_A, x_B);
-            Vector128<uint> vector1283 = Sse2.UnpackHigh(x_C, x_D);
-            x_A = Vector128.AsUInt32<ulong>(Sse2.UnpackLow(Vector128.AsUInt64<uint>(vector128), Vector128.AsUInt64<uint>(vector1281)));
-            x_B = Vector128.AsUInt32<ulong>(Sse2.UnpackHigh(Vector128.AsUInt64<uint>(vector128), Vector128.AsUInt64<uint>(vector1281)));
-            x_C = Vector128.AsUInt32<ulong>(Sse2.UnpackLow(Vector128.AsUInt64<uint>(vector1282), Vector128.AsUInt64<uint>(vector1283)));
-            x_D = Vector128.AsUInt32<ulong>(Sse2.UnpackHigh(Vector128.AsUInt64<uint>(vector1282), Vector128.AsUInt64<uint>(vector1283)));
-            Vector128<uint> vector1284 = Vector128.AsUInt32<byte>(Sse2.Xor(Vector128.AsByte<uint>(x_A), Sse2.LoadVector128(m)));
-            Sse2.Store(c, Vector128.AsByte<uint>(vector1284));
-            Vector128<uint> vector1285 = Vector128.AsUInt32<byte>(Sse2.Xor(Vector128.AsByte<uint>(x_B), Sse2.LoadVector128(m + 64)));
-            Sse2.Store(c + 64, Vector128.AsByte<uint>(vector1285));
-            Vector128<uint> vector1286 = Vector128.AsUInt32<byte>(Sse2.Xor(Vector128.AsByte<uint>(x_C), Sse2.LoadVector128(m + 128)));
-            Sse2.Store(c + 128, Vector128.AsByte<uint>(vector1286));
-            Vector128<uint> vector1287 = Vector128.AsUInt32<byte>(Sse2.Xor(Vector128.AsByte<uint>(x_D), Sse2.LoadVector128(m + 192)));
-            Sse2.Store(c + 192, Vector128.AsByte<uint>(vector1287));
+            t_A = Sse2.UnpackLow(x_A, x_B);
+            t_B = Sse2.UnpackLow(x_C, x_D);
+            t_C = Sse2.UnpackHigh(x_A, x_B);
+            t_D = Sse2.UnpackHigh(x_C, x_D);
+            x_A = Sse2.UnpackLow(t_A.AsUInt64(), t_B.AsUInt64()).AsUInt32();
+            x_B = Sse2.UnpackHigh(t_A.AsUInt64(), t_B.AsUInt64()).AsUInt32();
+            x_C = Sse2.UnpackLow(t_C.AsUInt64(), t_D.AsUInt64()).AsUInt32();
+            x_D = Sse2.UnpackHigh(t_C.AsUInt64(), t_D.AsUInt64()).AsUInt32();
+            t0 = Sse2.Xor(x_A.AsByte(), Sse2.LoadVector128(m)).AsUInt32();
+            Sse2.Store(c, t0.AsByte());
+            t1 = Sse2.Xor(x_B.AsByte(), Sse2.LoadVector128(m + 64)).AsUInt32();
+            Sse2.Store(c + 64, t1.AsByte());
+            t2 = Sse2.Xor(x_C.AsByte(), Sse2.LoadVector128(m + 128)).AsUInt32();
+            Sse2.Store(c + 128, t2.AsByte());
+            t3 = Sse2.Xor(x_D.AsByte(), Sse2.LoadVector128(m + 192)).AsUInt32();
+            Sse2.Store(c + 192, t3.AsByte());
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void Vec128QuarterRound(ref Vector128<uint> x_A, ref Vector128<uint> x_B, ref Vector128<uint> x_C, ref Vector128<uint> x_D)
         {
+            Vector128<uint> t_A, t_C;
             x_A = Sse2.Add(x_A, x_B);
-            Vector128<uint> vector128 = Sse2.Xor(x_D, x_A);
-            x_D = Vector128.AsUInt32<byte>(Ssse3.Shuffle(Vector128.AsByte<uint>(vector128), rot16_128));
+            t_A = Sse2.Xor(x_D, x_A);
+            x_D = Ssse3.Shuffle(t_A.AsByte(), rot16_128).AsUInt32();
             x_C = Sse2.Add(x_C, x_D);
-            Vector128<uint> vector1281 = Sse2.Xor(x_B, x_C);
-            x_B = Sse2.Or(Sse2.ShiftLeftLogical(vector1281, 12), Sse2.ShiftRightLogical(vector1281, 20));
+            t_C = Sse2.Xor(x_B, x_C);
+            x_B = Sse2.Or(Sse2.ShiftLeftLogical(t_C, 12), Sse2.ShiftRightLogical(t_C, 20));
             x_A = Sse2.Add(x_A, x_B);
-            vector128 = Sse2.Xor(x_D, x_A);
-            x_D = Vector128.AsUInt32<byte>(Ssse3.Shuffle(Vector128.AsByte<uint>(vector128), rot8_128));
+            t_A = Sse2.Xor(x_D, x_A);
+            x_D = Ssse3.Shuffle(t_A.AsByte(), rot8_128).AsUInt32();
             x_C = Sse2.Add(x_C, x_D);
-            vector1281 = Sse2.Xor(x_B, x_C);
-            x_B = Sse2.Or(Sse2.ShiftLeftLogical(vector1281, 7), Sse2.ShiftRightLogical(vector1281, 25));
+            t_C = Sse2.Xor(x_B, x_C);
+            x_B = Sse2.Or(Sse2.ShiftLeftLogical(t_C, 7), Sse2.ShiftRightLogical(t_C, 25));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -566,22 +568,22 @@ namespace NaCl.Core.Base
         private static void Vector256Line1(ref Vector256<uint> x_A, ref Vector256<uint> x_B, ref Vector256<uint> x_C, ref Vector256<uint> x_D)
         {
             x_A = Avx2.Add(x_A, x_B);
-            x_D = Avx2.Shuffle(Avx2.Xor(x_D, x_A).AsByte<uint>(), rot16_256).AsUInt32<byte>();
+            x_D = Avx2.Shuffle(Avx2.Xor(x_D, x_A).AsByte(), rot16_256).AsUInt32();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void Vector256Line2(ref Vector256<uint> x_A, ref Vector256<uint> x_B, ref Vector256<uint> x_C, ref Vector256<uint> x_D)
         {
             x_C = Avx2.Add(x_C, x_D);
-            Vector256<uint> vector256 = Avx2.Xor(x_B, x_C);
-            x_B = Avx2.Or(Avx2.ShiftLeftLogical(vector256, 12), Avx2.ShiftRightLogical(vector256, 20));
+            Vector256<uint> temp = Avx2.Xor(x_B, x_C);
+            x_B = Avx2.Or(Avx2.ShiftLeftLogical(temp, 12), Avx2.ShiftRightLogical(temp, 20));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void Vector256Line3(ref Vector256<uint> x_A, ref Vector256<uint> x_B, ref Vector256<uint> x_C, ref Vector256<uint> x_D)
         {
             x_A = Avx2.Add(x_A, x_B);
-            x_D = Avx2.Shuffle(Avx2.Xor(x_D, x_A).AsByte<uint>(), rot8_256).AsUInt32<byte>();
+            x_D = Avx2.Shuffle(Avx2.Xor(x_D, x_A).AsByte(), rot8_256).AsUInt32();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
