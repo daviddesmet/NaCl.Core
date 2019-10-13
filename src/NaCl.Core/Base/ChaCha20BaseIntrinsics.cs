@@ -21,7 +21,7 @@ namespace NaCl.Core.Base
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static unsafe void ChaCha20(uint* x, byte* m, byte* c, ulong bytes)
         {
-            if (Avx2.IsSupported && bytes >= 512)
+            if (Avx2.IsSupported && bytes >= 512 && false)      //Fix the AVX2 section!
             {
                 Vector256<uint> x_0 = Vector256.Create(x[0]);
                 Vector256<uint> x_1 = Vector256.Create(x[1]);
@@ -39,6 +39,7 @@ namespace NaCl.Core.Base
                 Vector256<uint> x_13;
                 Vector256<uint> x_14 = Vector256.Create(x[14]);
                 Vector256<uint> x_15 = Vector256.Create(x[15]);
+
                 Vector256<uint> orig0 = x_0;
                 Vector256<uint> orig1 = x_1;
                 Vector256<uint> orig2 = x_2;
@@ -51,15 +52,17 @@ namespace NaCl.Core.Base
                 Vector256<uint> orig9 = x_9;
                 Vector256<uint> orig10 = x_10;
                 Vector256<uint> orig11 = x_11;
+                Vector256<uint> orig12;
+                Vector256<uint> orig13;
                 Vector256<uint> orig14 = x_14;
                 Vector256<uint> orig15 = x_15;
-                Vector256<uint> t12, t13;
 
                 while (bytes >= 512)
                 {
                     Vector256<uint> addv12 = Vector256.Create(0, 1, 2, 3).AsUInt32();
                     Vector256<uint> addv13 = Vector256.Create(4, 5, 6, 7).AsUInt32();
                     Vector256<uint> permute = Vector256.Create(0, 1, 4, 5, 2, 3, 6, 7).AsUInt32();
+                    Vector256<uint> t12, t13;
                     x_0 = orig0;
                     x_1 = orig1;
                     x_2 = orig2;
@@ -76,20 +79,24 @@ namespace NaCl.Core.Base
                     x_15 = orig15;
                     uint in12 = x[12];
                     uint in13 = x[13];
-                    ulong in1213 = in12 | (ulong)in13 << 32;
-                    x_12 = Avx2.BroadcastScalarToVector256(Vector128.Create(in1213, 0)).AsUInt32();
-                    x_13 = x_12;
-                    t12 = Avx2.Add(addv12, x_12);
-                    t13 = Avx2.Add(addv13, x_13);
+                    ulong in1213 = in12 | ((ulong)in13 << 32);
+                    x_12 = x_13 = Avx2.BroadcastScalarToVector256(Sse2.X64.ConvertScalarToVector128UInt64(in1213)).AsUInt32();
+                    t12 = Avx2.Add(addv12.AsUInt64(), x_12.AsUInt64()).AsUInt32();
+                    t13 = Avx2.Add(addv13.AsUInt64(), x_13.AsUInt64()).AsUInt32();
                     x_12 = Avx2.UnpackLow(t12, t13);
                     x_13 = Avx2.UnpackHigh(t12, t13);
                     t12 = Avx2.UnpackLow(x_12, x_13);
                     t13 = Avx2.UnpackHigh(x_12, x_13);
                     x_12 = Avx2.PermuteVar8x32(t12, permute);
                     x_13 = Avx2.PermuteVar8x32(t13, permute);
+
+                    orig12 = x_12;
+                    orig13 = x_13;
+
                     in1213 += 8;
+
                     x[12] = (uint)(in1213 & 0xFFFFFFFF);
-                    x[13] = (uint)(in1213 >> 32 & 0xFFFFFFFF);
+                    x[13] = (uint)((in1213 >> 32) & 0xFFFFFFFF);
                     for (int i = 0; i < 20; i += 2)
                     {
                         Vec256Round(ref x_0, ref x_4, ref x_8, ref x_12, ref x_1, ref x_5, ref x_9, ref x_13, ref x_2, ref x_6, ref x_10, ref x_14, ref x_3, ref x_7, ref x_11, ref x_15);
@@ -97,102 +104,50 @@ namespace NaCl.Core.Base
                     }
 
                     Vector256<uint> t_0, t_1, t_2, t_3, t_4, t_5, t_6, t_7, t_8, t_9, t_10, t_11, t_12, t_13, t_14, t_15;
+                    t_0 = t_1 = t_2 = t_3 = t_4 = t_5 = t_6 = t_7 = t_8 = t_9 = t_10 = t_11 = t_12 = t_13 = t_14 = t_15 = Vector256.Create((uint)0);
                     // ONEOCTO enter
-                    // ONEQUAD_UNPCK enter
-                    x_0 = Avx2.Add(x_0, orig0);
-                    x_1 = Avx2.Add(x_1, orig1);
-                    x_2 = Avx2.Add(x_2, orig2);
-                    x_3 = Avx2.Add(x_3, orig3);
-                    t_0 = Avx2.UnpackLow(x_0, x_1);
-                    t_1 = Avx2.UnpackLow(x_2, x_3);
-                    t_2 = Avx2.UnpackHigh(x_0, x_1);
-                    t_3 = Avx2.UnpackHigh(x_2, x_3);
-                    x_0 = Avx2.UnpackLow(t_0, t_1);
-                    x_1 = Avx2.UnpackHigh(t_0, t_1);
-                    x_2 = Avx2.UnpackLow(t_2, t_3);
-                    x_3 = Avx2.UnpackHigh(t_2, t_3);
-                    // ONEQUAD_UNPCK exit
-                    // ONEQUAD_UNPCK enter
-                    x_4 = Avx2.Add(x_4, orig0);
-                    x_5 = Avx2.Add(x_5, orig1);
-                    x_6 = Avx2.Add(x_6, orig2);
-                    x_7 = Avx2.Add(x_7, orig3);
-                    t_0 = Avx2.UnpackLow(x_4, x_5);
-                    t_1 = Avx2.UnpackLow(x_6, x_7);
-                    t_2 = Avx2.UnpackHigh(x_4, x_5);
-                    t_3 = Avx2.UnpackHigh(x_6, x_7);
-                    x_4 = Avx2.UnpackLow(t_0, t_1);
-                    x_5 = Avx2.UnpackHigh(t_0, t_1);
-                    x_6 = Avx2.UnpackLow(t_2, t_3);
-                    x_7 = Avx2.UnpackHigh(t_2, t_3);
-                    // ONEQUAD_UNPCK exit
-                    t_0 = Avx2.Permute2x128(x_0, x_4, 32);
-                    t_4 = Avx2.Permute2x128(x_0, x_4, 49);
-                    t_1 = Avx2.Permute2x128(x_1, x_5, 32);
-                    t_5 = Avx2.Permute2x128(x_1, x_5, 49);
-                    t_2 = Avx2.Permute2x128(x_2, x_6, 32);
-                    t_6 = Avx2.Permute2x128(x_2, x_6, 49);
-                    t_3 = Avx2.Permute2x128(x_3, x_7, 32);
-                    t_7 = Avx2.Permute2x128(x_3, x_7, 49);
-                    t_0 = Avx2.Xor(t_0, Avx.LoadVector256(m).AsUInt32<byte>());
-                    t_1 = Avx2.Xor(t_1, Avx.LoadVector256(m + 64).AsUInt32<byte>());
-                    t_2 = Avx2.Xor(t_2, Avx.LoadVector256(m + 128).AsUInt32<byte>());
-                    t_3 = Avx2.Xor(t_3, Avx.LoadVector256(m + 192).AsUInt32<byte>());
-                    t_4 = Avx2.Xor(t_4, Avx.LoadVector256(m + 256).AsUInt32<byte>());
-                    t_5 = Avx2.Xor(t_5, Avx.LoadVector256(m + 320).AsUInt32<byte>());
-                    t_6 = Avx2.Xor(t_6, Avx.LoadVector256(m + 384).AsUInt32<byte>());
-                    t_7 = Avx2.Xor(t_7, Avx.LoadVector256(m + 448).AsUInt32<byte>());
-                    Avx.Store(c, t_0.AsByte<uint>());
-                    Avx.Store(c + 64, t_1.AsByte<uint>());
-                    Avx.Store(c + 128, t_2.AsByte<uint>());
-                    Avx.Store(c + 192, t_3.AsByte<uint>());
-                    Avx.Store(c + 256, t_4.AsByte<uint>());
-                    Avx.Store(c + 320, t_5.AsByte<uint>());
-                    Avx.Store(c + 384, t_6.AsByte<uint>());
-                    Avx.Store(c + 448, t_7.AsByte<uint>());
+                    OneQuadUnpack(ref x_0, ref x_1, ref x_2, ref x_3, ref t_0, ref t_1, ref t_2, ref t_3, ref orig0, ref orig1, ref orig2, ref orig3);
+                    OneQuadUnpack(ref x_4, ref x_5, ref x_6, ref x_7, ref t_4, ref t_5, ref t_6, ref t_7, ref orig4, ref orig5, ref orig6, ref orig7);
+                    t_0 = Avx2.Permute2x128(x_0, x_4, 0x20);
+                    t_4 = Avx2.Permute2x128(x_0, x_4, 0x31);
+                    t_1 = Avx2.Permute2x128(x_1, x_5, 0x20);
+                    t_5 = Avx2.Permute2x128(x_1, x_5, 0x31);
+                    t_2 = Avx2.Permute2x128(x_2, x_6, 0x20);
+                    t_6 = Avx2.Permute2x128(x_2, x_6, 0x31);
+                    t_3 = Avx2.Permute2x128(x_3, x_7, 0x20);
+                    t_7 = Avx2.Permute2x128(x_3, x_7, 0x31);
+                    t_0 = Avx2.Xor(t_0, Avx.LoadVector256(m).AsUInt32());
+                    t_1 = Avx2.Xor(t_1, Avx.LoadVector256(m + 64).AsUInt32());
+                    t_2 = Avx2.Xor(t_2, Avx.LoadVector256(m + 128).AsUInt32());
+                    t_3 = Avx2.Xor(t_3, Avx.LoadVector256(m + 192).AsUInt32());
+                    t_4 = Avx2.Xor(t_4, Avx.LoadVector256(m + 256).AsUInt32());
+                    t_5 = Avx2.Xor(t_5, Avx.LoadVector256(m + 320).AsUInt32());
+                    t_6 = Avx2.Xor(t_6, Avx.LoadVector256(m + 384).AsUInt32());
+                    t_7 = Avx2.Xor(t_7, Avx.LoadVector256(m + 448).AsUInt32());
+                    Avx.Store(c, t_0.AsByte());
+                    Avx.Store(c + 64, t_1.AsByte());
+                    Avx.Store(c + 128, t_2.AsByte());
+                    Avx.Store(c + 192, t_3.AsByte());
+                    Avx.Store(c + 256, t_4.AsByte());
+                    Avx.Store(c + 320, t_5.AsByte());
+                    Avx.Store(c + 384, t_6.AsByte());
+                    Avx.Store(c + 448, t_7.AsByte());
                     // ONEOCTO exit
 
                     m += 32;
                     c += 32;
 
                     // ONEOCTO enter
-                    // ONEQUAD_UNPCK enter
-                    x_8 = Avx2.Add(x_8, orig8);
-                    x_9 = Avx2.Add(x_9, orig9);
-                    x_10 = Avx2.Add(x_10, orig10);
-                    x_11 = Avx2.Add(x_11, orig11);
-                    t_8 = Avx2.UnpackLow(x_8, x_9);
-                    t_9 = Avx2.UnpackLow(x_10, x_11);
-                    t_10 = Avx2.UnpackHigh(x_8, x_9);
-                    t_11 = Avx2.UnpackHigh(x_10, x_11);
-                    x_8 = Avx2.UnpackLow(t_8, t_9);
-                    x_9 = Avx2.UnpackHigh(t_8, t_9);
-                    x_10 = Avx2.UnpackLow(t_10, t_11);
-                    x_11 = Avx2.UnpackHigh(t_10, t_11);
-                    // ONEQUAD_UNPCK exit
-                    // ONEQUAD_UNPCK enter
-                    x_12 = Avx2.Add(x_12, orig8);
-                    x_13 = Avx2.Add(x_13, orig9);
-                    x_14 = Avx2.Add(x_14, orig10);
-                    x_15 = Avx2.Add(x_15, orig11);
-                    t_8 = Avx2.UnpackLow(x_12, x_13);
-                    t_9 = Avx2.UnpackLow(x_14, x_15);
-                    t_10 = Avx2.UnpackHigh(x_12, x_13);
-                    t_11 = Avx2.UnpackHigh(x_14, x_15);
-                    x_12 = Avx2.UnpackLow(t_8, t_9);
-                    x_13 = Avx2.UnpackHigh(t_8, t_9);
-                    x_14 = Avx2.UnpackLow(t_10, t_11);
-                    x_15 = Avx2.UnpackHigh(t_10, t_11);
-                    // ONEQUAD_UNPCK exit
-                    // ONEQUAD_UNPCK enter
-                    t_8 = Avx2.Permute2x128(x_8, x_12, 32);
-                    t_12 = Avx2.Permute2x128(x_8, x_12, 49);
-                    t_9 = Avx2.Permute2x128(x_9, x_13, 32);
-                    t_13 = Avx2.Permute2x128(x_9, x_13, 49);
-                    t_10 = Avx2.Permute2x128(x_10, x_14, 32);
-                    t_14 = Avx2.Permute2x128(x_10, x_14, 49);
-                    t_11 = Avx2.Permute2x128(x_11, x_15, 32);
-                    t_15 = Avx2.Permute2x128(x_11, x_15, 49);
+                    OneQuadUnpack(ref x_8, ref x_9, ref x_10, ref x_11, ref t_8, ref t_9, ref t_10, ref t_11, ref orig8, ref orig9, ref orig10, ref orig11);
+                    OneQuadUnpack(ref x_12, ref x_13, ref x_14, ref x_15, ref t_12, ref t_13, ref t_14, ref t_15, ref orig12, ref orig13, ref orig14, ref orig15);
+                    t_8 = Avx2.Permute2x128(x_8, x_12, 0x20);
+                    t_12 = Avx2.Permute2x128(x_8, x_12, 0x31);
+                    t_9 = Avx2.Permute2x128(x_9, x_13, 0x20);
+                    t_13 = Avx2.Permute2x128(x_9, x_13, 0x31);
+                    t_10 = Avx2.Permute2x128(x_10, x_14, 0x20);
+                    t_14 = Avx2.Permute2x128(x_10, x_14, 0x31);
+                    t_11 = Avx2.Permute2x128(x_11, x_15, 0x20);
+                    t_15 = Avx2.Permute2x128(x_11, x_15, 0x31);
                     t_8 = Avx2.Xor(t_8, Avx.LoadVector256(m).AsUInt32());
                     t_9 = Avx2.Xor(t_9, Avx.LoadVector256(m + 64).AsUInt32());
                     t_10 = Avx2.Xor(t_10, Avx.LoadVector256(m + 128).AsUInt32());
@@ -212,7 +167,7 @@ namespace NaCl.Core.Base
                     // ONEOCTO exit
                     m -= 32;
                     c -= 32;
-                    bytes -= (long)512;
+                    bytes -= 512;
                     c += 512;
                     m += 512;
                 }
@@ -543,6 +498,8 @@ namespace NaCl.Core.Base
             x_B = Sse2.Or(Sse2.ShiftLeftLogical(t_C, 7), Sse2.ShiftRightLogical(t_C, 25));
         }
 
+        // 512 byte methods
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void Vec256Round(ref Vector256<uint> A1, ref Vector256<uint> B1, ref Vector256<uint> C1, ref Vector256<uint> D1, ref Vector256<uint> A2, ref Vector256<uint> B2, ref Vector256<uint> C2, ref Vector256<uint> D2, ref Vector256<uint> A3, ref Vector256<uint> B3, ref Vector256<uint> C3, ref Vector256<uint> D3, ref Vector256<uint> A4, ref Vector256<uint> B4, ref Vector256<uint> C4, ref Vector256<uint> D4)
         {
@@ -593,6 +550,25 @@ namespace NaCl.Core.Base
             Vector256<uint> temp = Avx2.Xor(x_B, x_C);
             x_B = Avx2.Or(Avx2.ShiftLeftLogical(temp, 7), Avx2.ShiftRightLogical(temp, 25));
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void OneQuadUnpack(ref Vector256<uint> x_A, ref Vector256<uint> x_B, ref Vector256<uint> x_C, ref Vector256<uint> x_D, ref Vector256<uint> t_A, ref Vector256<uint> t_B, ref Vector256<uint> t_C, ref Vector256<uint> t_D, ref Vector256<uint> orig_A, ref Vector256<uint> orig_B, ref Vector256<uint> orig_C, ref Vector256<uint> orig_D)
+        {
+            x_A = Avx2.Add(x_A, orig_A);
+            x_B = Avx2.Add(x_B, orig_B);
+            x_D = Avx2.Add(x_C, orig_C);
+            x_D = Avx2.Add(x_D, orig_D);
+            t_A = Avx2.UnpackLow(x_A, x_B);
+            t_B = Avx2.UnpackLow(x_B, x_D);
+            t_C = Avx2.UnpackHigh(x_C, x_B);
+            t_D = Avx2.UnpackHigh(x_D, x_D);
+            x_A = Avx2.UnpackLow(t_A.AsUInt64(), t_B.AsUInt64()).AsUInt32();
+            x_B = Avx2.UnpackHigh(t_A.AsUInt64(), t_B.AsUInt64()).AsUInt32();
+            x_C = Avx2.UnpackLow(t_C.AsUInt64(), t_D.AsUInt64()).AsUInt32();
+            x_D = Avx2.UnpackHigh(t_C.AsUInt64(), t_D.AsUInt64()).AsUInt32();
+        }
+
+        // End of 512 byte methods
     }
 }
 #pragma warning restore IDE0007 // Use implicit type

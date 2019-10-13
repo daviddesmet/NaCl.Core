@@ -362,5 +362,33 @@
             //Assert.AreEqual(expected, Combine(block0, block1));
             Assert.IsTrue(CryptoBytes.ConstantTimeEquals(expected, CryptoBytes.Combine(block0, block1)));
         }
+
+        [Test]
+        public void ChaCha20AVX2TestVector()
+        {
+            // Arrange
+            foreach (var test in Avx2TestVector.Avx2TestVectors)
+            {
+               //// var rnd = new Random();
+               // var b = new byte[1000];
+               // //rnd.NextBytes(b);
+               // for (int i = 0; i < b.Length; i++)
+               //     b[i] = (byte)i;
+
+               // var plainText = CryptoBytes.ToHexStringLower(b);
+
+               // var cipher = new ChaCha20(test.Key, test.InitialCounter);
+               // var cipherText = cipher.Encrypt(b, test.Nonce);
+               // var cipherTextHex = CryptoBytes.ToHexStringLower(cipherText);
+
+                // Act
+                var cipher = new ChaCha20(test.Key, test.InitialCounter);
+                var output = cipher.Decrypt(CryptoBytes.Combine(test.Nonce, test.CipherText));
+
+                // Assert
+                //Assert.That(output, Is.EqualTo(test.PlainText));
+                Assert.IsTrue(CryptoBytes.ConstantTimeEquals(test.PlainText, output));
+            }
+        }
     }
 }
