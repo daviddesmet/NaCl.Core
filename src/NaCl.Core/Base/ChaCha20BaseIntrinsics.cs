@@ -21,7 +21,7 @@ namespace NaCl.Core.Base
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static unsafe void ChaCha20(uint* x, byte* m, byte* c, ulong bytes)
         {
-            if (Avx2.IsSupported && bytes >= 512 && false)      //Fix the AVX2 section!
+            if (Avx2.IsSupported && bytes >= 512)      //Fix the AVX2 section!
             {
                 Vector256<uint> x_0 = Vector256.Create(x[0]);
                 Vector256<uint> x_1 = Vector256.Create(x[1]);
@@ -501,6 +501,9 @@ namespace NaCl.Core.Base
         // 512 byte methods
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static Vector256<uint> Vector256Rotate(Vector256<uint> a, byte imm) => Avx2.Or(Avx2.ShiftLeftLogical(a, imm), Avx2.ShiftRightLogical(a, (byte)(32 - imm)));
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void Vec256Round(ref Vector256<uint> A1, ref Vector256<uint> B1, ref Vector256<uint> C1, ref Vector256<uint> D1, ref Vector256<uint> A2, ref Vector256<uint> B2, ref Vector256<uint> C2, ref Vector256<uint> D2, ref Vector256<uint> A3, ref Vector256<uint> B3, ref Vector256<uint> C3, ref Vector256<uint> D3, ref Vector256<uint> A4, ref Vector256<uint> B4, ref Vector256<uint> C4, ref Vector256<uint> D4)
         {
             Vector256Line1(ref A1, ref B1, ref C1, ref D1);
@@ -532,8 +535,7 @@ namespace NaCl.Core.Base
         private static void Vector256Line2(ref Vector256<uint> x_A, ref Vector256<uint> x_B, ref Vector256<uint> x_C, ref Vector256<uint> x_D)
         {
             x_C = Avx2.Add(x_C, x_D);
-            Vector256<uint> temp = Avx2.Xor(x_B, x_C);
-            x_B = Avx2.Or(Avx2.ShiftLeftLogical(temp, 12), Avx2.ShiftRightLogical(temp, 20));
+            x_B = Vector256Rotate(Avx2.Xor(x_B, x_C), 12);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -547,8 +549,7 @@ namespace NaCl.Core.Base
         private static void Vector256Line4(ref Vector256<uint> x_A, ref Vector256<uint> x_B, ref Vector256<uint> x_C, ref Vector256<uint> x_D)
         {
             x_C = Avx2.Add(x_C, x_D);
-            Vector256<uint> temp = Avx2.Xor(x_B, x_C);
-            x_B = Avx2.Or(Avx2.ShiftLeftLogical(temp, 7), Avx2.ShiftRightLogical(temp, 25));
+            x_B = Vector256Rotate(Avx2.Xor(x_B, x_C), 7);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -556,18 +557,17 @@ namespace NaCl.Core.Base
         {
             x_A = Avx2.Add(x_A, orig_A);
             x_B = Avx2.Add(x_B, orig_B);
-            x_D = Avx2.Add(x_C, orig_C);
+            x_C = Avx2.Add(x_C, orig_C);
             x_D = Avx2.Add(x_D, orig_D);
             t_A = Avx2.UnpackLow(x_A, x_B);
-            t_B = Avx2.UnpackLow(x_B, x_D);
-            t_C = Avx2.UnpackHigh(x_C, x_B);
-            t_D = Avx2.UnpackHigh(x_D, x_D);
+            t_B = Avx2.UnpackLow(x_C, x_D);
+            t_C = Avx2.UnpackHigh(x_A, x_B);
+            t_D = Avx2.UnpackHigh(x_C, x_D);
             x_A = Avx2.UnpackLow(t_A.AsUInt64(), t_B.AsUInt64()).AsUInt32();
             x_B = Avx2.UnpackHigh(t_A.AsUInt64(), t_B.AsUInt64()).AsUInt32();
             x_C = Avx2.UnpackLow(t_C.AsUInt64(), t_D.AsUInt64()).AsUInt32();
             x_D = Avx2.UnpackHigh(t_C.AsUInt64(), t_D.AsUInt64()).AsUInt32();
         }
-
         // End of 512 byte methods
     }
 }
