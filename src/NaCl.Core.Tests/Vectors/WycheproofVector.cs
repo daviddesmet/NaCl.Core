@@ -7,7 +7,7 @@ namespace NaCl.Core.Tests.Vectors
     {
         public string Algorithm { get; set; }
 
-        public Version GeneratorVersion { get; set; }
+        public string GeneratorVersion { get; set; }
 
         public int NumberOfTests { get; set; }
 
