@@ -114,8 +114,8 @@ jobs:
   steps:
   - script: dotnet restore src
     displayName: 'dotnet restore src'
-  - script: dotnet build src -c $(BuildConfiguration)
-    displayName: 'dotnet build -c $(BuildConfiguration) --no-restore'
+  - script: dotnet build src -c $(BuildConfiguration) --no-restore
+    displayName: 'dotnet build $(BuildConfiguration)'
   - script: dotnet test -f netcoreapp2.0 src/NaCl.Core.Tests --logger trx
     displayName: 'Unit testing'
     env:
@@ -139,7 +139,7 @@ jobs:
     BuildPlatform: 'any cpu'
   steps:
   - script: dotnet build src -c $(BuildConfiguration)
-    displayName: 'dotnet build -c $(BuildConfiguration)'
+    displayName: 'dotnet build $(BuildConfiguration)'
     env:
       COREHOST_TRACE: 0
       DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
