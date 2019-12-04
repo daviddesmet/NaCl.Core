@@ -35,7 +35,8 @@ jobs:
     vmImage: 'ubuntu-16.04'
 
   variables:
-    buildConfiguration: 'Release'
+    BuildConfiguration: 'release'
+    BuildPlatform: 'any cpu'
     disable.coverage.autogenerate: 'true'
 
   # The steps to run to execute the build.
@@ -47,24 +48,30 @@ jobs:
       version: 2.2.301
       installationPath: $(Agent.ToolsDirectory)/dotnet
   - task: DotNetCoreCLI@2
-    displayName: 'Build $(buildConfiguration)'
+    displayName: 'Build $(BuildConfiguration)'
     inputs:
       command: 'build'
-      projects: 'src'
-      arguments: '--configuration $(buildConfiguration)'
+      projects: '**/NaCl.Core.csproj'
+      arguments: '-c $(BuildConfiguration)'
     env:
       COREHOST_TRACE: 0
       DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
       DOTNET_CLI_TELEMETRY_OPTOUT: 1
   - script: dotnet test -f netcoreapp2.0 src/NaCl.Core.Tests --logger trx /p:CollectCoverage=true /p:CoverletOutput=$(Build.SourcesDirectory)/TestResults/ /p:CoverletOutputFormat=cobertura /p:Exclude='[NaCl.Core.Tests]*'
     displayName: 'Unit testing'
+    enabled: false
+  - task: DotNetCoreCLI@2
+    displayName: 'Unit testing'
+    inputs:
+      command: 'test'
+      projects: '**/NaCl.Core.Tests.csproj'
+      arguments: '/p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:Include="[NaCl.*]*" /p:Exclude="[*Tests]*"'
   - task: reportgenerator@4
     displayName: 'Generate Coverage Report'
     inputs:
-      reports: '$(Build.SourcesDirectory)/TestResults/coverage.cobertura.xml'
-      targetdir: '$(Build.SourcesDirectory)/TestResults'
+      reports: '$(Build.SourcesDirectory)/test/**/coverage.cobertura.xml'
+      targetdir: '$(Build.ArtifactStagingDirectory)/TestResults/'
       reporttypes: 'HtmlInline_AzurePipelines_Dark;Cobertura;Badges'
-      assemblyfilters: '-test*'
   - task: PublishTestResults@2
     displayName: 'Publish Test Results'
     inputs:
@@ -72,24 +79,29 @@ jobs:
       testResultsFiles: '**/*.trx'
     continueOnError: true
     condition: always()
+    enabled: false
   - task: PublishCodeCoverageResults@1
     displayName: 'Publish Coverage Results'
     inputs:
       codeCoverageTool: 'Cobertura'
-      summaryFileLocation: '$(Build.SourcesDirectory)/TestResults/coverage.cobertura.xml'
-      reportDirectory: '$(Build.SourcesDirectory)/TestResults'
+      summaryFileLocation: '$(Build.ArtifactStagingDirectory)/TestResults/cobertura.xml'
+      reportDirectory: '$(Build.ArtifactStagingDirectory)/TestResults/'
     continueOnError: true
     condition: always()
   - task: DotNetCoreCLI@2
     inputs:
-      command: publish
-      arguments: '--configuration $(buildConfiguration) --framework netstandard2.0 --output $(Build.ArtifactStagingDirectory)'
+      command: 'publish'
+      arguments: '-c $(BuildConfiguration) -f netstandard2.0 -o $(Build.ArtifactStagingDirectory) --no-restore'
       projects: src/NaCl.Core/NaCl.Core.csproj
       publishWebProjects: false
       modifyOutputPath: true
       zipAfterPublish: true
   - task: PublishBuildArtifacts@1
     displayName: 'Publish Logs'
+    inputs:
+      PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+      ArtifactName: 'drop'
+      publishLocation: 'Container'
     continueOnError: true
     condition: always()
 
@@ -98,12 +110,12 @@ jobs:
   pool:
     vmImage: 'xcode9-macos10.13'
   variables:
-    buildConfiguration: 'Release'
+    BuildConfiguration: 'release'
   steps:
   - script: dotnet restore src
     displayName: 'dotnet restore src'
-  - script: dotnet build src --configuration $(buildConfiguration)
-    displayName: 'dotnet build $(buildConfiguration)'
+  - script: dotnet build src -c $(BuildConfiguration)
+    displayName: 'dotnet build $(BuildConfiguration)'
   - script: dotnet test -f netcoreapp2.0 src/NaCl.Core.Tests --logger trx
     displayName: 'Unit testing'
     env:
@@ -123,10 +135,11 @@ jobs:
   pool:
     vmImage: 'vs2017-win2016'
   variables:
-    buildConfiguration: 'Release'
+    BuildConfiguration: 'release'
+    BuildPlatform: 'any cpu'
   steps:
-  - script: dotnet build src --configuration $(buildConfiguration)
-    displayName: 'dotnet build $(buildConfiguration)'
+  - script: dotnet build src -c $(BuildConfiguration)
+    displayName: 'dotnet build $(BuildConfiguration)'
     env:
       COREHOST_TRACE: 0
       DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
@@ -138,5 +151,5 @@ jobs:
       runInParallel: true
       codeCoverageEnabled: True
       runSettingsFile: 'src/CodeCoverage.runsettings'
-#      platform: '$(buildPlatform)' # Not working...
-      configuration: '$(buildConfiguration)'
+      platform: '$(BuildPlatform)'
+      configuration: '$(BuildConfiguration)'
