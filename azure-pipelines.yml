@@ -89,6 +89,7 @@ jobs:
     continueOnError: true
     condition: always()
   - task: DotNetCoreCLI@2
+    displayName: 'Publish Library'
     inputs:
       command: 'publish'
       arguments: '-c $(BuildConfiguration) -f netstandard2.0 -o $(Build.ArtifactStagingDirectory) --no-restore'
