@@ -69,7 +69,7 @@ jobs:
   - task: reportgenerator@4
     displayName: 'Generate Coverage Report'
     inputs:
-      reports: '$(Build.SourcesDirectory)/test/**/coverage.cobertura.xml'
+      reports: '$(Build.SourcesDirectory)/**/coverage.cobertura.xml'
       targetdir: '$(Build.ArtifactStagingDirectory)/TestResults/'
       reporttypes: 'HtmlInline_AzurePipelines_Dark;Cobertura;Badges'
   - task: PublishTestResults@2
