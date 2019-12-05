@@ -84,7 +84,7 @@ jobs:
     displayName: 'Publish Coverage Results'
     inputs:
       codeCoverageTool: 'Cobertura'
-      summaryFileLocation: '$(Build.ArtifactStagingDirectory)/TestResults/cobertura.xml'
+      summaryFileLocation: '$(Build.ArtifactStagingDirectory)/TestResults/Cobertura.xml'
       reportDirectory: '$(Build.ArtifactStagingDirectory)/TestResults/'
     continueOnError: true
     condition: always()
