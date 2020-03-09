@@ -10,7 +10,6 @@
     using BenchmarkDotNet.Attributes;
 
     [BenchmarkCategory("Stream Cipher")]
-    [CoreJob(baseline: true), ClrJob/*, MonoJob*/]
     [MemoryDiagnoser]
     [RPlotExporter, RankColumn]
     public class XChaCha20Benchmark

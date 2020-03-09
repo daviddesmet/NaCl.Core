@@ -1,4 +1,4 @@
-namespace NaCl.Core.Benchmarks
+﻿namespace NaCl.Core.Benchmarks
 {
     using System;
     using System.Collections.Generic;
@@ -10,7 +10,6 @@ namespace NaCl.Core.Benchmarks
     using BenchmarkDotNet.Attributes;
 
     [BenchmarkCategory("Stream Cipher")]
-    [CoreJob(baseline: true), ClrJob/*, MonoJob*/]
     [MemoryDiagnoser]
     [RPlotExporter, RankColumn]
     public class ChaCha20Benchmark

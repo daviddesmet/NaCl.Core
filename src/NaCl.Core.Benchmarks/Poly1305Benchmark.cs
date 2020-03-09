@@ -5,7 +5,6 @@
     using BenchmarkDotNet.Attributes;
 
     [BenchmarkCategory("MAC")]
-    [CoreJob(baseline: true), ClrJob/*, MonoJob*/]
     [MemoryDiagnoser]
     [RPlotExporter, RankColumn]
     public class Poly1305Benchmark

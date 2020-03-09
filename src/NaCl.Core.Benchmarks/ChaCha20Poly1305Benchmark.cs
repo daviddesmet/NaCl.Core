@@ -9,7 +9,6 @@
     using BenchmarkDotNet.Attributes;
 
     [BenchmarkCategory("AEAD")]
-    [CoreJob(baseline: true), ClrJob/*, MonoJob*/]
     [MemoryDiagnoser]
     [RPlotExporter, RankColumn]
     public class ChaCha20Poly1305Benchmark
