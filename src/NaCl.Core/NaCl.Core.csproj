@@ -1,8 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard1.3;netstandard2.0</TargetFrameworks>
-    <TargetFrameworks Condition="'$(OS)' != 'Unix'">net45;net47;netstandard1.3;netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>netstandard1.3;netstandard2.0;netstandard2.1;netcoreapp3.1;net45;net48</TargetFrameworks>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+
     <Version>1.2.0</Version>
     <Authors>David De Smet</Authors>
     <Company />
@@ -16,20 +17,7 @@
     <RepositoryBranch>master</RepositoryBranch>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <LangVersion>latest</LangVersion>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <LangVersion>latest</LangVersion>
-  </PropertyGroup>
-
-  <Target Name="LogDebugInfo">
-    <Message Text="Building for $(TargetFramework) on $(OS)" Importance="High" />
-  </Target>
-
-  <ItemGroup>
+  <ItemGroup Condition="$(TargetFramework) != 'netcoreapp3.1' AND $(TargetFramework) != 'netstandard2.1'">
     <PackageReference Include="System.Memory" Version="4.5.3" />
   </ItemGroup>
 
