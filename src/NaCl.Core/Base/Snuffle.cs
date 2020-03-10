@@ -209,8 +209,6 @@
             }
         }
 
-        protected static uint RotateLeft(uint x, int y) => (x << y) | (x >> (32 - y));
-
         /// <summary>
         /// Formats the nonce length exception message.
         /// </summary>
