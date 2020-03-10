@@ -1,6 +1,6 @@
 language: csharp
 mono: none
-dotnet: 2.1.500
+dotnet: 3.1
 script:
  - dotnet restore src
- - dotnet test -f netcoreapp2.0 src/NaCl.Core.Tests
+ - dotnet test -f netcoreapp3.1 src/NaCl.Core.Tests
