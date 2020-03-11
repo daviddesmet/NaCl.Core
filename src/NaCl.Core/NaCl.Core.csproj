@@ -1,7 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard1.3;netstandard2.0;netstandard2.1;netcoreapp3.1;net45;net48</TargetFrameworks>
+    <TargetFrameworks>netstandard1.3;netstandard2.0;netstandard2.1;netcoreapp3.1</TargetFrameworks>
+    <TargetFrameworks Condition="'$(OS)' != 'Unix'">netstandard1.3;netstandard2.0;netstandard2.1;netcoreapp3.1;net45;net48</TargetFrameworks>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
     <Version>1.2.0</Version>
@@ -24,5 +25,9 @@
   <PropertyGroup Condition="$(TargetFramework) == 'netcoreapp3.1'">
     <DefineConstants>FCL_BITOPS</DefineConstants>
   </PropertyGroup>
+
+  <Target Name="LogDebugInfo">
+    <Message Text="Building for $(TargetFramework) on $(OS)" Importance="High" />
+  </Target>
 
 </Project>

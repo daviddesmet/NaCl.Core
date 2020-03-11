@@ -24,5 +24,9 @@
   <ItemGroup>
     <ProjectReference Include="..\NaCl.Core\NaCl.Core.csproj" />
   </ItemGroup>
-  
+
+  <Target Name="LogDebugInfo">
+    <Message Text="Building for $(TargetFramework) on $(OS)" Importance="High" />
+  </Target>
+
 </Project>
