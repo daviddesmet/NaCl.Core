@@ -170,7 +170,7 @@ jobs:
     inputs:
       command: 'test'
       projects: '**/*.Tests.csproj'
-      arguments: '/p:CollectCoverage=true /p:CoverletOutputFormat=opencover /p:Include="[NaCl.Core.*]*" /p:Exclude="[*Tests]*"'
+      arguments: '/p:CollectCoverage=true /p:CoverletOutputFormat=opencover /p:Include="[NaCl.*]*" /p:Exclude="[*Tests]*"'
   - task: reportgenerator@4
     displayName: 'Generate Coverage Report'
     inputs:
