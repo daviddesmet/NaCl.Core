@@ -3,7 +3,8 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using NUnit.Framework;
+
+    using FluentAssertions;
 
     using Internal;
 
@@ -22,7 +23,7 @@
 
         public static void AssertEqualBytes(byte[] expected, byte[] actual)
         {
-            Assert.AreEqual(BitConverter.ToString(expected), BitConverter.ToString(actual));
+            BitConverter.ToString(actual).Should().Be(BitConverter.ToString(expected));
         }
 
         public static ArraySegment<byte> Pad(this byte[] array)

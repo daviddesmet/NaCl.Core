@@ -3,11 +3,13 @@
     using System;
     using System.Linq;
 
-    using NUnit.Framework;
+    using FluentAssertions;
+    using Xunit;
+    using Xunit.Categories;
 
     using Internal;
 
-    [TestFixture]
+    [Category("CI")]
     public class CryptoBytesTest
     {
         private readonly byte[] _bytes = Enumerable.Range(0, 256).Select(i => (byte)i).ToArray();
@@ -72,94 +74,96 @@
             "8PHy8/T19vf4+fr7" +
             "/P3+/w==";
 
-        [Test]
+        [Fact]
         public void ToHexStringUpper()
         {
-            Assert.AreEqual(HexStringUpper, CryptoBytes.ToHexStringUpper(_bytes));
+            CryptoBytes.ToHexStringUpper(_bytes).Should().Be(HexStringUpper);
         }
 
-        [Test]
+        [Fact]
         public void ToHexStringLower()
         {
-            Assert.AreEqual(HexStringLower, CryptoBytes.ToHexStringLower(_bytes));
+            CryptoBytes.ToHexStringLower(_bytes).Should().Be(HexStringLower);
         }
 
-        [Test]
+        [Fact]
         public void ToHexStringLowerNull()
         {
-            Assert.AreEqual(null, CryptoBytes.ToHexStringLower(null));
+            CryptoBytes.ToHexStringLower(null).Should().BeNull();
         }
 
-        [Test]
+        [Fact]
         public void ToHexStringUpperNull()
         {
-            Assert.AreEqual(null, CryptoBytes.ToHexStringUpper(null));
+            CryptoBytes.ToHexStringUpper(null).Should().BeNull();
         }
 
-        [Test]
+        [Fact]
         public void FromHexStringUpperCase()
         {
-            Assert.IsTrue(_bytes.SequenceEqual(CryptoBytes.FromHexString(HexStringUpper)));
+            _bytes.SequenceEqual(CryptoBytes.FromHexString(HexStringUpper)).Should().BeTrue();
         }
 
-        [Test]
+        [Fact]
         public void FromHexStringLowerCase()
         {
-            Assert.IsTrue(_bytes.SequenceEqual(CryptoBytes.FromHexString(HexStringLower)));
+            _bytes.SequenceEqual(CryptoBytes.FromHexString(HexStringLower)).Should().BeTrue();
         }
 
-        [Test]
+        [Fact]
         public void FromHexStringNull()
         {
-            Assert.AreEqual(null, CryptoBytes.FromHexString(null));
+            CryptoBytes.FromHexString(null).Should().BeNull();
         }
 
-        [Test]
+        [Fact]
         public void FromHexStringWithOddLengthFails()
         {
-            Assert.Throws<FormatException>(() => CryptoBytes.FromHexString("A"));
+            Action act = () => CryptoBytes.FromHexString("A");
+            act.Should().Throw<FormatException>();
         }
 
-        [Test]
+        [Fact]
         public void FromHexStringWithInvalidCharactersFails()
         {
-            Assert.Throws<FormatException>(() => CryptoBytes.FromHexString("AQ"));
+            Action act = () => CryptoBytes.FromHexString("AQ");
+            act.Should().Throw<FormatException>();
         }
 
-        [Test]
+        [Fact]
         public void ToBase64String()
         {
-            Assert.AreEqual(Base64String, CryptoBytes.ToBase64String(_bytes));
+            CryptoBytes.ToBase64String(_bytes).Should().Be(Base64String);
         }
 
-        [Test]
+        [Fact]
         public void FromBase64String()
         {
-            Assert.IsTrue(_bytes.SequenceEqual(CryptoBytes.FromBase64String(Base64String)));
+            _bytes.SequenceEqual(CryptoBytes.FromBase64String(Base64String)).Should().BeTrue();
         }
 
 
-        [Test]
+        [Fact]
         public void ToBase64StringNull()
         {
-            Assert.AreEqual(null, CryptoBytes.ToBase64String(null));
+            CryptoBytes.ToBase64String(null).Should().BeNull();
         }
 
-        [Test]
+        [Fact]
         public void FromBase64StringNull()
         {
-            Assert.AreEqual(null, CryptoBytes.FromBase64String(null));
+            CryptoBytes.FromBase64String(null).Should().BeNull();
         }
 
-        [Test]
+        [Fact]
         public void Wipe()
         {
             var bytes = (byte[])_bytes.Clone();
             CryptoBytes.Wipe(bytes);
-            Assert.IsTrue(bytes.All(b => b == 0));
+            bytes.All(b => b == 0).Should().BeTrue();
         }
 
-        [Test]
+        [Fact]
         public void WipeInterval()
         {
             var bytes = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
@@ -168,7 +172,7 @@
             TestHelpers.AssertEqualBytes(wipedBytes, bytes);
         }
 
-        [Test]
+        [Fact]
         public void WipeSegment()
         {
             var bytes = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
@@ -177,53 +181,49 @@
             TestHelpers.AssertEqualBytes(wipedBytes, bytes);
         }
 
-        [Test]
+        [Fact]
         public void ConstantTimeEqualsSuccess()
         {
             var x = new byte[] { 1, 2, 3 };
             var y = new byte[] { 1, 2, 3 };
-            Assert.IsTrue(CryptoBytes.ConstantTimeEquals(x, y));
+            CryptoBytes.ConstantTimeEquals(x, y).Should().BeTrue();
         }
 
-        [Test]
+        [Fact]
         public void ConstantTimeEqualsFail()
         {
             var x = new byte[] { 1, 2, 3 };
             foreach (var y in x.WithChangedBit())
-            {
-                Assert.IsFalse(CryptoBytes.ConstantTimeEquals(x, y));
-            }
+                CryptoBytes.ConstantTimeEquals(x, y).Should().BeFalse();
         }
 
-        [Test]
+        [Fact]
         public void ConstantTimeEqualsSegmentsSuccess()
         {
             var x = new byte[] { 1, 2, 3 };
             var y = new byte[] { 1, 2, 3 };
-            Assert.IsTrue(CryptoBytes.ConstantTimeEquals(x.Pad(), y.Pad()));
+            CryptoBytes.ConstantTimeEquals(x.Pad(), y.Pad()).Should().BeTrue();
         }
 
-        [Test]
+        [Fact]
         public void ConstantTimeEqualsSegmentsFail()
         {
             var x = new byte[] { 1, 2, 3 };
             foreach (var y in x.WithChangedBit())
-            {
-                Assert.IsFalse(CryptoBytes.ConstantTimeEquals(x.Pad(), y.Pad()));
-            }
+                CryptoBytes.ConstantTimeEquals(x.Pad(), y.Pad()).Should().BeFalse();
         }
 
-        [Test]
+        [Fact]
         public void ConstantTimeEqualsRangeSuccess()
         {
             var x = new byte[] { 1, 2, 3 };
             var y = new byte[] { 1, 2, 3 };
             var paddedX = x.Pad();
             var paddedY = y.Pad();
-            Assert.IsTrue(CryptoBytes.ConstantTimeEquals(paddedX.Array, paddedX.Offset, paddedY.Array, paddedY.Offset, paddedX.Count));
+            CryptoBytes.ConstantTimeEquals(paddedX.Array, paddedX.Offset, paddedY.Array, paddedY.Offset, paddedX.Count).Should().BeTrue();
         }
 
-        [Test]
+        [Fact]
         public void ConstantTimeEqualsRangeFail()
         {
             var x = new byte[] { 1, 2, 3 };
@@ -231,126 +231,134 @@
             {
                 var paddedX = x.Pad();
                 var paddedY = y.Pad();
-                Assert.IsFalse(CryptoBytes.ConstantTimeEquals(paddedX.Array, paddedX.Offset, paddedY.Array, paddedY.Offset, paddedX.Count));
+                CryptoBytes.ConstantTimeEquals(paddedX.Array, paddedX.Offset, paddedY.Array, paddedY.Offset, paddedX.Count).Should().BeFalse();
             }
         }
 
         #region Argument Validation
 
         /*
-        [Test]
+        [Fact]
         public void ConstantTimeEqualsXMustNotBeNull()
         {
             Assert.Throws<ArgumentNullException>(() => CryptoBytes.ConstantTimeEquals(null, new byte[1]));
         }
 
-        [Test]
+        [Fact]
         public void ConstantTimeEqualsYMustNotBeNull()
         {
             Assert.Throws<ArgumentNullException>(() => CryptoBytes.ConstantTimeEquals(new byte[1], null));
         }
         */
 
-        [Test]
+        [Fact]
         public void ConstantTimeEqualsXAndYMustHaveSameLength()
         {
-            Assert.Throws<ArgumentException>(() => CryptoBytes.ConstantTimeEquals(new byte[1], new byte[2]));
+            Action act = () => CryptoBytes.ConstantTimeEquals(new byte[1], new byte[2]);
+            act.Should().Throw<ArgumentException>();
         }
 
-        [Test]
+        [Fact]
         public void ConstantTimeEqualsSegmentsMustHaveSameLength()
         {
             var x = new byte[5];
             var y = new byte[5];
-            Assert.Throws<ArgumentException>(() => CryptoBytes.ConstantTimeEquals(new ArraySegment<byte>(x, 0, 4), new ArraySegment<byte>(y, 0, 5)));
+
+            Action act = () => CryptoBytes.ConstantTimeEquals(new ArraySegment<byte>(x, 0, 4), new ArraySegment<byte>(y, 0, 5));
+            act.Should().Throw<ArgumentException>();
         }
 
-        [Test]
+        [Fact]
         public void ConstantTimeEqualsSegmentsXMustNotBeNull()
         {
-            Assert.Throws<ArgumentNullException>(() => CryptoBytes.ConstantTimeEquals(default(ArraySegment<byte>), new ArraySegment<byte>(new byte[1])));
+            Action act = () => CryptoBytes.ConstantTimeEquals(default, new ArraySegment<byte>(new byte[1]));
+            act.Should().Throw<ArgumentNullException>();
         }
 
-        [Test]
+        [Fact]
         public void ConstantTimeEqualsSegmentsYMustNotBeNull()
         {
-            Assert.Throws<ArgumentNullException>(() => CryptoBytes.ConstantTimeEquals(new ArraySegment<byte>(new byte[1]), default(ArraySegment<byte>)));
+            Action act = () => CryptoBytes.ConstantTimeEquals(new ArraySegment<byte>(new byte[1]), default);
+            act.Should().Throw<ArgumentNullException>();
         }
 
-        [Test]
+        [Fact]
         public void WipeNullFails()
         {
-            Assert.Throws<ArgumentNullException>(() => CryptoBytes.Wipe(null));
+            Action act = () => CryptoBytes.Wipe(null);
+            act.Should().Throw<ArgumentNullException>();
         }
 
-        [Test]
+        [Fact]
         public void ConstantTimeEqualsRangeXmustNotBeNull()
         {
-            Assert.Throws<ArgumentNullException>(() => CryptoBytes.ConstantTimeEquals(null, 0, new byte[10], 0, 1));
+            Action act = () => CryptoBytes.ConstantTimeEquals(null, 0, new byte[10], 0, 1);
+            act.Should().Throw<ArgumentNullException>();
         }
 
-        [Test]
+        [Fact]
         public void ConstantTimeEqualsRangeYmustNotBeNull()
         {
-            Assert.Throws<ArgumentNullException>(() => CryptoBytes.ConstantTimeEquals(new byte[10], 0, null, 0, 1));
+            Action act = () => CryptoBytes.ConstantTimeEquals(new byte[10], 0, null, 0, 1);
+            act.Should().Throw<ArgumentNullException>();
         }
 
-        [Test]
+        [Fact]
         public void ConstantTimeEqualsRangeXoffsetMustNotBeNegative()
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => CryptoBytes.ConstantTimeEquals(new byte[10], -1, new byte[10], 0, 1));
         }
 
-        [Test]
+        [Fact]
         public void ConstantTimeEqualsRangeYoffsetMustNotBeNegative()
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => CryptoBytes.ConstantTimeEquals(new byte[10], 0, new byte[10], -1, 1));
         }
 
-        [Test]
+        [Fact]
         public void ConstantTimeEqualsRangeLengthMustNotBeNegative()
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => CryptoBytes.ConstantTimeEquals(new byte[10], 0, new byte[10], 0, -1));
         }
 
 
-        [Test]
+        [Fact]
         public void ConstantTimeEqualsRangeLengthTooBigX()
         {
             Assert.Throws<ArgumentException>(() => CryptoBytes.ConstantTimeEquals(new byte[10], 8, new byte[10], 1, 7));
         }
 
-        [Test]
+        [Fact]
         public void ConstantTimeEqualsRangeLengthTooBigY()
         {
             Assert.Throws<ArgumentException>(() => CryptoBytes.ConstantTimeEquals(new byte[10], 1, new byte[10], 8, 7));
         }
 
-        [Test]
+        [Fact]
         public void WipeSegmentNullFails()
         {
             Assert.Throws<ArgumentNullException>(() => CryptoBytes.Wipe(default(ArraySegment<byte>)));
         }
 
-        [Test]
+        [Fact]
         public void WipeRangeNullFails()
         {
             Assert.Throws<ArgumentNullException>(() => CryptoBytes.Wipe(null, 0, 0));
         }
 
-        [Test]
+        [Fact]
         public void WipeRangeNegativeOffsetFails()
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => CryptoBytes.Wipe(new byte[10], -1, 0));
         }
 
-        [Test]
+        [Fact]
         public void WipeRangeNegativeLengthFails()
         {
             Assert.Throws<ArgumentOutOfRangeException>(() => CryptoBytes.Wipe(new byte[10], 0, -1));
         }
 
-        [Test]
+        [Fact]
         public void WipeRangeTooLargeLengthFails()
         {
             Assert.Throws<ArgumentException>(() => CryptoBytes.Wipe(new byte[10], 8, 8));

@@ -6,42 +6,48 @@
     using System.Security.Cryptography;
     using System.Text;
 
-    using NUnit.Framework;
+    using FluentAssertions;
+    using Xunit;
+    using Xunit.Categories;
 
     using Internal;
 
-    [TestFixture]
+    [Category("CI")]
     public class Poly1305Test
     {
-        [Test]
+        [Fact]
         public void ComputeMacWhenKeyLengthIsGreaterThan32Fails()
         {
             // Arrange, Act & Assert
-            Assert.Throws<CryptographicException>(() => Poly1305.ComputeMac(new byte[Poly1305.MAC_KEY_SIZE_IN_BYTES + 1], new byte[0]));
+            Action act = () => Poly1305.ComputeMac(new byte[Poly1305.MAC_KEY_SIZE_IN_BYTES + 1], new byte[0]);
+            act.Should().Throw<CryptographicException>();
         }
 
-        [Test]
+        [Fact]
         public void ComputeMacWhenKeyLengthIsLessThan32Fails()
         {
             // Arrange, Act & Assert
-            Assert.Throws<CryptographicException>(() => Poly1305.ComputeMac(new byte[Poly1305.MAC_KEY_SIZE_IN_BYTES - 1], new byte[0]));
+            Action act = () => Poly1305.ComputeMac(new byte[Poly1305.MAC_KEY_SIZE_IN_BYTES - 1], new byte[0]);
+            act.Should().Throw<CryptographicException>();
         }
 
-        [Test]
+        [Fact]
         public void VerifyMacWhenKeyLengthIsGreaterThan32Fails()
         {
             // Arrange, Act & Assert
-            Assert.Throws<CryptographicException>(() => Poly1305.VerifyMac(new byte[Poly1305.MAC_KEY_SIZE_IN_BYTES + 1], new byte[0], new byte[0]));
+            Action act = () => Poly1305.VerifyMac(new byte[Poly1305.MAC_KEY_SIZE_IN_BYTES + 1], new byte[0], new byte[0]);
+            act.Should().Throw<CryptographicException>();
         }
 
-        [Test]
+        [Fact]
         public void VerifyMacWhenKeyLengthIsLessThan32Fails()
         {
             // Arrange, Act & Assert
-            Assert.Throws<CryptographicException>(() => Poly1305.VerifyMac(new byte[Poly1305.MAC_KEY_SIZE_IN_BYTES - 1], new byte[0], new byte[0]));
+            Action act = () => Poly1305.VerifyMac(new byte[Poly1305.MAC_KEY_SIZE_IN_BYTES - 1], new byte[0], new byte[0]);
+            act.Should().Throw<CryptographicException>();
         }
 
-        [Test]
+        [Fact]
         public void RandomMacTest()
         {
             var rnd = new Random();
@@ -57,11 +63,12 @@
                 var mac = Poly1305.ComputeMac(key, data);
 
                 // Assert
-                Assert.DoesNotThrow(() => Poly1305.VerifyMac(key, data, mac));
+                Action act = () => Poly1305.VerifyMac(key, data, mac);
+                act.Should().NotThrow();
             }
         }
 
-        [Test]
+        [Fact]
         public void VerifyMacFails()
         {
             // Arrange
@@ -69,10 +76,11 @@
             key[0] = 1;
 
             // Act & Assert
-            Assert.Throws<CryptographicException>(() => Poly1305.VerifyMac(key, new byte[] { 1 }, new byte[Poly1305.MAC_TAG_SIZE_IN_BYTES]));
+            Action act = () => Poly1305.VerifyMac(key, new byte[] { 1 }, new byte[Poly1305.MAC_TAG_SIZE_IN_BYTES]);
+            act.Should().Throw<CryptographicException>();
         }
 
-        [Test]
+        [Fact]
         public void ComputeMacTest()
         {
             // Tests against the test vectors in Section 2.5.2 of RFC 7539.
@@ -87,10 +95,10 @@
             var mac = Poly1305.ComputeMac(key, dat);
 
             // Assert
-            Assert.AreEqual(CryptoBytes.FromHexString("a8061dc1305136c6c22b8baf0c0127a9"), mac);
+            mac.Should().Equal(CryptoBytes.FromHexString("a8061dc1305136c6c22b8baf0c0127a9"));
         }
 
-        [Test]
+        [Fact]
         public void Poly1305TestVector1()
         {
             // Tests against the test vector 1 in Appendix A.3 of RFC 7539.
@@ -108,10 +116,10 @@
             var mac = Poly1305.ComputeMac(key, dat);
 
             // Assert
-            Assert.AreEqual(CryptoBytes.FromHexString("00000000000000000000000000000000"), mac);
+            mac.Should().Equal(CryptoBytes.FromHexString("00000000000000000000000000000000"));
         }
 
-        [Test]
+        [Fact]
         public void Poly1305TestVector2()
         {
             // Tests against the test vector 2 in Appendix A.3 of RFC 7539.
@@ -126,10 +134,10 @@
             var mac = Poly1305.ComputeMac(key, dat);
 
             // Assert
-            Assert.AreEqual(CryptoBytes.FromHexString("36e5f6b5c5e06070f0efca96227a863e"), mac);
+            mac.Should().Equal(CryptoBytes.FromHexString("36e5f6b5c5e06070f0efca96227a863e"));
         }
 
-        [Test]
+        [Fact]
         public void Poly1305TestVector3()
         {
             // Tests against the test vector 3 in Appendix A.3 of RFC 7539.
@@ -144,10 +152,10 @@
             var mac = Poly1305.ComputeMac(key, dat);
 
             // Assert
-            Assert.AreEqual(CryptoBytes.FromHexString("f3477e7cd95417af89a6b8794c310cf0"), mac);
+            mac.Should().Equal(CryptoBytes.FromHexString("f3477e7cd95417af89a6b8794c310cf0"));
         }
 
-        [Test]
+        [Fact]
         public void Poly1305TestVector4()
         {
             // Tests against the test vector 4 in Appendix A.3 of RFC 7539.
@@ -169,10 +177,10 @@
             var mac = Poly1305.ComputeMac(key, dat);
 
             // Assert
-            Assert.AreEqual(CryptoBytes.FromHexString("4541669a7eaaee61e708dc7cbcc5eb62"), mac);
+            mac.Should().Equal(CryptoBytes.FromHexString("4541669a7eaaee61e708dc7cbcc5eb62"));
         }
 
-        [Test]
+        [Fact]
         public void Poly1305TestVector5()
         {
             // Tests against the test vector 5 in Appendix A.3 of RFC 7539.
@@ -187,10 +195,10 @@
             var mac = Poly1305.ComputeMac(key, dat);
 
             // Assert
-            Assert.AreEqual(CryptoBytes.FromHexString("03000000000000000000000000000000"), mac);
+            mac.Should().Equal(CryptoBytes.FromHexString("03000000000000000000000000000000"));
         }
 
-        [Test]
+        [Fact]
         public void Poly1305TestVector6()
         {
             // Tests against the test vector 6 in Appendix A.3 of RFC 7539.
@@ -205,10 +213,10 @@
             var mac = Poly1305.ComputeMac(key, dat);
 
             // Assert
-            Assert.AreEqual(CryptoBytes.FromHexString("03000000000000000000000000000000"), mac);
+            mac.Should().Equal(CryptoBytes.FromHexString("03000000000000000000000000000000"));
         }
 
-        [Test]
+        [Fact]
         public void Poly1305TestVector7()
         {
             // Tests against the test vector 7 in Appendix A.3 of RFC 7539.
@@ -225,10 +233,10 @@
             var mac = Poly1305.ComputeMac(key, dat);
 
             // Assert
-            Assert.AreEqual(CryptoBytes.FromHexString("05000000000000000000000000000000"), mac);
+            mac.Should().Equal(CryptoBytes.FromHexString("05000000000000000000000000000000"));
         }
 
-        [Test]
+        [Fact]
         public void Poly1305TestVector8()
         {
             // Tests against the test vector 8 in Appendix A.3 of RFC 7539.
@@ -245,10 +253,10 @@
             var mac = Poly1305.ComputeMac(key, dat);
 
             // Assert
-            Assert.AreEqual(CryptoBytes.FromHexString("00000000000000000000000000000000"), mac);
+            mac.Should().Equal(CryptoBytes.FromHexString("00000000000000000000000000000000"));
         }
 
-        [Test]
+        [Fact]
         public void Poly1305TestVector9()
         {
             // Tests against the test vector 9 in Appendix A.3 of RFC 7539.
@@ -263,10 +271,10 @@
             var mac = Poly1305.ComputeMac(key, dat);
 
             // Assert
-            Assert.AreEqual(CryptoBytes.FromHexString("faffffffffffffffffffffffffffffff"), mac);
+            mac.Should().Equal(CryptoBytes.FromHexString("faffffffffffffffffffffffffffffff"));
         }
 
-        [Test]
+        [Fact]
         public void Poly1305TestVector10()
         {
             // Tests against the test vector 10 in Appendix A.3 of RFC 7539.
@@ -284,10 +292,10 @@
             var mac = Poly1305.ComputeMac(key, dat);
 
             // Assert
-            Assert.AreEqual(CryptoBytes.FromHexString("14000000000000005500000000000000"), mac);
+            mac.Should().Equal(CryptoBytes.FromHexString("14000000000000005500000000000000"));
         }
 
-        [Test]
+        [Fact]
         public void Poly1305TestVector11()
         {
             // Tests against the test vector 11 in Appendix A.3 of RFC 7539.
@@ -304,7 +312,7 @@
             var mac = Poly1305.ComputeMac(key, dat);
 
             // Assert
-            Assert.AreEqual(CryptoBytes.FromHexString("13000000000000000000000000000000"), mac);
+            mac.Should().Equal(CryptoBytes.FromHexString("13000000000000000000000000000000"));
         }
     }
 }

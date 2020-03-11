@@ -1,80 +1,98 @@
-namespace NaCl.Core.Tests
+﻿namespace NaCl.Core.Tests
 {
     using System;
     using System.Collections.Generic;
     using System.Security.Cryptography;
 
-    using NUnit.Framework;
+    using FluentAssertions;
+    using Newtonsoft.Json;
+    using Xunit;
+    using Xunit.Categories;
 
     using Base;
     using Internal;
     using Vectors;
 
-    [TestFixture]
+    [Category("CI")]
     public class XChaCha20Poly1305Test
     {
-        private const string EXCEPTION_MESSAGE_NONCE_LENGTH = "The nonce length in bytes must be 24.";
+        private const string EXCEPTION_MESSAGE_NONCE_LENGTH = "*The nonce length in bytes must be 24.";
 
-        [Test]
+        [Fact]
         public void CreateInstanceWhenKeyLengthIsInvalidFails()
         {
             // Arrange, Act & Assert
-            Assert.Throws<CryptographicException>(() => new XChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES + TestHelpers.ReturnRandomPositiveNegative()]));
+            Action act = () => new XChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES + TestHelpers.ReturnRandomPositiveNegative()]);
+            act.Should().Throw<CryptographicException>();
         }
 
-        [Test]
+        [Fact]
         public void EncryptWhenNonceLengthIsInvalidFails()
         {
-            // Arrange, Act & Assert
+            // Arrange
             var aead = new XChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES]);
-            Assert.Throws<CryptographicException>(() => aead.Encrypt(new byte[0], new byte[0], new byte[24 + TestHelpers.ReturnRandomPositiveNegative()]), EXCEPTION_MESSAGE_NONCE_LENGTH);
+
+            // Act & Assert
+            Action act = () => aead.Encrypt(new byte[0], new byte[0], new byte[24 + TestHelpers.ReturnRandomPositiveNegative()]);
+            act.Should().Throw<CryptographicException>().WithMessage(EXCEPTION_MESSAGE_NONCE_LENGTH);
         }
 
-        [Test]
+        [Fact]
         public void EncryptWhenNonceIsEmptyFails()
         {
-            // Arrange, Act & Assert
+            // Arrange
             var aead = new XChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES]);
-            Assert.Throws<CryptographicException>(() => aead.Encrypt(new byte[0], new byte[0], new byte[0]), EXCEPTION_MESSAGE_NONCE_LENGTH);
+
+            // Act & Assert
+            Action act = () => aead.Encrypt(new byte[0], new byte[0], new byte[0]);
+            act.Should().Throw<CryptographicException>().WithMessage(EXCEPTION_MESSAGE_NONCE_LENGTH);
         }
 
-        [Test]
+        [Fact]
         public void DecryptWhenNonceLengthIsInvalidFails()
         {
-            // Arrange, Act & Assert
+            // Arrange
             var aead = new XChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES]);
-            Assert.Throws<CryptographicException>(() => aead.Decrypt(new byte[50], new byte[0], new byte[24 + TestHelpers.ReturnRandomPositiveNegative()]), EXCEPTION_MESSAGE_NONCE_LENGTH);
+
+            // Act & Assert
+            Action act = () => aead.Decrypt(new byte[50], new byte[0], new byte[24 + TestHelpers.ReturnRandomPositiveNegative()]);
+            act.Should().Throw<CryptographicException>().WithMessage(EXCEPTION_MESSAGE_NONCE_LENGTH);
         }
 
-        [Test]
+        [Fact]
         public void DecryptWhenNonceIsEmptyFails()
         {
-            // Arrange, Act & Assert
+            // Arrange
             var aead = new XChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES]);
-            Assert.Throws<CryptographicException>(() => aead.Decrypt(new byte[50], new byte[0], new byte[0]), EXCEPTION_MESSAGE_NONCE_LENGTH);
+
+            // Act & Assert
+            Action act = () => aead.Decrypt(new byte[50], new byte[0], new byte[0]);
+            act.Should().Throw<CryptographicException>().WithMessage(EXCEPTION_MESSAGE_NONCE_LENGTH);
         }
 
-        [Test]
+        [Fact]
         public void DecryptWhenCiphertextIsTooShortFails()
         {
-            // Arrange & Act
+            // Arrange
             var cipher = new XChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES]);
 
-            // Assert
-            Assert.Throws<CryptographicException>(() => cipher.Decrypt(new byte[27], new byte[1]));
+            // Act & Assert
+            Action act = () => cipher.Decrypt(new byte[27], new byte[1]);
+            act.Should().Throw<CryptographicException>();
         }
 
-        [Test]
+        [Fact]
         public void DecryptWithNonceWhenCiphertextIsTooShortFails()
         {
-            // Arrange & Act
+            // Arrange
             var cipher = new XChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES]);
 
-            // Assert
-            Assert.Throws<CryptographicException>(() => cipher.Decrypt(new byte[27], new byte[1], new byte[1]));
+            // Act & Assert
+            Action act = () => cipher.Decrypt(new byte[27], new byte[1], new byte[1]);
+            act.Should().Throw<CryptographicException>();
         }
 
-        [Test]
+        [Fact]
         public void EncryptDecryptTest()
         {
             var rnd = new Random();
@@ -93,12 +111,11 @@ namespace NaCl.Core.Tests
                 var ciphertext = aead.Encrypt(message, aad);
                 var decrypted = aead.Decrypt(ciphertext, aad);
 
-                //Assert.AreEqual(message, decrypted);
-                Assert.IsTrue(CryptoBytes.ConstantTimeEquals(message, decrypted));
+                CryptoBytes.ConstantTimeEquals(message, decrypted).Should().BeTrue();
             }
         }
 
-        [Test]
+        [Fact]
         public void EncryptDecryptWithNonceTest()
         {
             var rnd = new Random();
@@ -120,12 +137,11 @@ namespace NaCl.Core.Tests
                 var ciphertext = aead.Encrypt(message, aad, nonce);
                 var decrypted = aead.Decrypt(ciphertext, aad, nonce);
 
-                //Assert.AreEqual(message, decrypted);
-                Assert.IsTrue(CryptoBytes.ConstantTimeEquals(message, decrypted));
+                CryptoBytes.ConstantTimeEquals(message, decrypted).Should().BeTrue();
             }
         }
 
-        [Test]
+        [Fact]
         public void EncryptDecryptLongMessagesTest()
         {
             var rnd = new Random();
@@ -146,13 +162,12 @@ namespace NaCl.Core.Tests
                 var ciphertext = aead.Encrypt(plaintext, aad);
                 var decrypted = aead.Decrypt(ciphertext, aad);
 
-                //Assert.AreEqual(plaintext, decrypted);
-                Assert.IsTrue(CryptoBytes.ConstantTimeEquals(plaintext, decrypted));
+                CryptoBytes.ConstantTimeEquals(plaintext, decrypted).Should().BeTrue();
                 dataSize += 5 * dataSize / 11;
             }
         }
 
-        [Test]
+        [Fact]
         public void EncryptDecryptLongMessagesWithNonceTest()
         {
             var rnd = new Random();
@@ -176,13 +191,12 @@ namespace NaCl.Core.Tests
                 var ciphertext = aead.Encrypt(plaintext, aad, nonce);
                 var decrypted = aead.Decrypt(ciphertext, aad, nonce);
 
-                //Assert.AreEqual(plaintext, decrypted);
-                Assert.IsTrue(CryptoBytes.ConstantTimeEquals(plaintext, decrypted));
+                CryptoBytes.ConstantTimeEquals(plaintext, decrypted).Should().BeTrue();
                 dataSize += 5 * dataSize / 11;
             }
         }
 
-        [Test]
+        [Fact]
         public void ModifiedCiphertextFails()
         {
             var rnd = new Random();
@@ -208,7 +222,8 @@ namespace NaCl.Core.Tests
 
                     modified[b] ^= (byte)(1 << bit);
 
-                    Assert.Throws<CryptographicException>(() => aead.Decrypt(modified, aad), SnufflePoly1305.AEAD_EXCEPTION_INVALID_TAG);
+                    Action act = () => aead.Decrypt(modified, aad);
+                    act.Should().Throw<CryptographicException>().WithMessage(SnufflePoly1305.AEAD_EXCEPTION_INVALID_TAG);
                 }
             }
 
@@ -218,7 +233,8 @@ namespace NaCl.Core.Tests
                 var modified = new byte[length];
                 Array.Copy(ciphertext, modified, length);
 
-                Assert.Throws<CryptographicException>(() => aead.Decrypt(modified, aad), SnufflePoly1305.AEAD_EXCEPTION_INVALID_TAG);
+                Action act = () => aead.Decrypt(modified, aad);
+                act.Should().Throw<CryptographicException>();
             }
 
             // Modify AAD
@@ -231,13 +247,14 @@ namespace NaCl.Core.Tests
 
                     modified[b] ^= (byte)(1 << bit);
 
-                    Assert.Throws<CryptographicException>(() => aead.Decrypt(modified, aad), SnufflePoly1305.AEAD_EXCEPTION_INVALID_TAG);
+                    Action act = () => aead.Decrypt(modified, aad);
+                    act.Should().Throw<CryptographicException>();
                 }
             }
         }
 
         /*
-        [Test]
+        [Fact]
         public void NullPlaintextOrCiphertextFails()
         {
             var rnd = new Random();
@@ -254,7 +271,7 @@ namespace NaCl.Core.Tests
         }
         */
 
-        [Test]
+        [Fact]
         public void ModifiedAssociatedDataFails()
         {
             var rnd = new Random();
@@ -272,31 +289,29 @@ namespace NaCl.Core.Tests
                 // encrypting with aad as a 0-length array
                 var ciphertext = aead.Encrypt(message, aad);
                 var decrypted = aead.Decrypt(ciphertext, aad);
-                //Assert.AreEqual(message, decrypted);
-                Assert.IsTrue(CryptoBytes.ConstantTimeEquals(message, decrypted));
+                CryptoBytes.ConstantTimeEquals(message, decrypted).Should().BeTrue();
 
                 var decrypted2 = aead.Decrypt(ciphertext, null);
-                //Assert.AreEqual(message, decrypted2);
-                Assert.IsTrue(CryptoBytes.ConstantTimeEquals(message, decrypted2));
+                CryptoBytes.ConstantTimeEquals(message, decrypted2).Should().BeTrue();
 
                 var badAad = new byte[] { 1, 2, 3 };
-                Assert.Throws<CryptographicException>(() => aead.Decrypt(ciphertext, badAad), SnufflePoly1305.AEAD_EXCEPTION_INVALID_TAG);
+                Action badAadAct = () => aead.Decrypt(ciphertext, badAad);
+                badAadAct.Should().Throw<CryptographicException>().WithMessage(SnufflePoly1305.AEAD_EXCEPTION_INVALID_TAG);
 
                 // encrypting with aad equal to null
                 ciphertext = aead.Encrypt(message, null);
                 decrypted = aead.Decrypt(ciphertext, aad);
-                //Assert.AreEqual(message, decrypted);
-                Assert.IsTrue(CryptoBytes.ConstantTimeEquals(message, decrypted));
+                CryptoBytes.ConstantTimeEquals(message, decrypted).Should().BeTrue();
 
                 decrypted2 = aead.Decrypt(ciphertext, null);
-                //Assert.AreEqual(message, decrypted2);
-                Assert.IsTrue(CryptoBytes.ConstantTimeEquals(message, decrypted2));
+                CryptoBytes.ConstantTimeEquals(message, decrypted2).Should().BeTrue();
 
-                Assert.Throws<CryptographicException>(() => aead.Decrypt(ciphertext, badAad), SnufflePoly1305.AEAD_EXCEPTION_INVALID_TAG);
+                Action act = () => aead.Decrypt(ciphertext, badAad);
+                act.Should().Throw<CryptographicException>().WithMessage(SnufflePoly1305.AEAD_EXCEPTION_INVALID_TAG);
             }
         }
 
-        [Test]
+        [Fact]
         public void RandomNonceTest()
         {
             var rnd = new Random();
@@ -315,14 +330,14 @@ namespace NaCl.Core.Tests
                 var ct = aead.Encrypt(message, aad);
                 var ctHex = CryptoBytes.ToHexStringLower(ct);
 
-                Assert.IsFalse(ciphertexts.Contains(ctHex));
+                ciphertexts.Contains(ctHex).Should().BeFalse();
                 ciphertexts.Add(ctHex);
             }
 
-            Assert.AreEqual(samples, ciphertexts.Count);
+            ciphertexts.Count.Should().Be(samples);
         }
 
-        [Test]
+        [Fact]
         public void XChaCha20Poly1305TestVectors()
         {
             // From libsodium's test/default/aead_xchacha20poly1305.c and https://tools.ietf.org/html/draft-arciszewski-xchacha-01.
@@ -337,8 +352,7 @@ namespace NaCl.Core.Tests
                 var output = aead.Decrypt(CryptoBytes.Combine(test.Nonce, test.CipherText, test.Tag), test.Aad);
 
                 // Assert
-                //Assert.That(output, Is.EqualTo(test.PlainText));
-                Assert.IsTrue(CryptoBytes.ConstantTimeEquals(test.PlainText, output));
+                CryptoBytes.ConstantTimeEquals(test.PlainText, output).Should().BeTrue();
             }
         }
     }

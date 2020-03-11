@@ -1,69 +1,76 @@
-namespace NaCl.Core.Tests
+﻿namespace NaCl.Core.Tests
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Security.Cryptography;
 
-    using NUnit.Framework;
+    using FluentAssertions;
+    using Xunit;
+    using Xunit.Categories;
 
     using Base;
     using Internal;
     using Vectors;
 
-    [TestFixture]
+    [Category("CI")]
     public class XChaCha20Tests
     {
-        private const string EXCEPTION_MESSAGE_NONCE_LENGTH = "The nonce length in bytes must be 24.";
+        private const string EXCEPTION_MESSAGE_NONCE_LENGTH = "*The nonce length in bytes must be 24.";
 
-        [Test]
+        [Fact]
         public void CreateInstanceWhenKeyLengthIsInvalidFails()
         {
             // Arrange, Act & Assert
-            Assert.Throws<CryptographicException>(() => new XChaCha20(new byte[Snuffle.KEY_SIZE_IN_BYTES + TestHelpers.ReturnRandomPositiveNegative()], 0));
+            Action act = () => new XChaCha20(new byte[Snuffle.KEY_SIZE_IN_BYTES + TestHelpers.ReturnRandomPositiveNegative()], 0);
+            act.Should().Throw<CryptographicException>();
         }
 
-        [Test]
+        [Fact]
         public void EncryptWhenNonceLengthIsInvalidFails()
         {
             // Arrange
             var cipher = new XChaCha20(new byte[Snuffle.KEY_SIZE_IN_BYTES], 0);
 
             // Act & Assert
-            Assert.Throws<CryptographicException>(() => cipher.Encrypt(new byte[0], new byte[cipher.NonceSizeInBytes() + TestHelpers.ReturnRandomPositiveNegative()]), EXCEPTION_MESSAGE_NONCE_LENGTH);
+            Action act = () => cipher.Encrypt(new byte[0], new byte[cipher.NonceSizeInBytes() + TestHelpers.ReturnRandomPositiveNegative()]);
+            act.Should().Throw<CryptographicException>().WithMessage(EXCEPTION_MESSAGE_NONCE_LENGTH);
         }
 
-        [Test]
+        [Fact]
         public void EncryptWhenNonceIsEmptyFails()
         {
             // Arrange
             var cipher = new XChaCha20(new byte[Snuffle.KEY_SIZE_IN_BYTES], 0);
 
             // Act & Assert
-            Assert.Throws<CryptographicException>(() => cipher.Encrypt(new byte[0], new byte[0]), EXCEPTION_MESSAGE_NONCE_LENGTH);
+            Action act = () => cipher.Encrypt(new byte[0], new byte[0]);
+            act.Should().Throw<CryptographicException>().WithMessage(EXCEPTION_MESSAGE_NONCE_LENGTH);
         }
 
-        [Test]
+        [Fact]
         public void DecryptWhenNonceLengthIsInvalidFails()
         {
             // Arrange
             var cipher = new XChaCha20(new byte[Snuffle.KEY_SIZE_IN_BYTES], 0);
 
             // Act & Assert
-            Assert.Throws<CryptographicException>(() => cipher.Decrypt(new byte[0], new byte[cipher.NonceSizeInBytes() + TestHelpers.ReturnRandomPositiveNegative()]), EXCEPTION_MESSAGE_NONCE_LENGTH);
+            Action act = () => cipher.Decrypt(new byte[0], new byte[cipher.NonceSizeInBytes() + TestHelpers.ReturnRandomPositiveNegative()]);
+            act.Should().Throw<CryptographicException>().WithMessage(EXCEPTION_MESSAGE_NONCE_LENGTH);
         }
 
-        [Test]
+        [Fact]
         public void DecryptWhenNonceIsEmptyFails()
         {
             // Arrange
             var cipher = new XChaCha20(new byte[Snuffle.KEY_SIZE_IN_BYTES], 0);
 
             // Act & Assert
-            Assert.Throws<CryptographicException>(() => cipher.Decrypt(new byte[0], new byte[0]), EXCEPTION_MESSAGE_NONCE_LENGTH);
+            Action act = () => cipher.Decrypt(new byte[0], new byte[0]);
+            act.Should().Throw<CryptographicException>().WithMessage(EXCEPTION_MESSAGE_NONCE_LENGTH);
         }
 
-        [Test]
+        [Fact]
         public void DecryptWhenCiphertextIsTooShortFails()
         {
             // Arrange
@@ -72,12 +79,13 @@ namespace NaCl.Core.Tests
 
             // Act
             var cipher = new XChaCha20(key, 0);
+            Action act = () => cipher.Decrypt(new byte[2]);
 
             // Assert
-            Assert.Throws<CryptographicException>(() => cipher.Decrypt(new byte[2]));
+            act.Should().Throw<CryptographicException>();
         }
 
-        [Test]
+        [Fact]
         public void EncryptDecryptNBlocksTest()
         {
             // Arrange
@@ -100,13 +108,12 @@ namespace NaCl.Core.Tests
                     var actualInput = cipher.Decrypt(output);
 
                     // Assert
-                    //Assert.AreEqual(expectedInput, actualInput);
-                    Assert.IsTrue(CryptoBytes.ConstantTimeEquals(expectedInput, actualInput));
+                    CryptoBytes.ConstantTimeEquals(expectedInput, actualInput).Should().BeTrue();
                 }
             }
         }
 
-        [Test]
+        [Fact]
         public void EncryptDecryptLongMessagesTest()
         {
             var rnd = new Random();
@@ -125,13 +132,12 @@ namespace NaCl.Core.Tests
                 var ciphertext = cipher.Encrypt(plaintext);
                 var decrypted = cipher.Decrypt(ciphertext);
 
-                //Assert.AreEqual(plaintext, decrypted);
-                Assert.IsTrue(CryptoBytes.ConstantTimeEquals(plaintext, decrypted));
+                CryptoBytes.ConstantTimeEquals(plaintext, decrypted).Should().BeTrue();
                 dataSize += 5 * dataSize / 11;
             }
         }
 
-        [Test]
+        [Fact]
         public void EncryptDecryptLongMessagesWithNonceTest()
         {
             var rnd = new Random();
@@ -153,13 +159,12 @@ namespace NaCl.Core.Tests
                 var ciphertext = cipher.Encrypt(plaintext, nonce);
                 var decrypted = cipher.Decrypt(ciphertext, nonce);
 
-                //Assert.AreEqual(plaintext, decrypted);
-                Assert.IsTrue(CryptoBytes.ConstantTimeEquals(plaintext, decrypted));
+                CryptoBytes.ConstantTimeEquals(plaintext, decrypted).Should().BeTrue();
                 dataSize += 5 * dataSize / 11;
             }
         }
 
-        [Test]
+        [Fact]
         public void XChaCha20BlockWhenNonceLengthIsEmptyFails()
         {
             // Arrange
@@ -170,10 +175,11 @@ namespace NaCl.Core.Tests
             var block = new byte[Snuffle.BLOCK_SIZE_IN_BYTES];
 
             // Act & Assert
-            Assert.Throws<CryptographicException>(() => cipher.ProcessKeyStreamBlock(nonce, 0, block));
+            Action act = () => cipher.ProcessKeyStreamBlock(nonce, 0, block);
+            act.Should().Throw<CryptographicException>();
         }
 
-        [Test]
+        [Fact]
         public void XChaCha20BlockWhenNonceLengthIsInvalidFails()
         {
             // Arrange
@@ -184,10 +190,11 @@ namespace NaCl.Core.Tests
             var block = new byte[Snuffle.BLOCK_SIZE_IN_BYTES];
 
             // Act & Assert
-            Assert.Throws<CryptographicException>(() => cipher.ProcessKeyStreamBlock(nonce, 0, block));
+            Action act = () => cipher.ProcessKeyStreamBlock(nonce, 0, block);
+            act.Should().Throw<CryptographicException>();
         }
 
-        [Test]
+        [Fact]
         public void XChaCha20BlockWhenLengthIsInvalidFails()
         {
             // Arrange
@@ -198,10 +205,11 @@ namespace NaCl.Core.Tests
             var block = new byte[0];
 
             // Act & Assert
-            Assert.Throws<CryptographicException>(() => cipher.ProcessKeyStreamBlock(nonce, 0, block));
+            Action act = () => cipher.ProcessKeyStreamBlock(nonce, 0, block);
+            act.Should().Throw<CryptographicException>();
         }
 
-        [Test]
+        [Fact]
         public void HChaCha20TestVectors()
         {
             // Arrange
@@ -213,12 +221,11 @@ namespace NaCl.Core.Tests
                 var output = cipher.HChaCha20(test.Input);
 
                 // Assert
-                //Assert.That(output, Is.EqualTo(test.Output));
-                Assert.IsTrue(CryptoBytes.ConstantTimeEquals(test.Output, output));
+                CryptoBytes.ConstantTimeEquals(test.Output, output).Should().BeTrue();
             }
         }
 
-        [Test]
+        [Fact]
         public void XChaCha20TestVectors()
         {
             // From libsodium's test/default/xchacha20.c (tv_stream_xchacha20) and https://tools.ietf.org/html/draft-arciszewski-xchacha-00.
@@ -231,13 +238,12 @@ namespace NaCl.Core.Tests
                 var output = cipher.Decrypt(CryptoBytes.Combine(test.Nonce, test.CipherText));
 
                 // Assert
-                //Assert.That(output, Is.EqualTo(test.Output));
-                Assert.IsTrue(CryptoBytes.ConstantTimeEquals(test.PlainText, output));
+                CryptoBytes.ConstantTimeEquals(test.PlainText, output).Should().BeTrue();
             }
         }
 
         /*
-        [Test]
+        [Fact]
         public void HChaCha20BlockTestVector()
         {
             // Arrange
@@ -275,7 +281,7 @@ namespace NaCl.Core.Tests
         */
 
         /*
-        [Test]
+        [Fact]
         public void XChaCha20BlockTestVector()
         {
             // Arrange

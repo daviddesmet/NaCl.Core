@@ -6,25 +6,28 @@
     using System.Security.Cryptography;
     using System.Text;
 
-    using NUnit.Framework;
+    using FluentAssertions;
+    using Xunit;
+    using Xunit.Categories;
 
     using Base;
     using Internal;
     using Vectors;
 
-    [TestFixture]
+    [Category("CI")]
     public class ChaCha20Tests
     {
-        private const string EXCEPTION_MESSAGE_NONCE_LENGTH = "The nonce length in bytes must be 12.";
+        private const string EXCEPTION_MESSAGE_NONCE_LENGTH = "*The nonce length in bytes must be 12.";
 
-        [Test]
+        [Fact]
         public void CreateInstanceWhenKeyLengthIsInvalidFails()
         {
             // Arrange, Act & Assert
-            Assert.Throws<CryptographicException>(() => new ChaCha20(new byte[Snuffle.KEY_SIZE_IN_BYTES + TestHelpers.ReturnRandomPositiveNegative()], 0));
+            Action act = () => new ChaCha20(new byte[Snuffle.KEY_SIZE_IN_BYTES + TestHelpers.ReturnRandomPositiveNegative()], 0);
+            act.Should().Throw<CryptographicException>();
         }
 
-        //[Test]
+        //[Fact]
         //public void EncryptWhenPlaintextIsLongerFails()
         //{
         //    // Arrange, Act & Assert
@@ -33,47 +36,51 @@
         //    Assert.Throws<CryptographicException>(() => cipher.Encrypt(plaintext, new byte[cipher.NonceSizeInBytes()]));
         //}
 
-        [Test]
+        [Fact]
         public void EncryptWhenNonceLengthIsInvalidFails()
         {
             // Arrange
             var cipher = new ChaCha20(new byte[Snuffle.KEY_SIZE_IN_BYTES], 0);
 
             // Act & Assert
-            Assert.Throws<CryptographicException>(() => cipher.Encrypt(new byte[0], new byte[cipher.NonceSizeInBytes() + TestHelpers.ReturnRandomPositiveNegative()]), EXCEPTION_MESSAGE_NONCE_LENGTH);
+            Action act = () => cipher.Encrypt(new byte[0], new byte[cipher.NonceSizeInBytes() + TestHelpers.ReturnRandomPositiveNegative()]);
+            act.Should().Throw<CryptographicException>().WithMessage(EXCEPTION_MESSAGE_NONCE_LENGTH);
         }
 
-        [Test]
+        [Fact]
         public void EncryptWhenNonceIsEmptyFails()
         {
             // Arrange
             var cipher = new ChaCha20(new byte[Snuffle.KEY_SIZE_IN_BYTES], 0);
 
             // Act & Assert
-            Assert.Throws<CryptographicException>(() => cipher.Encrypt(new byte[0], new byte[0]), EXCEPTION_MESSAGE_NONCE_LENGTH);
+            Action act = () => cipher.Encrypt(new byte[0], new byte[0]);
+            act.Should().Throw<CryptographicException>().WithMessage(EXCEPTION_MESSAGE_NONCE_LENGTH);
         }
 
-        [Test]
+        [Fact]
         public void DecryptWhenNonceLengthIsInvalidFails()
         {
             // Arrange
             var cipher = new ChaCha20(new byte[Snuffle.KEY_SIZE_IN_BYTES], 0);
 
             // Act & Assert
-            Assert.Throws<CryptographicException>(() => cipher.Decrypt(new byte[0], new byte[cipher.NonceSizeInBytes() + TestHelpers.ReturnRandomPositiveNegative()]), EXCEPTION_MESSAGE_NONCE_LENGTH);
+            Action act = () => cipher.Decrypt(new byte[0], new byte[cipher.NonceSizeInBytes() + TestHelpers.ReturnRandomPositiveNegative()]);
+            act.Should().Throw<CryptographicException>().WithMessage(EXCEPTION_MESSAGE_NONCE_LENGTH);
         }
 
-        [Test]
+        [Fact]
         public void DecryptWhenNonceIsEmptyFails()
         {
             // Arrange
             var cipher = new ChaCha20(new byte[Snuffle.KEY_SIZE_IN_BYTES], 0);
 
             // Act & Assert
-            Assert.Throws<CryptographicException>(() => cipher.Decrypt(new byte[0], new byte[0]), EXCEPTION_MESSAGE_NONCE_LENGTH);
+            Action act = () => cipher.Decrypt(new byte[0], new byte[0]);
+            act.Should().Throw<CryptographicException>().WithMessage(EXCEPTION_MESSAGE_NONCE_LENGTH);
         }
 
-        [Test]
+        [Fact]
         public void DecryptWhenCiphertextIsTooShortFails()
         {
             // Arrange
@@ -82,12 +89,13 @@
 
             // Act
             var cipher = new ChaCha20(key, 0);
+            Action act = () => cipher.Decrypt(new byte[2]);
 
             // Assert
-            Assert.Throws<CryptographicException>(() => cipher.Decrypt(new byte[2]));
+            act.Should().Throw<CryptographicException>();
         }
 
-        [Test]
+        [Fact]
         public void EncryptDecrypt1BlockTest()
         {
             // Arrange
@@ -104,11 +112,10 @@
             var actualInput = cipher.Decrypt(output);
 
             // Assert
-            //Assert.AreEqual(expectedInput, actualInput);
-            Assert.IsTrue(CryptoBytes.ConstantTimeEquals(expectedInput, actualInput));
+            CryptoBytes.ConstantTimeEquals(expectedInput, actualInput).Should().BeTrue();
         }
 
-        [Test]
+        [Fact]
         public void EncryptDecryptNBlocksTest()
         {
             // Arrange
@@ -131,13 +138,12 @@
                     var actualInput = cipher.Decrypt(output);
 
                     // Assert
-                    //Assert.AreEqual(expectedInput, actualInput);
-                    Assert.IsTrue(CryptoBytes.ConstantTimeEquals(expectedInput, actualInput));
+                    CryptoBytes.ConstantTimeEquals(expectedInput, actualInput).Should().BeTrue();
                 }
             }
         }
 
-        [Test]
+        [Fact]
         public void EncryptDecryptLongMessagesTest()
         {
             var rnd = new Random();
@@ -156,13 +162,12 @@
                 var ciphertext = cipher.Encrypt(plaintext);
                 var decrypted = cipher.Decrypt(ciphertext);
 
-                //Assert.AreEqual(plaintext, decrypted);
-                Assert.IsTrue(CryptoBytes.ConstantTimeEquals(plaintext, decrypted));
+                CryptoBytes.ConstantTimeEquals(plaintext, decrypted).Should().BeTrue();
                 dataSize += 5 * dataSize / 11;
             }
         }
 
-        [Test]
+        [Fact]
         public void EncryptDecryptLongMessagesWithNonceTest()
         {
             var rnd = new Random();
@@ -184,13 +189,12 @@
                 var ciphertext = cipher.Encrypt(plaintext, nonce);
                 var decrypted = cipher.Decrypt(ciphertext, nonce);
 
-                //Assert.AreEqual(plaintext, decrypted);
-                Assert.IsTrue(CryptoBytes.ConstantTimeEquals(plaintext, decrypted));
+                CryptoBytes.ConstantTimeEquals(plaintext, decrypted).Should().BeTrue();
                 dataSize += 5 * dataSize / 11;
             }
         }
 
-        [Test]
+        [Fact]
         public void QuarterRoundTest()
         {
             // https://tools.ietf.org/html/rfc8439#section-2.1.1
@@ -202,10 +206,10 @@
             ChaCha20Base.QuarterRound(ref x[0], ref x[1], ref x[2], ref x[3]);
 
             // Assert
-            Assert.AreEqual(new uint[] { 0xea2a92f4, 0xcb1cf8ce, 0x4581472e, 0x5881c4bb }, x);
+            x.Should().Equal(new uint[] { 0xea2a92f4, 0xcb1cf8ce, 0x4581472e, 0x5881c4bb });
         }
 
-        [Test]
+        [Fact]
         public void QuarterRound16Test()
         {
             // https://tools.ietf.org/html/rfc8439#section-2.2.1
@@ -217,10 +221,10 @@
             ChaCha20Base.QuarterRound(ref x[2], ref x[7], ref x[8], ref x[13]);
 
             // Assert
-            Assert.AreEqual(new uint[] { 0x879531e0, 0xc5ecf37d, 0xbdb886dc, 0xc9a62f8a, 0x44c20ef3, 0x3390af7f, 0xd9fc690b, 0xcfacafd2, 0xe46bea80, 0xb00a5631, 0x974c541a, 0x359e9963, 0x5c971061, 0xccc07c79, 0x2098d9d6, 0x91dbd320 }, x);
+            x.Should().Equal(new uint[] { 0x879531e0, 0xc5ecf37d, 0xbdb886dc, 0xc9a62f8a, 0x44c20ef3, 0x3390af7f, 0xd9fc690b, 0xcfacafd2, 0xe46bea80, 0xb00a5631, 0x974c541a, 0x359e9963, 0x5c971061, 0xccc07c79, 0x2098d9d6, 0x91dbd320 });
         }
 
-        [Test]
+        [Fact]
         public void ChaCha20BlockWhenNonceLengthIsEmptyFails()
         {
             // Arrange
@@ -231,10 +235,11 @@
             var block = new byte[Snuffle.BLOCK_SIZE_IN_BYTES];
 
             // Act & Assert
-            Assert.Throws<CryptographicException>(() => chacha20.ProcessKeyStreamBlock(nonce, 0, block));
+            Action act = () => chacha20.ProcessKeyStreamBlock(nonce, 0, block);
+            act.Should().Throw<CryptographicException>();
         }
 
-        [Test]
+        [Fact]
         public void ChaCha20BlockWhenNonceLengthIsInvalidFails()
         {
             // Arrange
@@ -245,10 +250,11 @@
             var block = new byte[Snuffle.BLOCK_SIZE_IN_BYTES];
 
             // Act & Assert
-            Assert.Throws<CryptographicException>(() => chacha20.ProcessKeyStreamBlock(nonce, 0, block));
+            Action act = () => chacha20.ProcessKeyStreamBlock(nonce, 0, block);
+            act.Should().Throw<CryptographicException>();
         }
 
-        [Test]
+        [Fact]
         public void ChaCha20BlockWhenLengthIsInvalidFails()
         {
             // Arrange
@@ -259,10 +265,11 @@
             var block = new byte[0];
 
             // Act & Assert
-            Assert.Throws<CryptographicException>(() => chacha20.ProcessKeyStreamBlock(nonce, 0, block));
+            Action act = () => chacha20.ProcessKeyStreamBlock(nonce, 0, block);
+            act.Should().Throw<CryptographicException>();
         }
 
-        [Test]
+        [Fact]
         public void ChaCha20BlockTestVector()
         {
             // https://tools.ietf.org/html/rfc8439#section-2.3.2
@@ -286,10 +293,10 @@
                 0xd19c12b5, 0xb94e16de, 0xe883d0cb, 0x4e3c50a2,
             };
 
-            Assert.AreEqual(expected, output.ToUInt16Array());
+            output.ToUInt16Array().Should().Equal(expected);
         }
 
-        [Test]
+        [Fact]
         public void ChaCha20TestVector()
         {
             // https://tools.ietf.org/html/rfc8439#section-2.4.2
@@ -302,12 +309,11 @@
                 var output = cipher.Decrypt(CryptoBytes.Combine(test.Nonce, test.CipherText));
 
                 // Assert
-                //Assert.That(output, Is.EqualTo(test.PlainText));
-                Assert.IsTrue(CryptoBytes.ConstantTimeEquals(test.PlainText, output));
+                CryptoBytes.ConstantTimeEquals(test.PlainText, output).Should().BeTrue();
             }
         }
 
-        [Test]
+        [Fact]
         public void ChaCha20TestVectorTC8()
         {
             // TC8: key: 'All your base are belong to us!, IV: 'IETF2013'
@@ -359,8 +365,7 @@
                 0x05, 0x3C, 0x84, 0xE4, 0x9A, 0x4A, 0x33, 0x32
             };
 
-            //Assert.AreEqual(expected, Combine(block0, block1));
-            Assert.IsTrue(CryptoBytes.ConstantTimeEquals(expected, CryptoBytes.Combine(block0, block1)));
+            CryptoBytes.ConstantTimeEquals(CryptoBytes.Combine(block0, block1), expected).Should().BeTrue();
         }
     }
 }
