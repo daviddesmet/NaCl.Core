@@ -12,8 +12,8 @@ jobs:
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 2.2.301
+        dotnet-version: 3.1.101
     - name: Build with dotnet
       run: dotnet build src --configuration Release
     - name: Unit Tests
-      run: dotnet test -f netcoreapp2.0 src/NaCl.Core.Tests --logger trx /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura
+      run: dotnet test -f netcoreapp3.1 src/NaCl.Core.Tests --logger trx /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura
