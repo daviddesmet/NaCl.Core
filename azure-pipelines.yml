@@ -92,7 +92,7 @@ jobs:
     displayName: 'Publish Library'
     inputs:
       command: 'publish'
-      arguments: '-c $(BuildConfiguration) -f netstandard3.1 -o $(Build.ArtifactStagingDirectory) --no-restore'
+      arguments: '-c $(BuildConfiguration) -f netcoreapp3.1 -o $(Build.ArtifactStagingDirectory) --no-restore'
       projects: src/NaCl.Core/NaCl.Core.csproj
       publishWebProjects: false
       modifyOutputPath: true
