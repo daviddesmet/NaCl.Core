@@ -148,6 +148,7 @@ jobs:
   variables:
     BuildConfiguration: 'release'
     BuildPlatform: 'any cpu'
+    disable.coverage.autogenerate: 'true'
   steps:
   - task: UseDotNet@2
     displayName: 'Use .NET Core 3.1'
@@ -186,8 +187,9 @@ jobs:
     displayName: 'Publish Project'
     inputs:
       command: 'publish'
-      publishWebProjects: false
       arguments: '-c $(BuildConfiguration) -o $(Build.ArtifactStagingDirectory) --no-restore'
+      projects: src/NaCl.Core/NaCl.Core.csproj
+      publishWebProjects: false
   - task: PublishBuildArtifacts@1
     displayName: 'Publish Artifacts'
     inputs:
