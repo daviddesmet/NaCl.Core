@@ -136,77 +136,77 @@
                 {
                     // Column quarter rounds
                     x0 += x4;
-                    x12 = RotateLeft(x12 ^ x0, 16);
+                    x12 = BitUtils.RotateLeft(x12 ^ x0, 16);
                     x8 += x12;
-                    x4 = RotateLeft(x4 ^ x8, 12);
+                    x4 = BitUtils.RotateLeft(x4 ^ x8, 12);
                     x0 += x4;
-                    x12 = RotateLeft(x12 ^ x0, 8);
+                    x12 = BitUtils.RotateLeft(x12 ^ x0, 8);
                     x8 += x12;
-                    x4 = RotateLeft(x4 ^ x8, 7);
+                    x4 = BitUtils.RotateLeft(x4 ^ x8, 7);
 
                     x1 += x5;
-                    x13 = RotateLeft(x13 ^ x1, 16);
+                    x13 = BitUtils.RotateLeft(x13 ^ x1, 16);
                     x9 += x13;
-                    x5 = RotateLeft(x5 ^ x9, 12);
+                    x5 = BitUtils.RotateLeft(x5 ^ x9, 12);
                     x1 += x5;
-                    x13 = RotateLeft(x13 ^ x1, 8);
+                    x13 = BitUtils.RotateLeft(x13 ^ x1, 8);
                     x9 += x13;
-                    x5 = RotateLeft(x5 ^ x9, 7);
+                    x5 = BitUtils.RotateLeft(x5 ^ x9, 7);
 
                     x2 += x6;
-                    x14 = RotateLeft(x14 ^ x2, 16);
+                    x14 = BitUtils.RotateLeft(x14 ^ x2, 16);
                     x10 += x14;
-                    x6 = RotateLeft(x6 ^ x10, 12);
+                    x6 = BitUtils.RotateLeft(x6 ^ x10, 12);
                     x2 += x6;
-                    x14 = RotateLeft(x14 ^ x2, 8);
+                    x14 = BitUtils.RotateLeft(x14 ^ x2, 8);
                     x10 += x14;
-                    x6 = RotateLeft(x6 ^ x10, 7);
+                    x6 = BitUtils.RotateLeft(x6 ^ x10, 7);
 
                     x3 += x7;
-                    x15 = RotateLeft(x15 ^ x3, 16);
+                    x15 = BitUtils.RotateLeft(x15 ^ x3, 16);
                     x11 += x15;
-                    x7 = RotateLeft(x7 ^ x11, 12);
+                    x7 = BitUtils.RotateLeft(x7 ^ x11, 12);
                     x3 += x7;
-                    x15 = RotateLeft(x15 ^ x3, 8);
+                    x15 = BitUtils.RotateLeft(x15 ^ x3, 8);
                     x11 += x15;
-                    x7 = RotateLeft(x7 ^ x11, 7);
+                    x7 = BitUtils.RotateLeft(x7 ^ x11, 7);
 
                     // Diagonal quarter rounds
                     x0 += x5;
-                    x15 = RotateLeft(x15 ^ x0, 16);
+                    x15 = BitUtils.RotateLeft(x15 ^ x0, 16);
                     x10 += x15;
-                    x5 = RotateLeft(x5 ^ x10, 12);
+                    x5 = BitUtils.RotateLeft(x5 ^ x10, 12);
                     x0 += x5;
-                    x15 = RotateLeft(x15 ^ x0, 8);
+                    x15 = BitUtils.RotateLeft(x15 ^ x0, 8);
                     x10 += x15;
-                    x5 = RotateLeft(x5 ^ x10, 7);
+                    x5 = BitUtils.RotateLeft(x5 ^ x10, 7);
 
                     x1 += x6;
-                    x12 = RotateLeft(x12 ^ x1, 16);
+                    x12 = BitUtils.RotateLeft(x12 ^ x1, 16);
                     x11 += x12;
-                    x6 = RotateLeft(x6 ^ x11, 12);
+                    x6 = BitUtils.RotateLeft(x6 ^ x11, 12);
                     x1 += x6;
-                    x12 = RotateLeft(x12 ^ x1, 8);
+                    x12 = BitUtils.RotateLeft(x12 ^ x1, 8);
                     x11 += x12;
-                    x6 = RotateLeft(x6 ^ x11, 7);
+                    x6 = BitUtils.RotateLeft(x6 ^ x11, 7);
 
                     x2 += x7;
-                    x13 = RotateLeft(x13 ^ x2, 16);
+                    x13 = BitUtils.RotateLeft(x13 ^ x2, 16);
                     x8 += x13;
-                    x7 = RotateLeft(x7 ^ x8, 12);
+                    x7 = BitUtils.RotateLeft(x7 ^ x8, 12);
                     x2 += x7;
-                    x13 = RotateLeft(x13 ^ x2, 8);
+                    x13 = BitUtils.RotateLeft(x13 ^ x2, 8);
                     x8 += x13;
-                    x7 = RotateLeft(x7 ^ x8, 7);
+                    x7 = BitUtils.RotateLeft(x7 ^ x8, 7);
 
                     x3 += x4;
-                    x14 = RotateLeft(x14 ^ x3, 16);
+                    x14 = BitUtils.RotateLeft(x14 ^ x3, 16);
                     x9 += x14;
-                    x4 = RotateLeft(x4 ^ x9, 12);
+                    x4 = BitUtils.RotateLeft(x4 ^ x9, 12);
                     x3 += x4;
-                    x14 = RotateLeft(x14 ^ x3, 8);
+                    x14 = BitUtils.RotateLeft(x14 ^ x3, 8);
                     x9 += x14;
-                    x4 = RotateLeft(x4 ^ x9, 7);
+                    x4 = BitUtils.RotateLeft(x4 ^ x9, 7);
                 }
             }
 
@@ -246,13 +246,13 @@
         public static void QuarterRound(ref uint a, ref uint b, ref uint c, ref uint d)
         {
             a += b;
-            d = RotateLeft(d ^ a, 16);
+            d = BitUtils.RotateLeft(d ^ a, 16);
             c += d;
-            b = RotateLeft(b ^ c, 12);
+            b = BitUtils.RotateLeft(b ^ c, 12);
             a += b;
-            d = RotateLeft(d ^ a, 8);
+            d = BitUtils.RotateLeft(d ^ a, 8);
             c += d;
-            b = RotateLeft(b ^ c, 7);
+            b = BitUtils.RotateLeft(b ^ c, 7);
         }
 
         protected static void SetSigma(ref Array16<uint> state)
