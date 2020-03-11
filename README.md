@@ -23,7 +23,7 @@
 
 ## Installation
 
-[![NuGet](https://buildstats.info/nuget/NaCl.Core)(https://www.nuget.org/packages/NaCl.Core/)
+[![NuGet](https://buildstats.info/nuget/NaCl.Core)](https://www.nuget.org/packages/NaCl.Core/)
 [![MyGet](https://img.shields.io/myget/nacl-core/v/NaCl.Core.svg)](https://www.myget.org/feed/nacl-core/package/nuget/NaCl.Core)
 
 Install the NaCl.Core NuGet package from the .NET Core CLI using:
