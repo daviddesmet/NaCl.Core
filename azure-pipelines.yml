@@ -48,7 +48,7 @@ jobs:
       version: '3.1.x'
       installationPath: $(Agent.ToolsDirectory)/dotnet
   - task: DotNetCoreCLI@2
-    displayName: 'Build $(BuildConfiguration)'
+    displayName: 'Build Project in $(BuildConfiguration) mode'
     inputs:
       command: 'build'
       projects: '**/NaCl.Core.csproj'
@@ -75,7 +75,7 @@ jobs:
       reporttypes: 'HtmlInline_AzurePipelines_Dark;Cobertura;Badges'
     enabled: false
   - script: dotnet test -f netcoreapp3.1 src/NaCl.Core.Tests --logger trx
-    displayName: 'Unit testing'
+    displayName: 'Run Unit Tests'
     env:
       COREHOST_TRACE: 0
       DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
@@ -124,11 +124,11 @@ jobs:
     BuildConfiguration: 'release'
   steps:
   - script: dotnet restore src
-    displayName: 'dotnet restore src'
+    displayName: 'Restore Project'
   - script: dotnet build src -c $(BuildConfiguration) --no-restore
-    displayName: 'dotnet build $(BuildConfiguration)'
+    displayName: 'Build Project in $(BuildConfiguration) mode'
   - script: dotnet test -f netcoreapp3.1 src/NaCl.Core.Tests --logger trx
-    displayName: 'Unit testing'
+    displayName: 'Run Unit Tests'
     env:
       COREHOST_TRACE: 0
       DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
@@ -169,7 +169,7 @@ jobs:
     inputs:
       command: 'test'
       projects: '**/*.Tests.csproj'
-      arguments: '/p:CollectCoverage=true /p:CoverletOutputFormat=opencover /p:Include="[NaCl.Core.*]*" /p:Exclude="[*Tests]*,[*Benchmarks]*"'
+      arguments: '/p:CollectCoverage=true /p:CoverletOutputFormat=opencover /p:Include="[NaCl.Core.*]*" /p:Exclude="[*Tests]*"'
   - task: reportgenerator@4
     displayName: 'Generate Coverage Report'
     inputs:
