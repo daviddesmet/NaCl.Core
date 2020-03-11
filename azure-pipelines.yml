@@ -156,7 +156,7 @@ jobs:
       packageType: 'sdk'
       version: '3.1.x'
   - task: DotNetCoreCLI@2
-    displayName: 'Build Project $(BuildConfiguration)'
+    displayName: 'Build Project in $(BuildConfiguration) mode'
     inputs:
       command: 'build'
       projects: '**/NaCl.Core.csproj'
