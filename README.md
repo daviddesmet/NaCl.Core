@@ -23,7 +23,7 @@
 
 ## Installation
 
-[![NuGet](https://img.shields.io/nuget/v/NaCl.Core.svg)](https://www.nuget.org/packages/NaCl.Core/)
+[![NuGet](https://buildstats.info/nuget/NaCl.Core)(https://www.nuget.org/packages/NaCl.Core/)
 [![MyGet](https://img.shields.io/myget/nacl-core/v/NaCl.Core.svg)](https://www.myget.org/feed/nacl-core/package/nuget/NaCl.Core)
 
 Install the NaCl.Core NuGet package from the .NET Core CLI using:
@@ -71,7 +71,7 @@ Poly1305.VerifyMac(key, data, tag);
 
 ## Test Coverage
 
-[![Azure DevOps tests](https://img.shields.io/azure-devops/tests/idaviddesmet/NaCl.Core/1.svg?compact_message=)](https://dev.azure.com/idaviddesmet/NaCl.Core/_build/latest?definitionId=1)
+[![Azure DevOps tests](https://img.shields.io/azure-devops/tests/idaviddesmet/NaCl.Core/1?logo=azure-devops)](https://dev.azure.com/idaviddesmet/NaCl.Core/_build/latest?definitionId=1)
 [![Azure DevOps coverage](https://img.shields.io/azure-devops/coverage/idaviddesmet/NaCl.Core/1.svg)](https://dev.azure.com/idaviddesmet/NaCl.Core/_build/latest?definitionId=1)
 
 - Includes the mandatory RFC [test vectors](https://github.com/idaviddesmet/NaCl.Core/tree/master/src/NaCl.Core.Tests).
