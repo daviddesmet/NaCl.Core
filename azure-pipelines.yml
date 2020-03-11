@@ -194,5 +194,5 @@ jobs:
     displayName: 'Publish Artifacts'
     inputs:
       PathtoPublish: '$(Build.ArtifactStagingDirectory)'
-      ArtifactName: 'drop'
+      ArtifactName: 'library'
       publishLocation: 'Container'
