@@ -184,10 +184,10 @@ jobs:
       summaryFileLocation: '$(Build.ArtifactStagingDirectory)/TestResults/cobertura.xml'
       reportDirectory: '$(Build.ArtifactStagingDirectory)/TestResults/'
   - task: DotNetCoreCLI@2
-    displayName: 'Publish Project'
+    displayName: 'Publish Library'
     inputs:
       command: 'publish'
-      arguments: '-c $(BuildConfiguration) -o $(Build.ArtifactStagingDirectory) --no-restore'
+      arguments: '-c $(BuildConfiguration) -f netcoreapp3.1 -o $(Build.ArtifactStagingDirectory) --no-restore'
       projects: src/NaCl.Core/NaCl.Core.csproj
       publishWebProjects: false
   - task: PublishBuildArtifacts@1
