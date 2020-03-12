@@ -150,6 +150,9 @@ jobs:
     BuildPlatform: 'any cpu'
     disable.coverage.autogenerate: 'true'
   steps:
+  - task: NuGetAuthenticate@0
+    displayName: 'Authenticate with Azure Artifacts'
+    condition: ne(variables['Build.Reason'], 'PullRequest')
   - task: UseDotNet@2
     displayName: 'Use .NET Core SDK 3.1'
     inputs:
@@ -184,15 +187,35 @@ jobs:
       summaryFileLocation: '$(Build.ArtifactStagingDirectory)/TestResults/cobertura.xml'
       reportDirectory: '$(Build.ArtifactStagingDirectory)/TestResults/'
   - task: DotNetCoreCLI@2
+    displayName: 'Pack NuGet'
+    inputs:
+      command: 'pack'
+      packagesToPack: '**/NaCl.Core.csproj'
+      nobuild: true
+      includesymbols: true
+      versioningScheme: 'byPrereleaseNumber'
+      majorVersion: '1'
+      minorVersion: '2'
+      patchVersion: '0'
+  - task: NuGetCommand@2
+    displayName: 'Push NuGet'
+    inputs:
+      command: 'push'
+      packagesToPush: '$(Build.ArtifactStagingDirectory)/**/*.nupkg;!$(Build.ArtifactStagingDirectory)/**/*.symbols.nupkg'
+      nuGetFeedType: 'internal'
+      publishVstsFeed: 'ffbd9fd0-ffca-4040-8576-0fa5065bd6d9/b465c74e-3671-458e-996f-8bbf45f957bc'
+  - task: DotNetCoreCLI@2
     displayName: 'Publish Library'
     inputs:
       command: 'publish'
       arguments: '-c $(BuildConfiguration) -f netcoreapp3.1 -o $(Build.ArtifactStagingDirectory) --no-restore'
       projects: src/NaCl.Core/NaCl.Core.csproj
       publishWebProjects: false
+    enabled: false
   - task: PublishBuildArtifacts@1
     displayName: 'Publish Artifacts'
     inputs:
       PathtoPublish: '$(Build.ArtifactStagingDirectory)'
       ArtifactName: 'library'
       publishLocation: 'Container'
+    enabled: false
