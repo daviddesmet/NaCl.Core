@@ -8,7 +8,7 @@
     <Authors>David De Smet</Authors>
     <Company />
     <Description>A managed-only cryptography library for .NET which provides modern cryptographic primitives.</Description>
-    <Copyright>Copyright © 2020 David De Smet</Copyright>
+    <Copyright>Copyright © 2018-2020 David De Smet</Copyright>
     <PackageLicenseUrl>https://opensource.org/licenses/MIT</PackageLicenseUrl>
     <PackageTags>NaCl cryptography dotnet dotnet-core netstandard</PackageTags>
     <PackageProjectUrl>https://github.com/idaviddesmet/NaCl.Core</PackageProjectUrl>
