@@ -9,7 +9,7 @@
         static void Main(string[] args)
         {
             // Execute following code:
-            // $ dotnet run -c release --framework netcoreapp2.0
+            // $ dotnet run -c release --framework netcoreapp3.1
             //BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args);
             BenchmarkRunner.Run<Poly1305Benchmark>();
             BenchmarkRunner.Run<ChaCha20Benchmark>();

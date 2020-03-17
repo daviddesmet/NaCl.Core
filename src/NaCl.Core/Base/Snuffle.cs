@@ -21,10 +21,10 @@
     /// </remarks>
     public abstract class Snuffle
     {
-        public static int BLOCK_SIZE_IN_INTS = 16;
-        public static int BLOCK_SIZE_IN_BYTES = BLOCK_SIZE_IN_INTS * 4;
-        public static int KEY_SIZE_IN_INTS = 8;
-        public static int KEY_SIZE_IN_BYTES = KEY_SIZE_IN_INTS * 4;
+        public const int BLOCK_SIZE_IN_INTS = 16;
+        public static int BLOCK_SIZE_IN_BYTES = BLOCK_SIZE_IN_INTS * 4; // 64
+        public const int KEY_SIZE_IN_INTS = 8;
+        public static int KEY_SIZE_IN_BYTES = KEY_SIZE_IN_INTS * 4; // 32
 
         public static uint[] SIGMA = new uint[] { 0x61707865, 0x3320646E, 0x79622D32, 0x6B206574 }; //Encoding.ASCII.GetBytes("expand 32-byte k");
 
@@ -64,7 +64,7 @@
         /// ChaCha20 uses 12-byte nonces, but XSalsa20 and XChaCha20 use 24-byte nonces.
         /// </summary>
         /// <returns>System.Int32.</returns>
-        public abstract int NonceSizeInBytes();
+        public abstract int NonceSizeInBytes { get; }
 
         /// <summary>
         /// Encrypts the specified plaintext.
@@ -85,10 +85,10 @@
             //if (plaintext.Length > int.MaxValue - NonceSizeInBytes())
             //    throw new CryptographyException($"The {nameof(plaintext)} is too long.");
 
-            var nonce = new byte[NonceSizeInBytes()];
+            var nonce = new byte[NonceSizeInBytes];
             RandomNumberGenerator.Create().GetBytes(nonce);
 
-            var ciphertext = new byte[plaintext.Length + NonceSizeInBytes()];
+            var ciphertext = new byte[plaintext.Length + NonceSizeInBytes];
 
             Array.Copy(nonce, ciphertext, nonce.Length);
             Process(nonce, ciphertext, plaintext, nonce.Length);
@@ -117,8 +117,8 @@
             //if (plaintext.Length > int.MaxValue - NonceSizeInBytes())
             //    throw new CryptographyException($"The {nameof(plaintext)} is too long.");
 
-            if (nonce.IsEmpty || nonce.Length != NonceSizeInBytes())
-                throw new CryptographicException(FormatNonceLengthExceptionMessage(GetType().Name, nonce.Length, NonceSizeInBytes()));
+            if (nonce.IsEmpty || nonce.Length != NonceSizeInBytes)
+                throw new CryptographicException(FormatNonceLengthExceptionMessage(GetType().Name, nonce.Length, NonceSizeInBytes));
 
             var ciphertext = new byte[plaintext.Length];
 
@@ -135,12 +135,12 @@
         /// <exception cref="CryptographicException">ciphertext</exception>
         public virtual byte[] Decrypt(ReadOnlySpan<byte> ciphertext)
         {
-            if (ciphertext.Length < NonceSizeInBytes())
+            if (ciphertext.Length < NonceSizeInBytes)
                 throw new CryptographicException($"The {nameof(ciphertext)} is too short.");
 
-            var plaintext = new byte[ciphertext.Length - NonceSizeInBytes()];
+            var plaintext = new byte[ciphertext.Length - NonceSizeInBytes];
 
-            Process(ciphertext.Slice(0, NonceSizeInBytes()), plaintext, ciphertext.Slice(NonceSizeInBytes()));
+            Process(ciphertext.Slice(0, NonceSizeInBytes), plaintext, ciphertext.Slice(NonceSizeInBytes));
 
             return plaintext;
         }
@@ -154,8 +154,8 @@
         /// <exception cref="CryptographicException">ciphertext or nonce</exception>
         public virtual byte[] Decrypt(ReadOnlySpan<byte> ciphertext, ReadOnlySpan<byte> nonce)
         {
-            if (nonce.IsEmpty || nonce.Length != NonceSizeInBytes())
-                throw new CryptographicException(FormatNonceLengthExceptionMessage(GetType().Name, nonce.Length, NonceSizeInBytes()));
+            if (nonce.IsEmpty || nonce.Length != NonceSizeInBytes)
+                throw new CryptographicException(FormatNonceLengthExceptionMessage(GetType().Name, nonce.Length, NonceSizeInBytes));
 
             var plaintext = new byte[ciphertext.Length];
 

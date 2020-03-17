@@ -24,35 +24,30 @@
         public ChaCha20(in byte[] key, int initialCounter) : base(key, initialCounter) { }
 
         /// <inheritdoc />
-        protected override Array16<uint> CreateInitialState(ReadOnlySpan<byte> nonce, int counter)
+        protected override void SetInitialState(Span<uint> state, ReadOnlySpan<byte> nonce, int counter)
         {
-            if (nonce.IsEmpty || nonce.Length != NonceSizeInBytes())
-                throw new CryptographicException(FormatNonceLengthExceptionMessage(GetType().Name, nonce.Length, NonceSizeInBytes()));
-
-            // Set the initial state based on https://tools.ietf.org/html/rfc8439#section-2.3
-            var state = new Array16<uint>();
+            if (nonce.IsEmpty || nonce.Length != NonceSizeInBytes)
+                throw new CryptographicException(FormatNonceLengthExceptionMessage(GetType().Name, nonce.Length, NonceSizeInBytes));
 
             // The first four words (0-3) are constants: 0x61707865, 0x3320646e, 0x79622d32, 0x6b206574.
             // The next eight words (4-11) are taken from the 256-bit key in little-endian order, in 4-byte chunks.
-            SetSigma(ref state);
-            SetKey(ref state, Key);
+            SetSigma(state);
+            SetKey(state, Key);
 
             // Word 12 is a block counter. Since each block is 64-byte, a 32-bit word is enough for 256 gigabytes of data. Ref: https://tools.ietf.org/html/rfc8439#section-2.3.
-            state.x12 = (uint)counter;
+            state[12] = (uint)counter;
 
             // Words 13-15 are a nonce, which must not be repeated for the same key.
             // The 13th word is the first 32 bits of the input nonce taken as a little-endian integer, while the 15th word is the last 32 bits.
-            state.x13 = ByteIntegerConverter.LoadLittleEndian32(nonce, 0);
-            state.x14 = ByteIntegerConverter.LoadLittleEndian32(nonce, 4);
-            state.x15 = ByteIntegerConverter.LoadLittleEndian32(nonce, 8);
-
-            return state;
+            state[13] = ArrayUtils.LoadUInt32LittleEndian(nonce, 0);
+            state[14] = ArrayUtils.LoadUInt32LittleEndian(nonce, 4);
+            state[15] = ArrayUtils.LoadUInt32LittleEndian(nonce, 8);
         }
 
         /// <summary>
         /// The size of the randomly generated nonces.
         /// </summary>
         /// <returns>System.Int32.</returns>
-        public override int NonceSizeInBytes() => 12;
+        public override int NonceSizeInBytes => 12;
     }
 }

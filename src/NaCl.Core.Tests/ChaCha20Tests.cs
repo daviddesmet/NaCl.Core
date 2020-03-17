@@ -43,7 +43,7 @@
             var cipher = new ChaCha20(new byte[Snuffle.KEY_SIZE_IN_BYTES], 0);
 
             // Act & Assert
-            Action act = () => cipher.Encrypt(new byte[0], new byte[cipher.NonceSizeInBytes() + TestHelpers.ReturnRandomPositiveNegative()]);
+            Action act = () => cipher.Encrypt(new byte[0], new byte[cipher.NonceSizeInBytes + TestHelpers.ReturnRandomPositiveNegative()]);
             act.Should().Throw<CryptographicException>().WithMessage(EXCEPTION_MESSAGE_NONCE_LENGTH);
         }
 
@@ -65,7 +65,7 @@
             var cipher = new ChaCha20(new byte[Snuffle.KEY_SIZE_IN_BYTES], 0);
 
             // Act & Assert
-            Action act = () => cipher.Decrypt(new byte[0], new byte[cipher.NonceSizeInBytes() + TestHelpers.ReturnRandomPositiveNegative()]);
+            Action act = () => cipher.Decrypt(new byte[0], new byte[cipher.NonceSizeInBytes + TestHelpers.ReturnRandomPositiveNegative()]);
             act.Should().Throw<CryptographicException>().WithMessage(EXCEPTION_MESSAGE_NONCE_LENGTH);
         }
 
@@ -183,7 +183,7 @@
 
                 var cipher = new ChaCha20(key, 0);
 
-                var nonce = new byte[cipher.NonceSizeInBytes()];
+                var nonce = new byte[cipher.NonceSizeInBytes];
                 rnd.NextBytes(nonce);
 
                 var ciphertext = cipher.Encrypt(plaintext, nonce);
@@ -246,7 +246,7 @@
             var key = new byte[Snuffle.KEY_SIZE_IN_BYTES];
 
             var chacha20 = new ChaCha20(key, 0);
-            var nonce = new byte[chacha20.NonceSizeInBytes() + TestHelpers.ReturnRandomPositiveNegative()];
+            var nonce = new byte[chacha20.NonceSizeInBytes + TestHelpers.ReturnRandomPositiveNegative()];
             var block = new byte[Snuffle.BLOCK_SIZE_IN_BYTES];
 
             // Act & Assert
@@ -261,7 +261,7 @@
             var key = new byte[Snuffle.KEY_SIZE_IN_BYTES];
 
             var chacha20 = new ChaCha20(key, 0);
-            var nonce = new byte[chacha20.NonceSizeInBytes() + TestHelpers.ReturnRandomPositiveNegative()];
+            var nonce = new byte[chacha20.NonceSizeInBytes + TestHelpers.ReturnRandomPositiveNegative()];
             var block = new byte[0];
 
             // Act & Assert

@@ -58,7 +58,7 @@
             //if (plaintext.Length > int.MaxValue - _snuffle.NonceSizeInBytes() - Poly1305.MAC_TAG_SIZE_IN_BYTES)
             //    throw new CryptographicException($"The {nameof(plaintext)} is too long.");
 
-            var nonce = new byte[_snuffle.NonceSizeInBytes()];
+            var nonce = new byte[_snuffle.NonceSizeInBytes];
             RandomNumberGenerator.Create().GetBytes(nonce);
 
             var ciphertext = Encrypt(plaintext, aad, nonce);
@@ -90,8 +90,8 @@
             //if (plaintext.Length > int.MaxValue - _snuffle.NonceSizeInBytes() - Poly1305.MAC_TAG_SIZE_IN_BYTES)
             //    throw new CryptographicException($"The {nameof(plaintext)} is too long.");
 
-            if (nonce.IsEmpty || nonce.Length != _snuffle.NonceSizeInBytes())
-                throw new CryptographicException(_snuffle.FormatNonceLengthExceptionMessage(GetType().Name, nonce.Length, _snuffle.NonceSizeInBytes()));
+            if (nonce.IsEmpty || nonce.Length != _snuffle.NonceSizeInBytes)
+                throw new CryptographicException(_snuffle.FormatNonceLengthExceptionMessage(GetType().Name, nonce.Length, _snuffle.NonceSizeInBytes));
 
             var ciphertext = _snuffle.Encrypt(plaintext, nonce);
 
@@ -123,10 +123,10 @@
         /// <exception cref="CryptographicException"></exception>
         public virtual byte[] Decrypt(ReadOnlySpan<byte> ciphertext, ReadOnlySpan<byte> aad = default)
         {
-            if (ciphertext.Length < _snuffle.NonceSizeInBytes() + Poly1305.MAC_TAG_SIZE_IN_BYTES)
+            if (ciphertext.Length < _snuffle.NonceSizeInBytes + Poly1305.MAC_TAG_SIZE_IN_BYTES)
                 throw new CryptographicException($"The {nameof(ciphertext)} is too short.");
 
-            return Decrypt(ciphertext.Slice(_snuffle.NonceSizeInBytes()), aad, ciphertext.Slice(0, _snuffle.NonceSizeInBytes()));
+            return Decrypt(ciphertext.Slice(_snuffle.NonceSizeInBytes), aad, ciphertext.Slice(0, _snuffle.NonceSizeInBytes));
         }
 
         /// <summary>
@@ -149,11 +149,11 @@
         /// <exception cref="CryptographicException"></exception>
         public virtual byte[] Decrypt(ReadOnlySpan<byte> ciphertext, ReadOnlySpan<byte> aad, ReadOnlySpan<byte> nonce)
         {
-            if (ciphertext.Length + nonce.Length < _snuffle.NonceSizeInBytes() + Poly1305.MAC_TAG_SIZE_IN_BYTES)
+            if (ciphertext.Length + nonce.Length < _snuffle.NonceSizeInBytes + Poly1305.MAC_TAG_SIZE_IN_BYTES)
                 throw new CryptographicException($"The {nameof(ciphertext)} is too short.");
 
-            if (nonce.IsEmpty || nonce.Length != _snuffle.NonceSizeInBytes())
-                throw new CryptographicException(_snuffle.FormatNonceLengthExceptionMessage(_snuffle.GetType().Name, nonce.Length, _snuffle.NonceSizeInBytes()));
+            if (nonce.IsEmpty || nonce.Length != _snuffle.NonceSizeInBytes)
+                throw new CryptographicException(_snuffle.FormatNonceLengthExceptionMessage(_snuffle.GetType().Name, nonce.Length, _snuffle.NonceSizeInBytes));
 
             var limit = ciphertext.Length - Poly1305.MAC_TAG_SIZE_IN_BYTES;
 
@@ -174,14 +174,19 @@
         /// </summary>
         /// <param name="nonce">The nonce.</param>
         /// <returns>System.Byte[].</returns>
-        private byte[] GetMacKey(ReadOnlySpan<byte> nonce)
+        private Span<byte> GetMacKey(ReadOnlySpan<byte> nonce)
         {
-            var firstBlock = new byte[Snuffle.BLOCK_SIZE_IN_BYTES];
+            //var firstBlock = new byte[Snuffle.BLOCK_SIZE_IN_BYTES];
+            //_macKeySnuffle.ProcessKeyStreamBlock(nonce, 0, firstBlock);
+
+            //var result = new byte[Poly1305.MAC_KEY_SIZE_IN_BYTES];
+            //Array.Copy(firstBlock, result, result.Length);
+            //return result;
+
+            Span<byte> firstBlock = new byte[Snuffle.BLOCK_SIZE_IN_BYTES];
             _macKeySnuffle.ProcessKeyStreamBlock(nonce, 0, firstBlock);
 
-            var result = new byte[Poly1305.MAC_KEY_SIZE_IN_BYTES];
-            Array.Copy(firstBlock, result, result.Length);
-            return result;
+            return firstBlock.Slice(0, Poly1305.MAC_KEY_SIZE_IN_BYTES);
         }
 
         /// <summary>
@@ -199,6 +204,7 @@
             var macData = new byte[aadPaddedLen + ciphertextPaddedLen + 16];
 
             // Mac Text
+            //aad.CopyTo(macData);
             Array.Copy(aad.ToArray(), macData, aad.Length);
             Array.Copy(ciphertext.ToArray(), 0, macData, aadPaddedLen, ciphertextLen);
 
@@ -211,12 +217,14 @@
             return macData;
         }
 
-        private void SetMacLength(byte[] macData, int offset, int value)
+        private void SetMacLength(Span<byte> macData, int offset, int value)
         {
-            var lenData = new byte[8];
-            ByteIntegerConverter.StoreLittleEndian64(lenData, 0, (ulong)value);
+            //var lenData = new byte[8];
+            //ByteIntegerConverter.StoreUInt64LittleEndian(lenData, 0, (ulong)value);
 
-            Array.Copy(lenData, 0, macData, offset, lenData.Length);
+            //Array.Copy(lenData, 0, macData, offset, lenData.Length);
+
+            ArrayUtils.StoreUInt64LittleEndian(macData, offset, (ulong)value);
         }
     }
 }

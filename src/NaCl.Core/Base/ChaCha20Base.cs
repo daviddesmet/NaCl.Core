@@ -11,8 +11,6 @@
     /// <seealso cref="NaCl.Core.Internal.Snuffle" />
     public abstract class ChaCha20Base : Snuffle
     {
-        private readonly byte[] ZERO_16_BYTES = new byte[16];
-
         /// <summary>
         /// Initializes a new instance of the <see cref="ChaCha20Base"/> class.
         /// </summary>
@@ -21,13 +19,13 @@
         public ChaCha20Base(in byte[] key, int initialCounter) : base(key, initialCounter) { }
 
         /// <summary>
-        /// Returns the initial state from <paramref name="nonce"/> and <paramref name="counter">.
+        /// Sets the initial <paramref name="state"/> from <paramref name="nonce"/> and <paramref name="counter">.
         /// ChaCha20 has a different logic than XChaCha20, because the former uses a 12-byte nonce, but the later uses 24-byte.
         /// </summary>
+        /// <param name="state">The state.</param>
         /// <param name="nonce">The nonce.</param>
         /// <param name="counter">The counter.</param>
-        /// <returns>Array16&lt;System.UInt32&gt;.</returns>
-        protected abstract Array16<uint> CreateInitialState(ReadOnlySpan<byte> nonce, int counter);
+        protected abstract void SetInitialState(Span<uint> state, ReadOnlySpan<byte> nonce, int counter);
 
         /// <inheritdoc />
         public override void ProcessKeyStreamBlock(ReadOnlySpan<byte> nonce, int counter, Span<byte> block)
@@ -35,81 +33,72 @@
             if (block.Length != BLOCK_SIZE_IN_BYTES)
                 throw new CryptographicException($"The keystream block length is not valid. The length in bytes must be {BLOCK_SIZE_IN_BYTES}.");
 
-            // Creates the initial state.
-            // https://tools.ietf.org/html/rfc8439#section-2.3.
-            var state = CreateInitialState(nonce, counter);
+            // Set the initial state based on https://tools.ietf.org/html/rfc8439#section-2.3
+            Span<uint> state = stackalloc uint[BLOCK_SIZE_IN_INTS];
+            SetInitialState(state, nonce, counter);
 
-            // Create a copy of the state and then
-            // run 20 rounds on it, alternating between "column rounds" and "diagonal rounds"; each round consisting of four quarter-rounds.
-            var workingState = ByteIntegerConverter.Array16ToArray(state);
-            ShuffleState(ref workingState);
+            // Create a copy of the state and then run 20 rounds on it,
+            // alternating between "column rounds" and "diagonal rounds"; each round consisting of four quarter-rounds.
+            Span<uint> workingState = stackalloc uint[BLOCK_SIZE_IN_INTS];
+            state.CopyTo(workingState);
+            ShuffleState(workingState);
 
             // At the end of the rounds, add the result to the original state.
-            unchecked
-            {
-                state.x0 += workingState[0];
-                state.x1 += workingState[1];
-                state.x2 += workingState[2];
-                state.x3 += workingState[3];
-                state.x4 += workingState[4];
-                state.x5 += workingState[5];
-                state.x6 += workingState[6];
-                state.x7 += workingState[7];
-                state.x8 += workingState[8];
-                state.x9 += workingState[9];
-                state.x10 += workingState[10];
-                state.x11 += workingState[11];
-                state.x12 += workingState[12];
-                state.x13 += workingState[13];
-                state.x14 += workingState[14];
-                state.x15 += workingState[15];
-            }
+            state[0] += workingState[0];
+            state[1] += workingState[1];
+            state[2] += workingState[2];
+            state[3] += workingState[3];
+            state[4] += workingState[4];
+            state[5] += workingState[5];
+            state[6] += workingState[6];
+            state[7] += workingState[7];
+            state[8] += workingState[8];
+            state[9] += workingState[9];
+            state[10] += workingState[10];
+            state[11] += workingState[11];
+            state[12] += workingState[12];
+            state[13] += workingState[13];
+            state[14] += workingState[14];
+            state[15] += workingState[15];
 
-            ByteIntegerConverter.WriteLittleEndian32(block, 0, ref state);
+            ArrayUtils.StoreArray16UInt32LittleEndian(block, 0, state);
         }
 
         /// <summary>
-        /// Process a pseudorandom keystream block, converting the key and part of the nonce into a subkey, and the remainder of the nonce.
+        /// Process a pseudorandom keystream block, converting the key and part of the <paramref name="nonce"> into a <paramref name="subkey">, and the remainder of the <paramref name="nonce">.
         /// </summary>
-        /// <returns>System.Byte[].</returns>
-        public byte[] HChaCha20() => HChaCha20(ZERO_16_BYTES);
-
-        /// <summary>
-        /// Process a pseudorandom keystream block, converting the key and part of the <paramref name="nonce"> into a subkey, and the remainder of the nonce.
-        /// </summary>
+        /// <param name="subKey">The subKey.</param>
         /// <param name="nonce">The nonce.</param>
-        /// <returns>System.Byte[].</returns>
-        public byte[] HChaCha20(ReadOnlySpan<byte> nonce)
+        public void HChaCha20(Span<byte> subKey, ReadOnlySpan<byte> nonce)
         {
             // See https://tools.ietf.org/html/draft-arciszewski-xchacha-01#section-2.2.
 
-            var state = new Array16<uint>();
+            Span<uint> state = stackalloc uint[BLOCK_SIZE_IN_INTS];
 
             // Set ChaCha20 constant
-            SetSigma(ref state);
-            
+            SetSigma(state);
+
             // Set 256-bit Key
-            SetKey(ref state, Key);
+            SetKey(state, Key);
 
             // Set 128-bit Nonce
-            state.x12 = ByteIntegerConverter.LoadLittleEndian32(nonce, 0);
-            state.x13 = ByteIntegerConverter.LoadLittleEndian32(nonce, 4);
-            state.x14 = ByteIntegerConverter.LoadLittleEndian32(nonce, 8);
-            state.x15 = ByteIntegerConverter.LoadLittleEndian32(nonce, 12);
+            state[12] = ArrayUtils.LoadUInt32LittleEndian(nonce, 0);
+            state[13] = ArrayUtils.LoadUInt32LittleEndian(nonce, 4);
+            state[14] = ArrayUtils.LoadUInt32LittleEndian(nonce, 8);
+            state[15] = ArrayUtils.LoadUInt32LittleEndian(nonce, 12);
 
             // Block function
-            ShuffleState(ref state);
+            ShuffleState(state);
 
-            state.x4 = state.x12;
-            state.x5 = state.x13;
-            state.x6 = state.x14;
-            state.x7 = state.x15;
+            state[4] = state[12];
+            state[5] = state[13];
+            state[6] = state[14];
+            state[7] = state[15];
 
-            var output = new byte[KEY_SIZE_IN_BYTES]; // TODO: Remove allocation
-            ByteIntegerConverter.Array8StoreLittleEndian32(output, 0, ref state);
-            return output;
+            ArrayUtils.StoreArray8UInt32LittleEndian(subKey, 0, state);
         }
 
+        /*
         protected static void ShuffleState(ref Array16<uint> state)
         {
             var x0 = state.x0;
@@ -227,8 +216,9 @@
             state.x14 = x14;
             state.x15 = x15;
         }
+        */
 
-        protected static void ShuffleState(ref uint[] state)
+        protected static void ShuffleState(Span<uint> state)
         {
             for (var i = 0; i < 10; i++)
             {
@@ -255,24 +245,24 @@
             b = BitUtils.RotateLeft(b ^ c, 7);
         }
 
-        protected static void SetSigma(ref Array16<uint> state)
+        protected static void SetSigma(Span<uint> state)
         {
-            state.x0 = SIGMA[0];
-            state.x1 = SIGMA[1];
-            state.x2 = SIGMA[2];
-            state.x3 = SIGMA[3];
+            state[0] = SIGMA[0];
+            state[1] = SIGMA[1];
+            state[2] = SIGMA[2];
+            state[3] = SIGMA[3];
         }
 
-        protected static void SetKey(ref Array16<uint> state, ReadOnlySpan<byte> key)
+        protected static void SetKey(Span<uint> state, ReadOnlySpan<byte> key)
         {
-            state.x4 = ByteIntegerConverter.LoadLittleEndian32(key, 0);
-            state.x5 = ByteIntegerConverter.LoadLittleEndian32(key, 4);
-            state.x6 = ByteIntegerConverter.LoadLittleEndian32(key, 8);
-            state.x7 = ByteIntegerConverter.LoadLittleEndian32(key, 12);
-            state.x8 = ByteIntegerConverter.LoadLittleEndian32(key, 16);
-            state.x9 = ByteIntegerConverter.LoadLittleEndian32(key, 20);
-            state.x10 = ByteIntegerConverter.LoadLittleEndian32(key, 24);
-            state.x11 = ByteIntegerConverter.LoadLittleEndian32(key, 28);
+            state[4] = ArrayUtils.LoadUInt32LittleEndian(key, 0);
+            state[5] = ArrayUtils.LoadUInt32LittleEndian(key, 4);
+            state[6] = ArrayUtils.LoadUInt32LittleEndian(key, 8);
+            state[7] = ArrayUtils.LoadUInt32LittleEndian(key, 12);
+            state[8] = ArrayUtils.LoadUInt32LittleEndian(key, 16);
+            state[9] = ArrayUtils.LoadUInt32LittleEndian(key, 20);
+            state[10] = ArrayUtils.LoadUInt32LittleEndian(key, 24);
+            state[11] = ArrayUtils.LoadUInt32LittleEndian(key, 28);
         }
     }
 }

@@ -125,24 +125,21 @@
             ulong f0, f1, f2, f3;
             ulong c;
 
-            var internalKey = new Array8<uint>
-            {
-                x0 = ByteIntegerConverter.LoadLittleEndian32(key, 0),
-                x1 = ByteIntegerConverter.LoadLittleEndian32(key, 4),
-                x2 = ByteIntegerConverter.LoadLittleEndian32(key, 8),
-                x3 = ByteIntegerConverter.LoadLittleEndian32(key, 12),
-                x4 = ByteIntegerConverter.LoadLittleEndian32(key, 16),
-                x5 = ByteIntegerConverter.LoadLittleEndian32(key, 20),
-                x6 = ByteIntegerConverter.LoadLittleEndian32(key, 24),
-                x7 = ByteIntegerConverter.LoadLittleEndian32(key, 28)
-            };
-            //ByteIntegerConverter.Array8LoadLittleEndian32(out internalKey, key, 0);
+            Span<uint> internalKey = stackalloc uint[8];
+            internalKey[0] = ArrayUtils.LoadUInt32LittleEndian(key, 0);
+            internalKey[1] = ArrayUtils.LoadUInt32LittleEndian(key, 4);
+            internalKey[2] = ArrayUtils.LoadUInt32LittleEndian(key, 8);
+            internalKey[3] = ArrayUtils.LoadUInt32LittleEndian(key, 12);
+            internalKey[4] = ArrayUtils.LoadUInt32LittleEndian(key, 16);
+            internalKey[5] = ArrayUtils.LoadUInt32LittleEndian(key, 20);
+            internalKey[6] = ArrayUtils.LoadUInt32LittleEndian(key, 24);
+            internalKey[7] = ArrayUtils.LoadUInt32LittleEndian(key, 28);
 
             // Clamp key
-            var t0 = internalKey.x0;
-            var t1 = internalKey.x1;
-            var t2 = internalKey.x2;
-            var t3 = internalKey.x3;
+            var t0 = internalKey[0];
+            var t1 = internalKey[1];
+            var t2 = internalKey[2];
+            var t3 = internalKey[3];
 
             // Precompute multipliers
             var r0 = t0 & 0x3ffffff; t0 >>= 26; t0 |= t1 << 6;
@@ -164,19 +161,19 @@
                 {
                     var block = GetLastBlock(data, i); // TODO: Remove allocation
 
-                    t0 = ByteIntegerConverter.LoadLittleEndian32(block, 0);
-                    t1 = ByteIntegerConverter.LoadLittleEndian32(block, 4);
-                    t2 = ByteIntegerConverter.LoadLittleEndian32(block, 8);
-                    t3 = ByteIntegerConverter.LoadLittleEndian32(block, 12);
+                    t0 = ArrayUtils.LoadUInt32LittleEndian(block, 0);
+                    t1 = ArrayUtils.LoadUInt32LittleEndian(block, 4);
+                    t2 = ArrayUtils.LoadUInt32LittleEndian(block, 8);
+                    t3 = ArrayUtils.LoadUInt32LittleEndian(block, 12);
 
                     CryptoBytes.Wipe(block);
                 }
                 else
                 {
-                    t0 = ByteIntegerConverter.LoadLittleEndian32(data, i + 0);
-                    t1 = ByteIntegerConverter.LoadLittleEndian32(data, i + 4);
-                    t2 = ByteIntegerConverter.LoadLittleEndian32(data, i + 8);
-                    t3 = ByteIntegerConverter.LoadLittleEndian32(data, i + 12);
+                    t0 = ArrayUtils.LoadUInt32LittleEndian(data, i + 0);
+                    t1 = ArrayUtils.LoadUInt32LittleEndian(data, i + 4);
+                    t2 = ArrayUtils.LoadUInt32LittleEndian(data, i + 8);
+                    t3 = ArrayUtils.LoadUInt32LittleEndian(data, i + 12);
                 }
 
                 h0 += t0 & 0x3ffffff;
@@ -206,11 +203,11 @@
             }
 
             // Do final reduction mod 2^130-5
-            b = h0 >> 26; h0 = h0 & 0x3ffffff;
-            h1 += b; b = h1 >> 26; h1 = h1 & 0x3ffffff;
-            h2 += b; b = h2 >> 26; h2 = h2 & 0x3ffffff;
-            h3 += b; b = h3 >> 26; h3 = h3 & 0x3ffffff;
-            h4 += b; b = h4 >> 26; h4 = h4 & 0x3ffffff;
+            b = h0 >> 26; h0 &= 0x3ffffff;
+            h1 += b; b = h1 >> 26; h1 &= 0x3ffffff;
+            h2 += b; b = h2 >> 26; h2 &= 0x3ffffff;
+            h3 += b; b = h3 >> 26; h3 &= 0x3ffffff;
+            h4 += b; b = h4 >> 26; h4 &= 0x3ffffff;
             h0 += b * 5;
 
             // Compute h - p
@@ -230,19 +227,19 @@
             h4 = (h4 & nb) | (g4 & b);
 
             // h = h % (2^128)
-            f0 = ((h0) | (h1 << 26)) + (ulong)internalKey.x4;
-            f1 = ((h1 >> 6) | (h2 << 20)) + (ulong)internalKey.x5;
-            f2 = ((h2 >> 12) | (h3 << 14)) + (ulong)internalKey.x6;
-            f3 = ((h3 >> 18) | (h4 << 8)) + (ulong)internalKey.x7;
+            f0 = ((h0) | (h1 << 26)) + (ulong)internalKey[4];
+            f1 = ((h1 >> 6) | (h2 << 20)) + (ulong)internalKey[5];
+            f2 = ((h2 >> 12) | (h3 << 14)) + (ulong)internalKey[6];
+            f3 = ((h3 >> 18) | (h4 << 8)) + (ulong)internalKey[7];
 
             // mac = (h + pad) % (2^128)
             var mac = new byte[MAC_TAG_SIZE_IN_BYTES];
             unchecked
             {
-                ByteIntegerConverter.StoreLittleEndian32(mac, 0, (uint)f0); f1 += (f0 >> 32);
-                ByteIntegerConverter.StoreLittleEndian32(mac, 4, (uint)f1); f2 += (f1 >> 32);
-                ByteIntegerConverter.StoreLittleEndian32(mac, 8, (uint)f2); f3 += (f2 >> 32);
-                ByteIntegerConverter.StoreLittleEndian32(mac, 12, (uint)f3);
+                ArrayUtils.StoreUI32LittleEndian(mac, 0, (uint)f0); f1 += (f0 >> 32);
+                ArrayUtils.StoreUI32LittleEndian(mac, 4, (uint)f1); f2 += (f1 >> 32);
+                ArrayUtils.StoreUI32LittleEndian(mac, 8, (uint)f2); f3 += (f2 >> 32);
+                ArrayUtils.StoreUI32LittleEndian(mac, 12, (uint)f3);
             }
 
             return mac;

@@ -33,7 +33,7 @@
             var cipher = new XChaCha20(new byte[Snuffle.KEY_SIZE_IN_BYTES], 0);
 
             // Act & Assert
-            Action act = () => cipher.Encrypt(new byte[0], new byte[cipher.NonceSizeInBytes() + TestHelpers.ReturnRandomPositiveNegative()]);
+            Action act = () => cipher.Encrypt(new byte[0], new byte[cipher.NonceSizeInBytes + TestHelpers.ReturnRandomPositiveNegative()]);
             act.Should().Throw<CryptographicException>().WithMessage(EXCEPTION_MESSAGE_NONCE_LENGTH);
         }
 
@@ -55,7 +55,7 @@
             var cipher = new XChaCha20(new byte[Snuffle.KEY_SIZE_IN_BYTES], 0);
 
             // Act & Assert
-            Action act = () => cipher.Decrypt(new byte[0], new byte[cipher.NonceSizeInBytes() + TestHelpers.ReturnRandomPositiveNegative()]);
+            Action act = () => cipher.Decrypt(new byte[0], new byte[cipher.NonceSizeInBytes + TestHelpers.ReturnRandomPositiveNegative()]);
             act.Should().Throw<CryptographicException>().WithMessage(EXCEPTION_MESSAGE_NONCE_LENGTH);
         }
 
@@ -153,7 +153,7 @@
 
                 var cipher = new XChaCha20(key, 0);
 
-                var nonce = new byte[cipher.NonceSizeInBytes()];
+                var nonce = new byte[cipher.NonceSizeInBytes];
                 rnd.NextBytes(nonce);
 
                 var ciphertext = cipher.Encrypt(plaintext, nonce);
@@ -186,7 +186,7 @@
             var key = new byte[Snuffle.KEY_SIZE_IN_BYTES];
 
             var cipher = new XChaCha20(key, 0);
-            var nonce = new byte[cipher.NonceSizeInBytes() + TestHelpers.ReturnRandomPositiveNegative()];
+            var nonce = new byte[cipher.NonceSizeInBytes + TestHelpers.ReturnRandomPositiveNegative()];
             var block = new byte[Snuffle.BLOCK_SIZE_IN_BYTES];
 
             // Act & Assert
@@ -201,7 +201,7 @@
             var key = new byte[Snuffle.KEY_SIZE_IN_BYTES];
 
             var cipher = new XChaCha20(key, 0);
-            var nonce = new byte[cipher.NonceSizeInBytes() + TestHelpers.ReturnRandomPositiveNegative()];
+            var nonce = new byte[cipher.NonceSizeInBytes + TestHelpers.ReturnRandomPositiveNegative()];
             var block = new byte[0];
 
             // Act & Assert
@@ -218,7 +218,8 @@
                 var cipher = new XChaCha20(test.Key, 0);
 
                 // Act
-                var output = cipher.HChaCha20(test.Input);
+                var output = new byte[Snuffle.KEY_SIZE_IN_BYTES];
+                cipher.HChaCha20(output, test.Input);
 
                 // Assert
                 CryptoBytes.ConstantTimeEquals(test.Output, output).Should().BeTrue();
