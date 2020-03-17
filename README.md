@@ -39,9 +39,9 @@ Install-Package NaCl.Core
 
 Or alternatively, you can add the NaCl.Core package from within Visual Studio's NuGet package manager.
 
-Daily NuGet builds of the project are also available in the [MyGet](https://www.myget.org/feed/nacl-core/package/nuget/NaCl.Core) feed:
+Daily NuGet builds of the project are also available in the [Azure Artifacts](https://dev.azure.com/idaviddesmet/NaCl.Core/_packaging?_a=feed&feed=NaCl.Core-CI) feed:
 
-> [https://www.myget.org/F/nacl-core/api/v3/index.json](https://www.myget.org/F/nacl-core/api/v3/index.json)
+> [https://pkgs.dev.azure.com/idaviddesmet/NaCl.Core/_packaging/NaCl.Core-CI/nuget/v3/index.json](https://pkgs.dev.azure.com/idaviddesmet/NaCl.Core/_packaging/NaCl.Core-CI/nuget/v3/index.json)
 
 ## Usage
 
