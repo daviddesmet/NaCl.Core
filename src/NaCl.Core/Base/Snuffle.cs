@@ -28,7 +28,7 @@
 
         public static uint[] SIGMA = new uint[] { 0x61707865, 0x3320646E, 0x79622D32, 0x6B206574 }; //Encoding.ASCII.GetBytes("expand 32-byte k");
 
-        protected readonly byte[] Key;
+        protected readonly ReadOnlyMemory<byte> Key;
         protected readonly int InitialCounter;
 
         /// <summary>
@@ -37,7 +37,7 @@
         /// <param name="key">The key.</param>
         /// <param name="initialCounter">The initial counter.</param>
         /// <exception cref="CryptographicException"></exception>
-        public Snuffle(in byte[] key, int initialCounter)
+        public Snuffle(ReadOnlyMemory<byte> key, int initialCounter)
         {
             if (key.Length != KEY_SIZE_IN_BYTES)
                 throw new CryptographicException($"The key length in bytes must be {KEY_SIZE_IN_BYTES}.");
@@ -95,15 +95,6 @@
 
             return ciphertext;
         }
-
-        /// <summary>
-        /// Encrypts the specified plaintext using the supplied nonce.
-        /// </summary>
-        /// <param name="plaintext">The plaintext.</param>
-        /// <param name="nonce">The nonce.</param>
-        /// <returns>System.Byte[].</returns>
-        /// <exception cref="CryptographicException">plaintext or nonce</exception>
-        public virtual byte[] Encrypt(byte[] plaintext, byte[] nonce) => Encrypt((ReadOnlySpan<byte>)plaintext, (ReadOnlySpan<byte>)nonce);
 
         /// <summary>
         /// Encrypts the specified plaintext using the supplied nonce.

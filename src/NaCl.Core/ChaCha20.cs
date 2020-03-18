@@ -21,7 +21,7 @@
         /// </summary>
         /// <param name="key">The key.</param>
         /// <param name="initialCounter">The initial counter.</param>
-        public ChaCha20(in byte[] key, int initialCounter) : base(key, initialCounter) { }
+        public ChaCha20(ReadOnlyMemory<byte> key, int initialCounter) : base(key, initialCounter) { }
 
         /// <inheritdoc />
         protected override void SetInitialState(Span<uint> state, ReadOnlySpan<byte> nonce, int counter)
@@ -32,7 +32,7 @@
             // The first four words (0-3) are constants: 0x61707865, 0x3320646e, 0x79622d32, 0x6b206574.
             // The next eight words (4-11) are taken from the 256-bit key in little-endian order, in 4-byte chunks.
             SetSigma(state);
-            SetKey(state, Key);
+            SetKey(state, Key.Span);
 
             // Word 12 is a block counter. Since each block is 64-byte, a 32-bit word is enough for 256 gigabytes of data. Ref: https://tools.ietf.org/html/rfc8439#section-2.3.
             state[12] = (uint)counter;

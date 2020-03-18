@@ -16,7 +16,7 @@
         /// </summary>
         /// <param name="key">The key.</param>
         /// <param name="initialCounter">The initial counter.</param>
-        public ChaCha20Base(in byte[] key, int initialCounter) : base(key, initialCounter) { }
+        public ChaCha20Base(ReadOnlyMemory<byte> key, int initialCounter) : base(key, initialCounter) { }
 
         /// <summary>
         /// Sets the initial <paramref name="state"/> from <paramref name="nonce"/> and <paramref name="counter">.
@@ -79,7 +79,7 @@
             SetSigma(state);
 
             // Set 256-bit Key
-            SetKey(state, Key);
+            SetKey(state, Key.Span);
 
             // Set 128-bit Nonce
             state[12] = ArrayUtils.LoadUInt32LittleEndian(nonce, 0);

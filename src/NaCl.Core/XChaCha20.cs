@@ -19,7 +19,7 @@
         /// </summary>
         /// <param name="key">The key.</param>
         /// <param name="initialCounter">The initial counter.</param>
-        public XChaCha20(in byte[] key, int initialCounter) : base(key, initialCounter) { }
+        public XChaCha20(ReadOnlyMemory<byte> key, int initialCounter) : base(key, initialCounter) { }
 
         /// <inheritdoc />
         protected override void SetInitialState(Span<uint> state, ReadOnlySpan<byte> nonce, int counter)

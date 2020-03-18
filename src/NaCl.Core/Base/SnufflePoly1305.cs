@@ -13,18 +13,16 @@
     /// </summary>
     public abstract class SnufflePoly1305
     {
-        //private readonly byte[] Key;
-        private Snuffle _snuffle;
-        private Snuffle _macKeySnuffle;
+        private readonly Snuffle _snuffle;
+        private readonly Snuffle _macKeySnuffle;
         public const string AEAD_EXCEPTION_INVALID_TAG = "AEAD Bad Tag Exception";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SnufflePoly1305"/> class.
         /// </summary>
         /// <param name="key">The key.</param>
-        public SnufflePoly1305(in byte[] key)
+        public SnufflePoly1305(ReadOnlyMemory<byte> key)
         {
-            //Key = key;
             _snuffle = CreateSnuffleInstance(key, 1);
             _macKeySnuffle = CreateSnuffleInstance(key, 0);
         }
@@ -35,16 +33,7 @@
         /// <param name="key">The key.</param>
         /// <param name="initialCounter">The initial counter.</param>
         /// <returns>Snuffle.</returns>
-        protected abstract Snuffle CreateSnuffleInstance(in byte[] key, int initialCounter);
-
-        /// <summary>
-        /// Encrypts the <paramref name="plaintext"> and computes a MAC with <see cref="Poly1305"/> authentication based on an optional <paramref name="aad"> and a random auto-generated nonce.
-        /// </summary>
-        /// <param name="plaintext">The plaintext.</param>
-        /// <param name="aad">The optional associated data.</param>
-        /// <returns>System.Byte[].</returns>
-        /// <exception cref="CryptographicException">plaintext</exception>
-        public virtual byte[] Encrypt(byte[] plaintext, byte[] aad = null) => Encrypt((ReadOnlySpan<byte>)plaintext, (ReadOnlySpan<byte>)aad);
+        protected abstract Snuffle CreateSnuffleInstance(ReadOnlyMemory<byte> key, int initialCounter);
 
         /// <summary>
         /// Encrypts the <paramref name="plaintext"> and computes a MAC with <see cref="Poly1305"/> authentication based on an optional <paramref name="aad"> and a random auto-generated nonce.

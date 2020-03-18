@@ -1,5 +1,7 @@
 ﻿namespace NaCl.Core
 {
+    using System;
+
     using Base;
 
     /// <summary>
@@ -12,7 +14,7 @@
         /// Initializes a new instance of the <see cref="ChaCha20Poly1305"/> class.
         /// </summary>
         /// <param name="key">The key.</param>
-        public ChaCha20Poly1305(in byte[] key) : base(key) { }
+        public ChaCha20Poly1305(ReadOnlyMemory<byte> key) : base(key) { }
 
         /// <summary>
         /// Creates the snuffle instance.
@@ -20,6 +22,6 @@
         /// <param name="key">The key.</param>
         /// <param name="initialCounter">The initial counter.</param>
         /// <returns>Snuffle.</returns>
-        protected override Snuffle CreateSnuffleInstance(in byte[] key, int initialCounter) => new ChaCha20(key, initialCounter);
+        protected override Snuffle CreateSnuffleInstance(ReadOnlyMemory<byte> key, int initialCounter) => new ChaCha20(key, initialCounter);
     }
 }
