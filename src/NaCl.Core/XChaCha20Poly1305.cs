@@ -8,7 +8,7 @@
     /// XChaCha20-Poly1305 AEAD construction, as described in <a href="https://tools.ietf.org/html/draft-arciszewski-xchacha-02">draft</a>.
     /// </summary>
     /// <seealso cref="NaCl.Core.Base.SnufflePoly1305" />
-    public class XChaCha20Poly1305 : SnufflePoly1305
+    public sealed class XChaCha20Poly1305 : SnufflePoly1305
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="XChaCha20Poly1305"/> class.
