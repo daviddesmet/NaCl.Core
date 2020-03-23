@@ -40,10 +40,14 @@
         public void EncryptWhenNonceLengthIsInvalidFails()
         {
             // Arrange
+            var nonce = new byte[ChaCha20.NONCE_SIZE_IN_BYTES + TestHelpers.ReturnRandomPositiveNegative()];
+            var plaintext = new byte[0];
+            var ciphertext = new byte[0];
+
             var cipher = new ChaCha20(new byte[Snuffle.KEY_SIZE_IN_BYTES], 0);
 
             // Act & Assert
-            Action act = () => cipher.Encrypt(new byte[0], new byte[cipher.NonceSizeInBytes + TestHelpers.ReturnRandomPositiveNegative()]);
+            Action act = () => cipher.Encrypt(plaintext, nonce, ciphertext);
             act.Should().Throw<ArgumentException>().WithMessage(EXCEPTION_MESSAGE_NONCE_LENGTH);
         }
 
@@ -51,10 +55,14 @@
         public void EncryptWhenNonceIsEmptyFails()
         {
             // Arrange
+            var nonce = new byte[0];
+            var plaintext = new byte[0];
+            var ciphertext = new byte[0];
+
             var cipher = new ChaCha20(new byte[Snuffle.KEY_SIZE_IN_BYTES], 0);
 
             // Act & Assert
-            Action act = () => cipher.Encrypt(new byte[0], new byte[0]);
+            Action act = () => cipher.Encrypt(plaintext, nonce, ciphertext);
             act.Should().Throw<ArgumentException>().WithMessage(EXCEPTION_MESSAGE_NONCE_LENGTH);
         }
 
@@ -62,10 +70,14 @@
         public void DecryptWhenNonceLengthIsInvalidFails()
         {
             // Arrange
+            var nonce = new byte[ChaCha20.NONCE_SIZE_IN_BYTES + TestHelpers.ReturnRandomPositiveNegative()];
+            var plaintext = new byte[0];
+            var ciphertext = new byte[0];
+
             var cipher = new ChaCha20(new byte[Snuffle.KEY_SIZE_IN_BYTES], 0);
 
             // Act & Assert
-            Action act = () => cipher.Decrypt(new byte[0], new byte[cipher.NonceSizeInBytes + TestHelpers.ReturnRandomPositiveNegative()]);
+            Action act = () => cipher.Decrypt(ciphertext, nonce, plaintext);
             act.Should().Throw<ArgumentException>().WithMessage(EXCEPTION_MESSAGE_NONCE_LENGTH);
         }
 
@@ -73,10 +85,14 @@
         public void DecryptWhenNonceIsEmptyFails()
         {
             // Arrange
+            var nonce = new byte[0];
+            var plaintext = new byte[0];
+            var ciphertext = new byte[0];
+
             var cipher = new ChaCha20(new byte[Snuffle.KEY_SIZE_IN_BYTES], 0);
 
             // Act & Assert
-            Action act = () => cipher.Decrypt(new byte[0], new byte[0]);
+            Action act = () => cipher.Decrypt(ciphertext, nonce, plaintext);
             act.Should().Throw<ArgumentException>().WithMessage(EXCEPTION_MESSAGE_NONCE_LENGTH);
         }
 
@@ -110,7 +126,7 @@
             var plaintext = cipher.Decrypt(ciphertext);
 
             // Assert
-            CryptoBytes.ConstantTimeEquals(expected, plaintext).Should().BeTrue();
+            plaintext.Should().Equal(expected);
         }
 
         [Fact]
@@ -120,12 +136,34 @@
             var key = new byte[Snuffle.KEY_SIZE_IN_BYTES];
             RandomNumberGenerator.Fill(key);
 
+            var nonce = new byte[ChaCha20.NONCE_SIZE_IN_BYTES];
+            RandomNumberGenerator.Fill(nonce);
+
             var expected = Encoding.UTF8.GetBytes("This is a secret content!!");
 
             var cipher = new ChaCha20(key, 0);
 
-            var nonce = new byte[cipher.NonceSizeInBytes];
+            // Act
+            var ciphertext = cipher.Encrypt(expected, nonce);
+            var plaintext = cipher.Decrypt(ciphertext, nonce);
+
+            // Assert
+            plaintext.Should().Equal(expected);
+        }
+
+        [Fact]
+        public void EncryptDecrypt1BlockWithDestinationBufferTest()
+        {
+            // Arrange
+            var key = new byte[Snuffle.KEY_SIZE_IN_BYTES];
+            RandomNumberGenerator.Fill(key);
+
+            var nonce = new byte[ChaCha20.NONCE_SIZE_IN_BYTES];
             RandomNumberGenerator.Fill(nonce);
+
+            var expected = Encoding.UTF8.GetBytes("This is a secret content!!");
+
+            var cipher = new ChaCha20(key, 0);
 
             // Act
             var ciphertext = new byte[expected.Length];
@@ -135,7 +173,7 @@
             cipher.Decrypt(ciphertext, nonce, plaintext);
 
             // Assert
-            CryptoBytes.ConstantTimeEquals(expected, plaintext).Should().BeTrue();
+            plaintext.Should().Equal(expected);
         }
 
         [Fact]
@@ -161,7 +199,7 @@
                     var plaintext = cipher.Decrypt(ciphertext);
 
                     // Assert
-                    CryptoBytes.ConstantTimeEquals(expected, plaintext).Should().BeTrue();
+                    plaintext.Should().Equal(expected);
                 }
             }
         }
@@ -177,10 +215,41 @@
             {
                 RandomNumberGenerator.Fill(key);
 
+                var nonce = new byte[ChaCha20.NONCE_SIZE_IN_BYTES];
+                RandomNumberGenerator.Fill(nonce);
+
                 var cipher = new ChaCha20(key, 0);
 
-                var nonce = new byte[cipher.NonceSizeInBytes];
+                for (var j = 0; j < 64; j++)
+                {
+                    var expected = new byte[rnd.Next(300)];
+                    rnd.NextBytes(expected);
+
+                    // Act
+                    var ciphertext = cipher.Encrypt(expected, nonce);
+                    var plaintext = cipher.Decrypt(ciphertext, nonce);
+
+                    // Assert
+                    plaintext.Should().Equal(expected);
+                }
+            }
+        }
+
+        [Fact]
+        public void EncryptDecryptNBlocksWithDestinationBufferTest()
+        {
+            // Arrange
+            var rnd = new Random();
+            var key = new byte[Snuffle.KEY_SIZE_IN_BYTES];
+
+            for (var i = 0; i < 64; i++)
+            {
+                RandomNumberGenerator.Fill(key);
+
+                var nonce = new byte[ChaCha20.NONCE_SIZE_IN_BYTES];
                 RandomNumberGenerator.Fill(nonce);
+
+                var cipher = new ChaCha20(key, 0);
 
                 for (var j = 0; j < 64; j++)
                 {
@@ -195,7 +264,7 @@
                     cipher.Decrypt(ciphertext, nonce, plaintext);
 
                     // Assert
-                    CryptoBytes.ConstantTimeEquals(expected, plaintext).Should().BeTrue();
+                    plaintext.Should().Equal(expected);
                 }
             }
         }
@@ -216,13 +285,10 @@
 
                 var cipher = new ChaCha20(key, 0);
 
-                var nonce = new byte[cipher.NonceSizeInBytes];
-                RandomNumberGenerator.Fill(nonce);
-
                 var ciphertext = cipher.Encrypt(plaintext);
                 var decrypted = cipher.Decrypt(ciphertext);
 
-                CryptoBytes.ConstantTimeEquals(plaintext, decrypted).Should().BeTrue();
+                decrypted.Should().Equal(plaintext);
                 dataSize += 5 * dataSize / 11;
             }
         }
@@ -241,10 +307,37 @@
                 var key = new byte[Snuffle.KEY_SIZE_IN_BYTES];
                 RandomNumberGenerator.Fill(key);
 
+                var nonce = new byte[ChaCha20.NONCE_SIZE_IN_BYTES];
+                RandomNumberGenerator.Fill(nonce);
+
                 var cipher = new ChaCha20(key, 0);
 
-                var nonce = new byte[cipher.NonceSizeInBytes];
+                var ciphertext = cipher.Encrypt(plaintext, nonce);
+                var decrypted = cipher.Decrypt(ciphertext, nonce);
+
+                decrypted.Should().Equal(plaintext);
+                dataSize += 5 * dataSize / 11;
+            }
+        }
+
+        [Fact]
+        public void EncryptDecryptLongMessagesWithDestinationBufferTest()
+        {
+            var rnd = new Random();
+
+            var dataSize = 16;
+            while (dataSize <= (1 << 24))
+            {
+                var plaintext = new byte[dataSize];
+                rnd.NextBytes(plaintext);
+
+                var key = new byte[Snuffle.KEY_SIZE_IN_BYTES];
+                RandomNumberGenerator.Fill(key);
+
+                var nonce = new byte[ChaCha20.NONCE_SIZE_IN_BYTES];
                 RandomNumberGenerator.Fill(nonce);
+
+                var cipher = new ChaCha20(key, 0);
 
                 var ciphertext = new byte[plaintext.Length];
                 cipher.Encrypt(plaintext, nonce, ciphertext);
@@ -252,7 +345,7 @@
                 var decrypted = new byte[plaintext.Length];
                 cipher.Decrypt(ciphertext, nonce, decrypted);
 
-                CryptoBytes.ConstantTimeEquals(plaintext, decrypted).Should().BeTrue();
+                decrypted.Should().Equal(plaintext);
                 dataSize += 5 * dataSize / 11;
             }
         }
@@ -377,9 +470,9 @@
                 cipher.Decrypt(test.CipherText, test.Nonce, output3);
 
                 // Assert
-                CryptoBytes.ConstantTimeEquals(test.PlainText, output1).Should().BeTrue();
-                CryptoBytes.ConstantTimeEquals(test.PlainText, output2).Should().BeTrue();
-                CryptoBytes.ConstantTimeEquals(test.PlainText, output3).Should().BeTrue();
+                output1.Should().Equal(test.PlainText);
+                output2.Should().Equal(test.PlainText);
+                output3.Should().Equal(test.PlainText);
             }
         }
 
@@ -435,7 +528,7 @@
                 0x05, 0x3C, 0x84, 0xE4, 0x9A, 0x4A, 0x33, 0x32
             };
 
-            CryptoBytes.ConstantTimeEquals(CryptoBytes.Combine(block0, block1), expected).Should().BeTrue();
+            CryptoBytes.Combine(block0, block1).Should().Equal(expected);
         }
     }
 }

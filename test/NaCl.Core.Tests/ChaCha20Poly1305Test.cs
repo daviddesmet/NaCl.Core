@@ -231,7 +231,7 @@
                 var decrypted = new byte[message.Length];
                 aead.Decrypt(nonce, ciphertext, tag, decrypted, aad);
 
-                message.Should().Equal(decrypted);
+                decrypted.Should().Equal(message);
             }
         }
 
@@ -265,7 +265,7 @@
                 var decrypted = new byte[plaintext.Length];
                 aead.Decrypt(nonce, ciphertext, tag, decrypted, aad);
 
-                plaintext.Should().Equal(decrypted);
+                decrypted.Should().Equal(plaintext);
                 dataSize += 5 * dataSize / 11;
             }
         }
@@ -453,7 +453,7 @@
                 aead.Decrypt(test.Nonce, ct, test.Tag, output, test.Aad);
 
                 // Assert
-                CryptoBytes.ConstantTimeEquals(test.PlainText, output).Should().BeTrue();
+                output.Should().Equal(test.PlainText);
             }
         }
 
@@ -476,7 +476,7 @@
                 aead.Decrypt(test.Nonce, ct, test.Tag, output, test.Aad);
 
                 // Assert
-                CryptoBytes.ConstantTimeEquals(test.PlainText, output).Should().BeTrue();
+                output.Should().Equal(test.PlainText);
             }
         }
 
