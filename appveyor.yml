@@ -3,7 +3,7 @@ pull_requests:
   do_not_increment_build_number: true
 image: Visual Studio 2019
 before_build:
-  - cmd: dotnet restore src
+  - cmd: dotnet restore
 build:
   verbosity: minimal
 only_commits:
