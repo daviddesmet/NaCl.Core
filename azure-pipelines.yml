@@ -123,9 +123,9 @@ jobs:
   variables:
     BuildConfiguration: 'release'
   steps:
-  - script: dotnet restore src
+  - script: dotnet restore
     displayName: 'Restore Project'
-  - script: dotnet build src -c $(BuildConfiguration) --no-restore
+  - script: dotnet build -c $(BuildConfiguration) --no-restore
     displayName: 'Build Project in $(BuildConfiguration) mode'
   - script: dotnet test -f netcoreapp3.1 test/NaCl.Core.Tests --logger trx
     displayName: 'Run Unit Tests'

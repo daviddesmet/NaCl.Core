@@ -26,6 +26,6 @@ jobs:
       with:
         dotnet-version: 3.1.101
     - name: Build Project
-      run: dotnet build src --configuration Release
+      run: dotnet build --configuration Release
     - name: Run Unit Tests
       run: dotnet test -f netcoreapp3.1 test/NaCl.Core.Tests --logger trx /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura
