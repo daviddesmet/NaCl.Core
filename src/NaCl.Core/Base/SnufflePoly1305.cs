@@ -1,6 +1,7 @@
 ﻿namespace NaCl.Core.Base
 {
     using System;
+    using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Security.Cryptography;
 
@@ -42,6 +43,9 @@
         /// <param name="associatedData">The optional associated data.</param>
         /// <returns>The encrypted contents.</returns>
         /// <exception cref="CryptographicException">plaintext</exception>
+#if !NETSTANDARD1_6
+        [ExcludeFromCodeCoverage]
+#endif
         [Obsolete("This method will be removed in a future update", true)]
         public virtual byte[] Encrypt(byte[] plaintext, byte[] associatedData = null) => Encrypt((ReadOnlySpan<byte>)plaintext, (ReadOnlySpan<byte>)associatedData);
 
@@ -52,6 +56,9 @@
         /// <param name="associatedData">The optional associated data.</param>
         /// <returns>The encrypted contents.</returns>
         /// <exception cref="CryptographicException">plaintext</exception>
+#if !NETSTANDARD1_6
+        [ExcludeFromCodeCoverage]
+#endif
         [Obsolete("This method will be removed in a future update", true)]
         public virtual byte[] Encrypt(ReadOnlySpan<byte> plaintext, ReadOnlySpan<byte> associatedData = default)
         {
@@ -75,6 +82,9 @@
         /// <param name="associatedData">The associated data.</param>
         /// <returns>The encrypted contents.</returns>
         /// <exception cref="CryptographicException">plaintext</exception>
+#if !NETSTANDARD1_6
+        [ExcludeFromCodeCoverage]
+#endif
         [Obsolete("This method will be removed in a future update", true)]
         public virtual byte[] Encrypt(byte[] nonce, byte[] plaintext, byte[] associatedData = null) => Encrypt((ReadOnlySpan<byte>)nonce, (ReadOnlySpan<byte>)plaintext, (ReadOnlySpan<byte>)associatedData);
 
@@ -86,6 +96,9 @@
         /// <param name="associatedData">The associated data.</param>
         /// <returns>The encrypted contents.</returns>
         /// <exception cref="CryptographicException">plaintext</exception>
+#if !NETSTANDARD1_6
+        [ExcludeFromCodeCoverage]
+#endif
         [Obsolete("This method will be removed in a future update", true)]
         public virtual byte[] Encrypt(ReadOnlySpan<byte> nonce, ReadOnlySpan<byte> plaintext, ReadOnlySpan<byte> associatedData = default)
         {
@@ -141,6 +154,9 @@
         /// <param name="associatedData">The optional associated data.</param>
         /// <returns>The decrypted contents.</returns>
         /// <exception cref="CryptographicException"></exception>
+#if !NETSTANDARD1_6
+        [ExcludeFromCodeCoverage]
+#endif
         [Obsolete("This method will be removed in a future update", true)]
         public virtual byte[] Decrypt(byte[] ciphertext, byte[] associatedData = null) => Decrypt((ReadOnlySpan<byte>)ciphertext, (ReadOnlySpan<byte>)associatedData);
 
@@ -151,6 +167,9 @@
         /// <param name="associatedData">The optional associated data.</param>
         /// <returns>The decrypted contents.</returns>
         /// <exception cref="CryptographicException"></exception>
+#if !NETSTANDARD1_6
+        [ExcludeFromCodeCoverage]
+#endif
         [Obsolete("This method will be removed in a future update", true)]
         public virtual byte[] Decrypt(ReadOnlySpan<byte> ciphertext, ReadOnlySpan<byte> associatedData = default)
         {
@@ -168,6 +187,9 @@
         /// <param name="associatedData">Extra data associated with this message, which must match the value provided during encryption.</param>
         /// <returns>The decrypted contents.</returns>
         /// <exception cref="CryptographicException"></exception>
+#if !NETSTANDARD1_6
+        [ExcludeFromCodeCoverage]
+#endif
         [Obsolete("This method will be removed in a future update", true)]
         public virtual byte[] Decrypt(byte[] nonce, byte[] ciphertext, byte[] associatedData = null) => Decrypt((ReadOnlySpan<byte>)nonce, (ReadOnlySpan<byte>)ciphertext, (ReadOnlySpan<byte>)associatedData);
 
@@ -179,6 +201,9 @@
         /// <param name="associatedData">Extra data associated with this message, which must match the value provided during encryption.</param>
         /// <returns>The decrypted contents.</returns>
         /// <exception cref="CryptographicException"></exception>
+#if !NETSTANDARD1_6
+        [ExcludeFromCodeCoverage]
+#endif
         [Obsolete("This method will be removed in a future update", true)]
         public virtual byte[] Decrypt(ReadOnlySpan<byte> nonce, ReadOnlySpan<byte> ciphertext, ReadOnlySpan<byte> associatedData = default)
         {

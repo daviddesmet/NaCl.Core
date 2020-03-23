@@ -54,10 +54,35 @@
             for (var i = 0; i < 1000; i++)
             {
                 // Arrange
+                var key = new byte[Poly1305.MAC_KEY_SIZE_IN_BYTES];
+                RandomNumberGenerator.Fill(key);
+
+                var mac = new byte[Poly1305.MAC_TAG_SIZE_IN_BYTES];
+
                 var data = new byte[rnd.Next(300)];
                 rnd.NextBytes(data);
+
+                // Act
+                Poly1305.ComputeMac(key, data, mac);
+
+                // Assert
+                Action act = () => Poly1305.VerifyMac(key, data, mac);
+                act.Should().NotThrow();
+            }
+        }
+
+        [Fact]
+        public void RandomMacOldMethodSignatureTest()
+        {
+            var rnd = new Random();
+            for (var i = 0; i < 1000; i++)
+            {
+                // Arrange
                 var key = new byte[Poly1305.MAC_KEY_SIZE_IN_BYTES];
-                rnd.NextBytes(key);
+                RandomNumberGenerator.Fill(key);
+
+                var data = new byte[rnd.Next(300)];
+                rnd.NextBytes(data);
 
                 // Act
                 var mac = Poly1305.ComputeMac(key, data);
@@ -92,7 +117,8 @@
             var dat = Encoding.UTF8.GetBytes("Cryptographic Forum Research Group");
 
             // Act
-            var mac = Poly1305.ComputeMac(key, dat);
+            var mac = new byte[Poly1305.MAC_TAG_SIZE_IN_BYTES];
+            Poly1305.ComputeMac(key, dat, mac);
 
             // Assert
             mac.Should().Equal(CryptoBytes.FromHexString("a8061dc1305136c6c22b8baf0c0127a9"));
@@ -113,7 +139,8 @@
                                               + "00000000000000000000000000000000");
 
             // Act
-            var mac = Poly1305.ComputeMac(key, dat);
+            var mac = new byte[Poly1305.MAC_TAG_SIZE_IN_BYTES];
+            Poly1305.ComputeMac(key, dat, mac);
 
             // Assert
             mac.Should().Equal(CryptoBytes.FromHexString("00000000000000000000000000000000"));
@@ -131,7 +158,8 @@
             var dat = Encoding.UTF8.GetBytes("Any submission to the IETF intended by the Contributor for publication as all or part of an IETF Internet-Draft or RFC and any statement made within the context of an IETF activity is considered an \"IETF Contribution\". Such statements include oral statements in IETF sessions, as well as written and electronic communications made at any time or place, which are addressed to");
 
             // Act
-            var mac = Poly1305.ComputeMac(key, dat);
+            var mac = new byte[Poly1305.MAC_TAG_SIZE_IN_BYTES];
+            Poly1305.ComputeMac(key, dat, mac);
 
             // Assert
             mac.Should().Equal(CryptoBytes.FromHexString("36e5f6b5c5e06070f0efca96227a863e"));
@@ -149,7 +177,8 @@
             var dat = Encoding.UTF8.GetBytes("Any submission to the IETF intended by the Contributor for publication as all or part of an IETF Internet-Draft or RFC and any statement made within the context of an IETF activity is considered an \"IETF Contribution\". Such statements include oral statements in IETF sessions, as well as written and electronic communications made at any time or place, which are addressed to");
 
             // Act
-            var mac = Poly1305.ComputeMac(key, dat);
+            var mac = new byte[Poly1305.MAC_TAG_SIZE_IN_BYTES];
+            Poly1305.ComputeMac(key, dat, mac);
 
             // Assert
             mac.Should().Equal(CryptoBytes.FromHexString("f3477e7cd95417af89a6b8794c310cf0"));
@@ -174,7 +203,8 @@
                                               + "7261746873206f757467726162652e");
 
             // Act
-            var mac = Poly1305.ComputeMac(key, dat);
+            var mac = new byte[Poly1305.MAC_TAG_SIZE_IN_BYTES];
+            Poly1305.ComputeMac(key, dat, mac);
 
             // Assert
             mac.Should().Equal(CryptoBytes.FromHexString("4541669a7eaaee61e708dc7cbcc5eb62"));
@@ -192,7 +222,8 @@
             var dat = CryptoBytes.FromHexString("ffffffffffffffffffffffffffffffff");
 
             // Act
-            var mac = Poly1305.ComputeMac(key, dat);
+            var mac = new byte[Poly1305.MAC_TAG_SIZE_IN_BYTES];
+            Poly1305.ComputeMac(key, dat, mac);
 
             // Assert
             mac.Should().Equal(CryptoBytes.FromHexString("03000000000000000000000000000000"));
@@ -210,7 +241,8 @@
             var dat = CryptoBytes.FromHexString("02000000000000000000000000000000");
 
             // Act
-            var mac = Poly1305.ComputeMac(key, dat);
+            var mac = new byte[Poly1305.MAC_TAG_SIZE_IN_BYTES];
+            Poly1305.ComputeMac(key, dat, mac);
 
             // Assert
             mac.Should().Equal(CryptoBytes.FromHexString("03000000000000000000000000000000"));
@@ -230,7 +262,8 @@
                                               + "11000000000000000000000000000000");
 
             // Act
-            var mac = Poly1305.ComputeMac(key, dat);
+            var mac = new byte[Poly1305.MAC_TAG_SIZE_IN_BYTES];
+            Poly1305.ComputeMac(key, dat, mac);
 
             // Assert
             mac.Should().Equal(CryptoBytes.FromHexString("05000000000000000000000000000000"));
@@ -250,7 +283,8 @@
                                               + "01010101010101010101010101010101");
 
             // Act
-            var mac = Poly1305.ComputeMac(key, dat);
+            var mac = new byte[Poly1305.MAC_TAG_SIZE_IN_BYTES];
+            Poly1305.ComputeMac(key, dat, mac);
 
             // Assert
             mac.Should().Equal(CryptoBytes.FromHexString("00000000000000000000000000000000"));
@@ -268,7 +302,8 @@
             var dat = CryptoBytes.FromHexString("fdffffffffffffffffffffffffffffff");
 
             // Act
-            var mac = Poly1305.ComputeMac(key, dat);
+            var mac = new byte[Poly1305.MAC_TAG_SIZE_IN_BYTES];
+            Poly1305.ComputeMac(key, dat, mac);
 
             // Assert
             mac.Should().Equal(CryptoBytes.FromHexString("faffffffffffffffffffffffffffffff"));
@@ -289,7 +324,8 @@
                                               + "01000000000000000000000000000000");
 
             // Act
-            var mac = Poly1305.ComputeMac(key, dat);
+            var mac = new byte[Poly1305.MAC_TAG_SIZE_IN_BYTES];
+            Poly1305.ComputeMac(key, dat, mac);
 
             // Assert
             mac.Should().Equal(CryptoBytes.FromHexString("14000000000000005500000000000000"));
@@ -309,7 +345,8 @@
                                               + "00000000000000000000000000000000");
 
             // Act
-            var mac = Poly1305.ComputeMac(key, dat);
+            var mac = new byte[Poly1305.MAC_TAG_SIZE_IN_BYTES];
+            Poly1305.ComputeMac(key, dat, mac);
 
             // Assert
             mac.Should().Equal(CryptoBytes.FromHexString("13000000000000000000000000000000"));

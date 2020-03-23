@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.IO;
     using System.Net.Http;
     using System.Security.Cryptography;
     using System.Text;
@@ -525,8 +526,15 @@
 
         private string GetWycheproofTestVector()
         {
-            using var client = new HttpClient();
-            return client.GetStringAsync("https://github.com/google/wycheproof/raw/master/testvectors/xchacha20_poly1305_test.json").Result; // TODO: Grab a copy for testing locally in case the remote resource is no longer available
+            try
+            {
+                using var client = new HttpClient();
+                return client.GetStringAsync("https://github.com/google/wycheproof/raw/master/testvectors/xchacha20_poly1305_test.json").Result;
+            }
+            catch (Exception)
+            {
+                return File.ReadAllText(@"Vectors\xchacha20_poly1305_test.json");
+            }
         }
     }
 }

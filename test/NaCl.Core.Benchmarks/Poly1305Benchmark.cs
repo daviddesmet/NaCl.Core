@@ -34,7 +34,11 @@
         }
 
         [Benchmark(Description = "ComputeMac")]
-        public byte[] Compute() => Poly1305.ComputeMac(key, data);
+        public void Compute()
+        {
+            var mac = new byte[Poly1305.MAC_TAG_SIZE_IN_BYTES];
+            Poly1305.ComputeMac(key, data, mac);
+        }
 
         // TODO: Use the mac value (from Compute method) to benchmark verification
         //[Benchmark(Description = "VerifyMac")]
