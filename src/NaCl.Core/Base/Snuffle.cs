@@ -34,7 +34,7 @@
         /// <summary>
         /// Initializes a new instance of the <see cref="Snuffle"/> class.
         /// </summary>
-        /// <param name="key">The key.</param>
+        /// <param name="key">The secret key.</param>
         /// <param name="initialCounter">The initial counter.</param>
         /// <exception cref="CryptographicException"></exception>
         public Snuffle(ReadOnlyMemory<byte> key, int initialCounter)
@@ -67,92 +67,130 @@
         public abstract int NonceSizeInBytes { get; }
 
         /// <summary>
-        /// Encrypts the specified plaintext.
+        /// Encrypts the <paramref name="plaintext"> using an unique generated nonce.
         /// </summary>
-        /// <param name="plaintext">The plaintext.</param>
-        /// <returns>System.Byte[].</returns>
+        /// <param name="plaintext">The content to encrypt.</param>
+        /// <returns>The encrypted contents.</returns>
         /// <exception cref="CryptographicException">plaintext or ciphertext</exception>
         public virtual byte[] Encrypt(byte[] plaintext) => Encrypt((ReadOnlySpan<byte>)plaintext);
 
         /// <summary>
-        /// Encrypts the specified plaintext.
+        /// Encrypts the <paramref name="plaintext"> using an unique generated nonce.
         /// </summary>
-        /// <param name="plaintext">The plaintext.</param>
-        /// <returns>System.Byte[].</returns>
+        /// <param name="plaintext">The content to encrypt.</param>
+        /// <returns>The encrypted contents.</returns>
         /// <exception cref="CryptographicException">plaintext or ciphertext</exception>
         public virtual byte[] Encrypt(ReadOnlySpan<byte> plaintext)
         {
             //if (plaintext.Length > int.MaxValue - NonceSizeInBytes())
-            //    throw new CryptographyException($"The {nameof(plaintext)} is too long.");
-
-            var nonce = new byte[NonceSizeInBytes];
-            RandomNumberGenerator.Create().GetBytes(nonce);
+            //    throw new ArgumentException($"The {nameof(plaintext)} is too long.");
 
             var ciphertext = new byte[plaintext.Length + NonceSizeInBytes];
 
+#if NETCOREAPP3_1
+            Span<byte> nonce = stackalloc byte[NonceSizeInBytes];
+            RandomNumberGenerator.Fill(nonce);
+
+            nonce.CopyTo(ciphertext);
+#else
+            var nonce = new byte[NonceSizeInBytes];
+            RandomNumberGenerator.Create().GetBytes(nonce);
+
             Array.Copy(nonce, ciphertext, nonce.Length);
+#endif
+
             Process(nonce, ciphertext, plaintext, nonce.Length);
 
             return ciphertext;
         }
 
         /// <summary>
-        /// Encrypts the specified plaintext using the supplied nonce.
+        /// Encrypts the <paramref name="plaintext"> using the associated <paramref name="nonce">.
         /// </summary>
-        /// <param name="plaintext">The plaintext.</param>
-        /// <param name="nonce">The nonce.</param>
-        /// <returns>System.Byte[].</returns>
+        /// <param name="plaintext">The content to encrypt.</param>
+        /// <param name="nonce">The nonce associated with this message, which should be a unique value for every operation with the same key.</param>
+        /// <returns>The encrypted contents.</returns>
+        /// <exception cref="CryptographicException">plaintext or nonce</exception>
+        public virtual byte[] Encrypt(byte[] plaintext, byte[] nonce) => Encrypt((ReadOnlySpan<byte>)plaintext, (ReadOnlySpan<byte>)nonce);
+
+        /// <summary>
+        /// Encrypts the <paramref name="plaintext"> using the associated <paramref name="nonce">.
+        /// </summary>
+        /// <param name="plaintext">The content to encrypt.</param>
+        /// <param name="nonce">The nonce associated with this message, which should be a unique value for every operation with the same key.</param>
+        /// <returns>The encrypted contents.</returns>
         /// <exception cref="CryptographicException">plaintext or nonce</exception>
         public virtual byte[] Encrypt(ReadOnlySpan<byte> plaintext, ReadOnlySpan<byte> nonce)
         {
+            var ciphertext = new byte[plaintext.Length];
+            Encrypt(plaintext, nonce, ciphertext);
+            return ciphertext;
+        }
+
+        /// <summary>
+        /// Encrypts the <paramref name="plaintext"> into the <paramref name="ciphertext"> destination buffer using the associated <paramref name="nonce">.
+        /// </summary>
+        /// <param name="plaintext">The content to encrypt.</param>
+        /// <param name="nonce">The nonce associated with this message, which should be a unique value for every operation with the same key.</param>
+        /// <param name="ciphertext">The byte array to receive the encrypted contents.</param>
+        /// <exception cref="CryptographicException">plaintext or nonce</exception>
+        public virtual void Encrypt(ReadOnlySpan<byte> plaintext, ReadOnlySpan<byte> nonce, Span<byte> ciphertext)
+        {
             //if (plaintext.Length > int.MaxValue - NonceSizeInBytes())
-            //    throw new CryptographyException($"The {nameof(plaintext)} is too long.");
+            //    throw new ArgumentException($"The {nameof(plaintext)} is too long.");
+
+            if (plaintext.Length != ciphertext.Length)
+                throw new ArgumentException("The plaintext parameter and the ciphertext do not have the same length.");
 
             if (nonce.IsEmpty || nonce.Length != NonceSizeInBytes)
-                throw new CryptographicException(FormatNonceLengthExceptionMessage(GetType().Name, nonce.Length, NonceSizeInBytes));
-
-            var ciphertext = new byte[plaintext.Length];
+                throw new ArgumentException(FormatNonceLengthExceptionMessage(GetType().Name, nonce.Length, NonceSizeInBytes));
 
             Process(nonce, ciphertext, plaintext);
-
-            return ciphertext;
         }
 
         /// <summary>
         /// Decrypts the specified ciphertext.
         /// </summary>
-        /// <param name="ciphertext">The ciphertext.</param>
-        /// <returns>System.Byte[].</returns>
+        /// <param name="ciphertext">The encrypted content to decrypt.</param>
+        /// <returns>The decrypted contents.</returns>
         /// <exception cref="CryptographicException">ciphertext</exception>
         public virtual byte[] Decrypt(ReadOnlySpan<byte> ciphertext)
         {
             if (ciphertext.Length < NonceSizeInBytes)
-                throw new CryptographicException($"The {nameof(ciphertext)} is too short.");
+                throw new ArgumentException($"The {nameof(ciphertext)} is too short.");
 
             var plaintext = new byte[ciphertext.Length - NonceSizeInBytes];
-
-            Process(ciphertext.Slice(0, NonceSizeInBytes), plaintext, ciphertext.Slice(NonceSizeInBytes));
-
+            Decrypt(ciphertext.Slice(NonceSizeInBytes), ciphertext.Slice(0, NonceSizeInBytes), plaintext); //Process(ciphertext.Slice(0, NonceSizeInBytes), plaintext, ciphertext.Slice(NonceSizeInBytes));
             return plaintext;
         }
 
         /// <summary>
-        /// Decrypts the specified ciphertext using the supplied nonce.
+        /// Decrypts the <paramref name="ciphertext"> using the associated <paramref name="nonce">.
         /// </summary>
-        /// <param name="ciphertext">The ciphertext.</param>
-        /// <param name="nonce">The nonce.</param>
-        /// <returns>System.Byte[].</returns>
+        /// <param name="ciphertext">The encrypted content to decrypt.</param>
+        /// <param name="nonce">The nonce associated with this message, which must match the value provided during encryption.</param>
+        /// <returns>The decrypted contents.</returns>
         /// <exception cref="CryptographicException">ciphertext or nonce</exception>
         public virtual byte[] Decrypt(ReadOnlySpan<byte> ciphertext, ReadOnlySpan<byte> nonce)
         {
-            if (nonce.IsEmpty || nonce.Length != NonceSizeInBytes)
-                throw new CryptographicException(FormatNonceLengthExceptionMessage(GetType().Name, nonce.Length, NonceSizeInBytes));
-
             var plaintext = new byte[ciphertext.Length];
+            Decrypt(ciphertext, nonce, plaintext);
+            return plaintext;
+        }
+
+        /// <summary>
+        /// Decrypts the <paramref name="ciphertext"> into the <paramref name="plaintext"> provided destination buffer using the associated <paramref name="nonce">.
+        /// </summary>
+        /// <param name="ciphertext">The encrypted content to decrypt.</param>
+        /// <param name="nonce">The nonce associated with this message, which must match the value provided during encryption.</param>
+        /// <param name="plaintext">The byte span to receive the decrypted contents.</param>
+        /// <exception cref="CryptographicException">ciphertext or nonce.</exception>
+        public virtual void Decrypt(ReadOnlySpan<byte> ciphertext, ReadOnlySpan<byte> nonce, Span<byte> plaintext)
+        {
+            if (nonce.IsEmpty || nonce.Length != NonceSizeInBytes)
+                throw new ArgumentException(FormatNonceLengthExceptionMessage(GetType().Name, nonce.Length, NonceSizeInBytes));
 
             Process(nonce, plaintext, ciphertext);
-
-            return plaintext;
         }
 
         /// <summary>

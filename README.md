@@ -54,17 +54,17 @@ Daily NuGet builds of the project are also available in the [Azure Artifacts](ht
 var aead = new ChaCha20Poly1305(key);
 
 // Use the primitive to encrypt a plaintext
-var ciphertext = aead.Encrypt(plaintext, aad, nonce);
+aead.Encrypt(nonce, plaintext, ciphertext, tag, aad);
 
 // ... or to decrypt a ciphertext
-var output = aead.Decrypt(ciphertext, aad, nonce);
+aead.Decrypt(nonce, ciphertext, tag, plaintext, aad);
 ```
 
 #### MAC (Message Authentication Code)
 
 ```csharp
 // Use the primitive to compute a tag
-var tag = Poly1305.ComputeMac(key, data);
+Poly1305.ComputeMac(key, data, tag);
 
 // ... or to verify a tag
 Poly1305.VerifyMac(key, data, tag);

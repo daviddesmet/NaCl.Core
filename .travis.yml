@@ -3,4 +3,4 @@ mono: none
 dotnet: 3.1
 script:
  - dotnet restore src
- - dotnet test -f netcoreapp3.1 src/NaCl.Core.Tests
+ - dotnet test -f netcoreapp3.1 test/NaCl.Core.Tests

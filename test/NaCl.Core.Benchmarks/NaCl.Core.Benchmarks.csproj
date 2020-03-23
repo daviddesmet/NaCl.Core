@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" Version="0.12.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NaCl.Core.Tests\NaCl.Core.Tests.csproj" />
+    <ProjectReference Include="..\..\src\NaCl.Core\NaCl.Core.csproj" />
+  </ItemGroup>
+
+</Project>

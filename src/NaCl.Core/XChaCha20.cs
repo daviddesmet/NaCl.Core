@@ -14,6 +14,8 @@
     /// <seealso cref="NaCl.Core.Base.ChaCha20Base" />
     public class XChaCha20 : ChaCha20Base
     {
+        public const int NONCE_SIZE_IN_BYTES = 24;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="XChaCha20"/> class.
         /// </summary>
@@ -50,6 +52,6 @@
         /// The size of the randomly generated nonces.
         /// </summary>
         /// <returns>System.Int32.</returns>
-        public override int NonceSizeInBytes => 24;
+        public override int NonceSizeInBytes => NONCE_SIZE_IN_BYTES;
     }
 }
