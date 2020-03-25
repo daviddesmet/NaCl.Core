@@ -14,7 +14,7 @@
     [RPlotExporter, RankColumn]
     public class XChaCha20Benchmark
     {
-        private static Random rnd = new Random(42);
+        private static readonly Random rnd = new Random(42);
 
         private byte[] key;
         private byte[] nonce;

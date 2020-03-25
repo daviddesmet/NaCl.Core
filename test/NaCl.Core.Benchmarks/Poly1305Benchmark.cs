@@ -9,7 +9,8 @@
     [RPlotExporter, RankColumn]
     public class Poly1305Benchmark
     {
-        private static Random rnd = new Random(42);
+        //private const int KB = 1024;
+        private static readonly Random rnd = new Random(42);
 
         private byte[] key;
         private byte[] data;
@@ -21,6 +22,7 @@
             (int)1E+5,  // 100 000 bytes = 100 KB
             (int)1E+6,  // 1 000 000 bytes = 1 MB
             (int)1E+7)] // 10 000 000 bytes = 10 MB
+        //[Params(1, 4, 16, 64, 256, 1 * KB, 4 * KB, 16 * KB, 64 * KB)]
         public int Size { get; set; }
 
         [GlobalSetup]
