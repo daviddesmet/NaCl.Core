@@ -7,9 +7,12 @@
     using Internal;
 
     using BenchmarkDotNet.Attributes;
+    using BenchmarkDotNet.Jobs;
 
     [BenchmarkCategory("AEAD")]
-    [CoreJob(baseline: true), ClrJob/*, MonoJob*/]
+    [SimpleJob(RuntimeMoniker.Net472, baseline: true)]
+    [SimpleJob(RuntimeMoniker.NetCoreApp31)]
+    [SimpleJob(RuntimeMoniker.NetCoreApp50)]
     [MemoryDiagnoser]
     [RPlotExporter, RankColumn]
     public class XChaCha20Poly1305Benchmark

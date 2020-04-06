@@ -3,9 +3,12 @@
     using System;
 
     using BenchmarkDotNet.Attributes;
+    using BenchmarkDotNet.Jobs;
 
     [BenchmarkCategory("MAC")]
-    [CoreJob(baseline: true), ClrJob/*, MonoJob*/]
+    [SimpleJob(RuntimeMoniker.Net472, baseline: true)]
+    [SimpleJob(RuntimeMoniker.NetCoreApp31)]
+    [SimpleJob(RuntimeMoniker.NetCoreApp50)]
     [MemoryDiagnoser]
     [RPlotExporter, RankColumn]
     public class Poly1305Benchmark
