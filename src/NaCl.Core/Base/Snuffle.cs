@@ -59,6 +59,10 @@
         /// <returns>ByteBuffer.</returns>
         public abstract void ProcessKeyStreamBlock(ReadOnlySpan<byte> nonce, int counter, Span<byte> block);
 
+#if INTRINSICS
+        public abstract void ProcessStream(ReadOnlySpan<byte> nonce, Span<byte> output, ReadOnlySpan<byte> input, int initialCounter, int offset = 0);
+#endif
+
         /// <summary>
         /// The size of the randomly generated nonces.
         /// ChaCha20 uses 12-byte nonces, but XSalsa20 and XChaCha20 use 24-byte nonces.
@@ -193,6 +197,10 @@
             Process(nonce, plaintext, ciphertext);
         }
 
+
+#if INTRINSICS
+        private void Process(ReadOnlySpan<byte> nonce, Span<byte> output, ReadOnlySpan<byte> input, int offset = 0) => ProcessStream(nonce, output, input, InitialCounter, offset);
+#else
         /// <summary>
         /// Processes the Encryption/Decryption function.
         /// </summary>
@@ -237,6 +245,7 @@
                 }
             }
         }
+#endif
 
         /// <summary>
         /// Formats the nonce length exception message.

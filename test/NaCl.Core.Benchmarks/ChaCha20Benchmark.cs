@@ -8,8 +8,11 @@
     using Internal;
 
     using BenchmarkDotNet.Attributes;
+    using BenchmarkDotNet.Jobs;
 
     [BenchmarkCategory("Stream Cipher")]
+    [SimpleJob(RuntimeMoniker.NetCoreApp21, baseline: true)]
+    [SimpleJob(RuntimeMoniker.NetCoreApp31)]
     [MemoryDiagnoser]
     [RPlotExporter, RankColumn]
     public class ChaCha20Benchmark
