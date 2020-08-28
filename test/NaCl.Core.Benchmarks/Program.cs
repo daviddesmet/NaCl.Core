@@ -10,12 +10,13 @@
         {
             // Execute following code:
             // $ dotnet run -c release --framework netcoreapp3.1
-            //BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args);
-            BenchmarkRunner.Run<Poly1305Benchmark>();
-            BenchmarkRunner.Run<ChaCha20Benchmark>();
-            BenchmarkRunner.Run<ChaCha20Poly1305Benchmark>();
-            BenchmarkRunner.Run<XChaCha20Benchmark>();
-            BenchmarkRunner.Run<XChaCha20Poly1305Benchmark>();
+
+            BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args);
+            //BenchmarkRunner.Run<Poly1305Benchmark>(args);
+            //BenchmarkRunner.Run<ChaCha20Benchmark>(args);
+            //BenchmarkRunner.Run<ChaCha20Poly1305Benchmark>(args);
+            //BenchmarkRunner.Run<XChaCha20Benchmark>(args);
+            //BenchmarkRunner.Run<XChaCha20Poly1305Benchmark>(args);
 
             Console.ReadLine();
         }

@@ -1,0 +1,1 @@
+dotnet run -c Release -f netcoreapp3.1 --runtimes net48 netcoreapp3.1

@@ -20,7 +20,8 @@
         private byte[] message;
         private byte[] tag;
         private byte[] aad;
-        
+        private Memory<byte> ciphertext;
+
         private ChaCha20Poly1305 aead;
 
         [Params(
@@ -50,14 +51,15 @@
             rnd.NextBytes(aad);
 
             aead = new ChaCha20Poly1305(key);
+
+            ciphertext = new byte[message.Length];
         }
 
         [Benchmark]
         [BenchmarkCategory("Encryption")]
         public void Encrypt()
         {
-            var ciphertext = new byte[message.Length];
-            aead.Encrypt(nonce, message, ciphertext, tag, aad);
+            aead.Encrypt(nonce, message, ciphertext.Span, tag, aad);
         }
 
         [Benchmark]

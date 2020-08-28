@@ -1,8 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard1.6;netstandard2.0;netstandard2.1;netcoreapp3.1</TargetFrameworks>
-    <TargetFrameworks Condition="'$(OS)' != 'Unix'">netstandard1.6;netstandard2.0;netstandard2.1;netcoreapp3.1;net45;net48</TargetFrameworks>
+    <TargetFrameworks>netstandard1.6;netstandard2.0;netstandard2.1;netcoreapp3.1;netcoreapp5.0</TargetFrameworks>
+    <TargetFrameworks Condition="'$(OS)' != 'Unix'">netstandard1.6;netstandard2.0;netstandard2.1;netcoreapp3.1;netcoreapp5.0;net45;net48</TargetFrameworks>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Version>1.2.0</Version>
     <Authors>David De Smet</Authors>
@@ -26,10 +26,11 @@
     <PackageReference Include="System.Memory" Version="4.5.4" />
   </ItemGroup>
 
-  <PropertyGroup Condition="$(TargetFramework) == 'netcoreapp3.1'">
-    <DefineConstants>FCL_BITOPS</DefineConstants>
+  <PropertyGroup Condition="$(TargetFramework) == 'netcoreapp3.0' OR $(TargetFramework) == 'netcoreapp3.1' OR $(TargetFramework) == 'netcoreapp5.0'">
+    <DefineConstants>FCL_BITOPS;INTRINSICS;SPANSTACKALLOC</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
-
+  
   <Target Name="LogDebugInfo">
     <Message Text="Building for $(TargetFramework) on $(OS)" Importance="High" />
   </Target>

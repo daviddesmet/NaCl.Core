@@ -59,6 +59,10 @@
         /// <returns>ByteBuffer.</returns>
         public abstract void ProcessKeyStreamBlock(ReadOnlySpan<byte> nonce, int counter, Span<byte> block);
 
+#if INTRINSICS
+        public abstract void ProcessStream(ReadOnlySpan<byte> nonce, Span<byte> output, ReadOnlySpan<byte> input, int initialCounter, int offset = 0);
+#endif
+
         /// <summary>
         /// The size of the randomly generated nonces.
         /// ChaCha20 uses 12-byte nonces, but XSalsa20 and XChaCha20 use 24-byte nonces.
@@ -87,7 +91,7 @@
 
             var ciphertext = new byte[plaintext.Length + NonceSizeInBytes];
 
-#if NETCOREAPP3_1
+#if SPANSTACKALLOC
             Span<byte> nonce = stackalloc byte[NonceSizeInBytes];
             RandomNumberGenerator.Fill(nonce);
 
@@ -202,6 +206,9 @@
         /// <param name="offset">The output's starting offset.</param>
         private void Process(ReadOnlySpan<byte> nonce, Span<byte> output, ReadOnlySpan<byte> input, int offset = 0)
         {
+#if INTRINSICS
+            ProcessStream(nonce, output, input, InitialCounter, offset);
+#else
             var length = input.Length;
             var numBlocks = (length / BLOCK_SIZE_IN_BYTES) + 1;
 
@@ -236,6 +243,7 @@
                     owner.Memory.Span.Clear();
                 }
             }
+#endif
         }
 
         /// <summary>
