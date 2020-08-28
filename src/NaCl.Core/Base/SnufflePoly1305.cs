@@ -291,19 +291,13 @@
         /// <param name="aad">The associated data.</param>
         /// <param name="ciphertext">The ciphertext.</param>
         /// <returns>System.Byte[].</returns>
-        [ThreadStatic]
-        private static byte[] macDataBytes = new byte[0];
         private ReadOnlySpan<byte> GetMacDataRfc8439(ReadOnlySpan<byte> aad, ReadOnlySpan<byte> ciphertext)
         {
             var aadPaddedLen = (aad.Length % 16 == 0) ? aad.Length : (aad.Length + 16 - aad.Length % 16);
             var ciphertextLen = ciphertext.Length;
             var ciphertextPaddedLen = (ciphertextLen % 16 == 0) ? ciphertextLen : (ciphertextLen + 16 - ciphertextLen % 16);
-            var macDataLength = aadPaddedLen + ciphertextPaddedLen + 16;
 
-            if (macDataBytes.Length < macDataLength)
-                macDataBytes = new byte[macDataLength];
-
-            Span<byte> macData = macDataBytes;
+            Span<byte> macData = new byte[aadPaddedLen + ciphertextPaddedLen + 16];
 
             // Mac Text
             aad.CopyTo(macData);
