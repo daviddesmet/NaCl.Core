@@ -15,6 +15,7 @@
     <RepositoryUrl>https://github.com/idaviddesmet/NaCl.Core.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <RepositoryBranch>master</RepositoryBranch>
+    <LangVersion>8.0</LangVersion>
   </PropertyGroup>
 
   <PropertyGroup>

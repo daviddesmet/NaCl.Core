@@ -1,9 +1,11 @@
 ﻿namespace NaCl.Core.Base
 {
     using System;
+    using System.Buffers;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
     using System.Security.Cryptography;
+    using Microsoft.Toolkit.HighPerformance.Buffers;
 
     using Internal;
 
@@ -107,14 +109,19 @@
 
             var ciphertext = _snuffle.Encrypt(plaintext, nonce);
 
-            var tag = Poly1305.ComputeMac(GetMacKey(nonce), GetMacDataRfc8439(associatedData, ciphertext));
+            using (var macKey = GetMacKey(nonce))
+            using (var macData = GetMacDataRfc8439(associatedData, ciphertext))
+            {
+                var tag = Poly1305.ComputeMac(macKey.Span, macData.Span);
+                macKey.Span.Clear();
+                macData.Span.Clear();
+                // Array.Resize(ref ciphertext, ciphertext.Length + Poly1305.MAC_TAG_SIZE_IN_BYTES);
+                // Array.Copy(tag, 0, ciphertext, ciphertext.Length - Poly1305.MAC_TAG_SIZE_IN_BYTES, tag.Length);
 
-            // Array.Resize(ref ciphertext, ciphertext.Length + Poly1305.MAC_TAG_SIZE_IN_BYTES);
-            // Array.Copy(tag, 0, ciphertext, ciphertext.Length - Poly1305.MAC_TAG_SIZE_IN_BYTES, tag.Length);
-
-            // return ciphertext;
-            // return ciphertext.Concat(tag).ToArray(); // could be inefficient
-            return CryptoBytes.Combine(ciphertext, tag);
+                // return ciphertext;
+                // return ciphertext.Concat(tag).ToArray(); // could be inefficient
+                return CryptoBytes.Combine(ciphertext, tag);
+            }
         }
 
         /// <summary>
@@ -144,7 +151,13 @@
             //    throw new ArgumentException($"The {nameof(plaintext)} is too long.");
 
             _snuffle.Encrypt(plaintext, nonce, ciphertext);
-            Poly1305.ComputeMac(GetMacKey(nonce), GetMacDataRfc8439(associatedData, ciphertext), tag);
+            using (var macKey = GetMacKey(nonce))
+            using (var macData = GetMacDataRfc8439(associatedData, ciphertext))
+            {
+                Poly1305.ComputeMac(macKey.Span, macData.Span, tag);
+                macKey.Span.Clear();
+                macData.Span.Clear();
+            }
         }
 
         /// <summary>
@@ -217,7 +230,13 @@
 
             try
             {
-                Poly1305.VerifyMac(GetMacKey(nonce), GetMacDataRfc8439(associatedData, ciphertext.Slice(0, limit)), ciphertext.Slice(limit, Poly1305.MAC_TAG_SIZE_IN_BYTES));
+                using (var macKey = GetMacKey(nonce))
+                using (var macData = GetMacDataRfc8439(associatedData, ciphertext.Slice(0, limit)))
+                {
+                    Poly1305.VerifyMac(macKey.Span, macData.Span, ciphertext.Slice(limit, Poly1305.MAC_TAG_SIZE_IN_BYTES));
+                    macKey.Span.Clear();
+                    macData.Span.Clear();
+                }
             }
             catch (Exception ex)
             {
@@ -255,7 +274,13 @@
 
             try
             {
-                Poly1305.VerifyMac(GetMacKey(nonce), GetMacDataRfc8439(associatedData, ciphertext), tag);
+                using (var macKey = GetMacKey(nonce))
+                using (var macData = GetMacDataRfc8439(associatedData, ciphertext))
+                {
+                    Poly1305.VerifyMac(macKey.Span, macData.Span, tag);
+                    macKey.Span.Clear();
+                    macData.Span.Clear();
+                }
             }
             catch (Exception ex)
             {
@@ -270,7 +295,7 @@
         /// </summary>
         /// <param name="nonce">The nonce.</param>
         /// <returns>System.Byte[].</returns>
-        private Span<byte> GetMacKey(ReadOnlySpan<byte> nonce)
+        private SpanOwner<byte> GetMacKey(ReadOnlySpan<byte> nonce)
         {
             //var firstBlock = new byte[Snuffle.BLOCK_SIZE_IN_BYTES];
             //_macKeySnuffle.ProcessKeyStreamBlock(nonce, 0, firstBlock);
@@ -279,10 +304,16 @@
             //Array.Copy(firstBlock, result, result.Length);
             //return result;
 
-            Span<byte> firstBlock = new byte[Snuffle.BLOCK_SIZE_IN_BYTES];
-            _macKeySnuffle.ProcessKeyStreamBlock(nonce, 0, firstBlock);
+            using (var firstBlock = SpanOwner<byte>.Allocate(Snuffle.BLOCK_SIZE_IN_BYTES, AllocationMode.Clear))
+            {
+                //Span<byte> firstBlock = new byte[Snuffle.BLOCK_SIZE_IN_BYTES];
+                _macKeySnuffle.ProcessKeyStreamBlock(nonce, 0, firstBlock.Span);
 
-            return firstBlock.Slice(0, Poly1305.MAC_KEY_SIZE_IN_BYTES);
+                var macKey = SpanOwner<byte>.Allocate(Poly1305.MAC_KEY_SIZE_IN_BYTES, AllocationMode.Clear);
+                firstBlock.Span.Slice(0, Poly1305.MAC_KEY_SIZE_IN_BYTES).CopyTo(macKey.Span);
+                firstBlock.Span.Clear();
+                return macKey;
+            }
         }
 
         /// <summary>
@@ -291,23 +322,23 @@
         /// <param name="aad">The associated data.</param>
         /// <param name="ciphertext">The ciphertext.</param>
         /// <returns>System.Byte[].</returns>
-        private ReadOnlySpan<byte> GetMacDataRfc8439(ReadOnlySpan<byte> aad, ReadOnlySpan<byte> ciphertext)
+        private SpanOwner<byte> GetMacDataRfc8439(ReadOnlySpan<byte> aad, ReadOnlySpan<byte> ciphertext)
         {
             var aadPaddedLen = (aad.Length % 16 == 0) ? aad.Length : (aad.Length + 16 - aad.Length % 16);
             var ciphertextLen = ciphertext.Length;
             var ciphertextPaddedLen = (ciphertextLen % 16 == 0) ? ciphertextLen : (ciphertextLen + 16 - ciphertextLen % 16);
 
-            Span<byte> macData = new byte[aadPaddedLen + ciphertextPaddedLen + 16];
+            var macData = SpanOwner<byte>.Allocate(aadPaddedLen + ciphertextPaddedLen + 16, AllocationMode.Clear);
 
             // Mac Text
-            aad.CopyTo(macData);
-            ciphertext.CopyTo(macData.Slice(aadPaddedLen, ciphertextLen));
+            aad.CopyTo(macData.Span);
+            ciphertext.CopyTo(macData.Span.Slice(aadPaddedLen, ciphertextLen));
 
             // Mac Length
             //macData[aadPaddedLen + ciphertextPaddedLen] = (byte)aad.Length;
             //macData[aadPaddedLen + ciphertextPaddedLen + 8] = (byte)ciphertextLen;
-            SetMacLength(macData, aadPaddedLen + ciphertextPaddedLen, aad.Length);
-            SetMacLength(macData, aadPaddedLen + ciphertextPaddedLen + sizeof(ulong), ciphertextLen);
+            SetMacLength(macData.Span, aadPaddedLen + ciphertextPaddedLen, aad.Length);
+            SetMacLength(macData.Span, aadPaddedLen + ciphertextPaddedLen + sizeof(ulong), ciphertextLen);
 
             return macData;
         }
