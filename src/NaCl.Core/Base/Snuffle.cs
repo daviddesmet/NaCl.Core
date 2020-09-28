@@ -261,8 +261,9 @@
         {
             var blockOffset = curBlock * BLOCK_SIZE_IN_BYTES;
 
-            if (len < 0 || offset < 0 || curBlock < 0 || output.Length < len || (input.Length - blockOffset) < len || block.Length < len)
-                throw new CryptographicException("The combination of blocks, offsets and length to be XORed is out-of-bonds.");
+            // Since is not called directly from outside, there's no need to check
+            //if (len < 0 || offset < 0 || curBlock < 0 || output.Length < len || (input.Length - blockOffset) < len || block.Length < len)
+            //    throw new CryptographicException("The combination of blocks, offsets and length to be XORed is out-of-bonds.");
 
             for (var i = 0; i < len; i++)
                 output[i + offset + blockOffset] = (byte)(input[i + blockOffset] ^ block[i]);
