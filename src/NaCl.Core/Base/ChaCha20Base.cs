@@ -245,6 +245,10 @@
             b = BitUtils.RotateLeft(b ^ c, 7);
         }
 
+        /// <summary>
+        /// Sets the ChaCha20 constant.
+        /// </summary>
+        /// <param name="state">The state.</param>
         protected static void SetSigma(Span<uint> state)
         {
             state[0] = SIGMA[0];
@@ -253,6 +257,11 @@
             state[3] = SIGMA[3];
         }
 
+        /// <summary>
+        /// Sets the 256-bit Key.
+        /// </summary>
+        /// <param name="state">The state.</param>
+        /// <param name="key">The key.</param>
         protected static void SetKey(Span<uint> state, ReadOnlySpan<byte> key)
         {
             state[4] = ArrayUtils.LoadUInt32LittleEndian(key, 0);

@@ -4,10 +4,10 @@ var configuration =
     EnvironmentVariable("Configuration") is object ? EnvironmentVariable("Configuration") :
     "Release";
 
-var artefactsDirectory = Directory("./Artefacts");
+var artefactsDirectory = Directory("./Artifacts");
 
 Task("Clean")
-    .Description("Cleans the artefacts, bin and obj directories.")
+    .Description("Cleans the artifacts, bin and obj directories.")
     .Does(() =>
     {
         CleanDirectory(artefactsDirectory);
@@ -38,7 +38,7 @@ Task("Build")
     });
 
 Task("Test")
-    .Description("Runs unit tests and outputs test results to the artefacts directory.")
+    .Description("Runs unit tests and outputs test results to the artifacts directory.")
     .DoesForEach(GetFiles("./test/**/*.Tests.csproj"), project =>
     {
         DotNetCoreTest(
@@ -58,11 +58,11 @@ Task("Test")
     });
 
 Task("Pack")
-    .Description("Creates NuGet packages and outputs them to the artefacts directory.")
+    .Description("Creates NuGet packages and outputs them to the artifacts directory.")
     .Does(() =>
     {
         DotNetCorePack(
-            "./src/*",
+            "./src/NaCl.Core/",
             new DotNetCorePackSettings()
             {
                 Configuration = configuration,
