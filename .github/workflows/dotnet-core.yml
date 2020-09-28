@@ -40,8 +40,6 @@ jobs:
       run: git fetch --tags
     - name: 'Install .NET Core SDK'
       uses: actions/setup-dotnet@v1
-      with:
-        dotnet-version: 3.1.101
     - name: '.NET Restore'
       run: dotnet tool restore
     - name: 'Build Project'
