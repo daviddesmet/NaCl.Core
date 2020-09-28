@@ -13,19 +13,62 @@ on:
       - master
     paths:
      - 'src/**'
+  release:
+    types:
+      - published
+
+env:
+  # Set the DOTNET_SKIP_FIRST_TIME_EXPERIENCE environment variable to stop wasting time caching packages
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  # Disable sending usage data to Microsoft
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  # Set the build number in MinVer
+  MINVERBUILDMETADATA: build.${{github.run_number}}
 
 jobs:
   build:
-
-    runs-on: ubuntu-latest
+    name: Build on ${{matrix.os}}
+    runs-on: ${{matrix.os}}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macOS-latest]
     
     steps:
-    - uses: actions/checkout@v1
-    - name: Setup .NET Core
+    - name: 'Checkout'
+      uses: actions/checkout@v1
+        lfs: true
+        fetch-depth: 0
+    - name: 'Git Fetch Tags'
+      run: git fetch --tags
+    - name: 'Install .NET Core SDK'
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 3.1.101
-    - name: Build Project
-      run: dotnet build --configuration Release
-    - name: Run Unit Tests
-      run: dotnet test -f netcoreapp3.1 test/NaCl.Core.Tests --logger trx /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura
+    - name: '.NET Restore'
+      run: dotnet tool restore
+    - name: 'Build Project'
+      run: dotnet cake --target=Build
+    - name: 'Run Unit Tests'
+      run: dotnet cake --target=Test
+    - name: 'Pack NuGet'
+      run: dotnet cake --target=Pack
+    - name: 'Publish Artifacts'
+      uses: actions/upload-artifact@v1.0.0
+      with:
+        name: ${{matrix.os}}
+        path: './Artefacts'
+
+push-github-packages:
+    name: 'Push GitHub Packages'
+    needs: build
+    if: github.ref == 'refs/heads/master' || github.event_name == 'release'
+    runs-on: windows-latest
+    steps:
+      - name: 'Download Artifact'
+        uses: actions/download-artifact@v1
+        with:
+          name: 'windows-latest'
+      - name: 'Add NuGet Source'
+        run: dotnet nuget add source https://nuget.pkg.github.com/daviddesmet/index.json --name GitHub --username daviddesmet --password ${{secrets.GITHUB_TOKEN}}
+      - name: 'Dotnet NuGet Push'
+        run: dotnet nuget push .\windows-latest\*.nupkg --source GitHub --skip-duplicate
