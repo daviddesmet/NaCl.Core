@@ -106,14 +106,8 @@
             //    throw new ArgumentException($"The {nameof(plaintext)} is too long.");
 
             var ciphertext = _snuffle.Encrypt(plaintext, nonce);
-
             var tag = Poly1305.ComputeMac(GetMacKey(nonce), GetMacDataRfc8439(associatedData, ciphertext));
 
-            // Array.Resize(ref ciphertext, ciphertext.Length + Poly1305.MAC_TAG_SIZE_IN_BYTES);
-            // Array.Copy(tag, 0, ciphertext, ciphertext.Length - Poly1305.MAC_TAG_SIZE_IN_BYTES, tag.Length);
-
-            // return ciphertext;
-            // return ciphertext.Concat(tag).ToArray(); // could be inefficient
             return CryptoBytes.Combine(ciphertext, tag);
         }
 
@@ -272,13 +266,6 @@
         /// <returns>System.Byte[].</returns>
         private Span<byte> GetMacKey(ReadOnlySpan<byte> nonce)
         {
-            //var firstBlock = new byte[Snuffle.BLOCK_SIZE_IN_BYTES];
-            //_macKeySnuffle.ProcessKeyStreamBlock(nonce, 0, firstBlock);
-
-            //var result = new byte[Poly1305.MAC_KEY_SIZE_IN_BYTES];
-            //Array.Copy(firstBlock, result, result.Length);
-            //return result;
-
             Span<byte> firstBlock = new byte[Snuffle.BLOCK_SIZE_IN_BYTES];
             _macKeySnuffle.ProcessKeyStreamBlock(nonce, 0, firstBlock);
 
@@ -300,27 +287,16 @@
             var macData = new byte[aadPaddedLen + ciphertextPaddedLen + 16];
 
             // Mac Text
-            //aad.CopyTo(macData);
             Array.Copy(aad.ToArray(), macData, aad.Length);
             Array.Copy(ciphertext.ToArray(), 0, macData, aadPaddedLen, ciphertextLen);
 
             // Mac Length
-            //macData[aadPaddedLen + ciphertextPaddedLen] = (byte)aad.Length;
-            //macData[aadPaddedLen + ciphertextPaddedLen + 8] = (byte)ciphertextLen;
             SetMacLength(macData, aadPaddedLen + ciphertextPaddedLen, aad.Length);
             SetMacLength(macData, aadPaddedLen + ciphertextPaddedLen + sizeof(ulong), ciphertextLen);
 
             return macData;
         }
 
-        private void SetMacLength(Span<byte> macData, int offset, int value)
-        {
-            //var lenData = new byte[8];
-            //ByteIntegerConverter.StoreUInt64LittleEndian(lenData, 0, (ulong)value);
-
-            //Array.Copy(lenData, 0, macData, offset, lenData.Length);
-
-            ArrayUtils.StoreUInt64LittleEndian(macData, offset, (ulong)value);
-        }
+        private void SetMacLength(Span<byte> macData, int offset, int value) => ArrayUtils.StoreUInt64LittleEndian(macData, offset, (ulong)value);
     }
 }
