@@ -62,7 +62,7 @@ Task("Pack")
     .Does(() =>
     {
         DotNetCorePack(
-            ".",
+            "./src/*",
             new DotNetCorePackSettings()
             {
                 Configuration = configuration,
