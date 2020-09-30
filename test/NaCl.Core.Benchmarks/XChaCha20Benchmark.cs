@@ -16,9 +16,9 @@
     {
         private static readonly Random rnd = new Random(42);
 
-        private byte[] key;
-        private byte[] nonce;
-        private byte[] message;
+        private Memory<byte> key;
+        private Memory<byte> nonce;
+        private Memory<byte> message;
         private XChaCha20 cipher;
 
         [Params(
@@ -34,20 +34,20 @@
         public void Setup()
         {
             key = new byte[Snuffle.KEY_SIZE_IN_BYTES];
-            rnd.NextBytes(key);
+            rnd.NextBytes(key.Span);
 
             nonce = new byte[24];
-            rnd.NextBytes(nonce);
+            rnd.NextBytes(nonce.Span);
 
             message = new byte[Size];
-            rnd.NextBytes(message);
+            rnd.NextBytes(message.Span);
 
             cipher = new XChaCha20(key, 0);
         }
 
         [Benchmark]
         [BenchmarkCategory("Encryption")]
-        public byte[] Encrypt() => cipher.Encrypt(message, nonce);
+        public byte[] Encrypt() => cipher.Encrypt(message.Span, nonce.Span);
 
         [Benchmark]
         [BenchmarkCategory("Decryption")]

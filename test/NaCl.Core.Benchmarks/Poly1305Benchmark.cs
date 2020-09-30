@@ -12,8 +12,8 @@
         //private const int KB = 1024;
         private static readonly Random rnd = new Random(42);
 
-        private byte[] key;
-        private byte[] data;
+        private Memory<byte> key;
+        private Memory<byte> data;
 
         [Params(
             (int)1E+2,  // 100 bytes
@@ -29,17 +29,17 @@
         public void Setup()
         {
             key = new byte[Poly1305.MAC_KEY_SIZE_IN_BYTES];
-            rnd.NextBytes(key);
+            rnd.NextBytes(key.Span);
 
             data = new byte[Size];
-            rnd.NextBytes(data);
+            rnd.NextBytes(data.Span);
         }
 
         [Benchmark(Description = "ComputeMac")]
         public void Compute()
         {
             var mac = new byte[Poly1305.MAC_TAG_SIZE_IN_BYTES];
-            Poly1305.ComputeMac(key, data, mac);
+            Poly1305.ComputeMac(key.Span, data.Span, mac);
         }
 
         // TODO: Use the mac value (from Compute method) to benchmark verification

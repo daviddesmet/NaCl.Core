@@ -16,11 +16,12 @@
     {
         private static readonly Random rnd = new Random(42);
 
-        private byte[] key;
-        private byte[] nonce;
-        private byte[] message;
-        private byte[] tag;
-        private byte[] aad;
+        private Memory<byte> key;
+        private Memory<byte> nonce;
+        private Memory<byte> message;
+        private Memory<byte> tag;
+        private Memory<byte> aad;
+        private Memory<byte> ciphertext;
 
         private XChaCha20Poly1305 aead;
 
@@ -37,29 +38,27 @@
         public void Setup()
         {
             key = new byte[Snuffle.KEY_SIZE_IN_BYTES];
-            RandomNumberGenerator.Fill(key);
+            RandomNumberGenerator.Fill(key.Span);
 
             nonce = new byte[XChaCha20.NONCE_SIZE_IN_BYTES];
-            RandomNumberGenerator.Fill(nonce);
+            RandomNumberGenerator.Fill(nonce.Span);
 
             tag = new byte[Poly1305.MAC_TAG_SIZE_IN_BYTES];
 
             message = new byte[Size];
-            rnd.NextBytes(message);
+            rnd.NextBytes(message.Span);
 
             aad = new byte[24];
-            rnd.NextBytes(aad);
+            rnd.NextBytes(aad.Span);
+
+            ciphertext = new byte[message.Length];
 
             aead = new XChaCha20Poly1305(key);
         }
 
         [Benchmark]
         [BenchmarkCategory("Encryption")]
-        public void Encrypt()
-        {
-            var ciphertext = new byte[message.Length];
-            aead.Encrypt(nonce, message, ciphertext, tag, aad);
-        }
+        public void Encrypt() => aead.Encrypt(nonce.Span, message.Span, ciphertext.Span, tag.Span, aad.Span);
 
         [Benchmark]
         [BenchmarkCategory("Decryption")]
