@@ -415,27 +415,30 @@
         */
 
         /// <summary>
-        /// Verifies the mac value using the specified key and data.
+        /// Verifies the authentication <paramref name="mac"> using the specified <paramref name="key"> and <paramref name="data">.
         /// </summary>
-        /// <param name="key">The key.</param>
+        /// <param name="key">The secret key.</param>
         /// <param name="data">The data.</param>
-        /// <param name="mac">The mac.</param>
+        /// <param name="tag">The authentication tag.</param>
         /// <exception cref="CryptographicException"></exception>
-        public static void VerifyMac(byte[] key, byte[] data, byte[] mac) => VerifyMac((ReadOnlySpan<byte>)key, (ReadOnlySpan<byte>)data, (ReadOnlySpan<byte>)mac);
+        public static void VerifyMac(byte[] key, byte[] data, byte[] tag) => VerifyMac((ReadOnlySpan<byte>)key, (ReadOnlySpan<byte>)data, (ReadOnlySpan<byte>)tag);
 
         /// <summary>
         /// Verifies the authentication <paramref name="mac"> using the specified <paramref name="key"> and <paramref name="data">.
         /// </summary>
         /// <param name="key">The secret key.</param>
         /// <param name="data">The data.</param>
-        /// <param name="mac">The authentication tag.</param>
+        /// <param name="tag">The authentication tag.</param>
         /// <exception cref="CryptographicException"></exception>
-        public static void VerifyMac(ReadOnlySpan<byte> key, ReadOnlySpan<byte> data, ReadOnlySpan<byte> mac)
+        public static void VerifyMac(ReadOnlySpan<byte> key, ReadOnlySpan<byte> data, ReadOnlySpan<byte> tag)
         {
-            Span<byte> tag = stackalloc byte[MAC_TAG_SIZE_IN_BYTES];
-            ComputeMac(key, data, tag);
+            if (tag.Length != MAC_TAG_SIZE_IN_BYTES)
+                throw new CryptographicException($"The tag length in bytes must be {MAC_TAG_SIZE_IN_BYTES}.");
 
-            if (!CryptoBytes.ConstantTimeEquals(tag, mac))
+            Span<byte> mac = stackalloc byte[MAC_TAG_SIZE_IN_BYTES];
+            ComputeMac(key, data, mac);
+
+            if (!CryptoBytes.ConstantTimeEquals(mac, tag))
                 throw new CryptographicException(MAC_EXCEPTION_INVALID);
         }
     }

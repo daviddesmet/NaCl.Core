@@ -184,7 +184,7 @@
 
             // Act & Assert
             Action act = () => aead.Decrypt(nonce, plaintext, tag, ciphertext, aad);
-            act.Should().Throw<CryptographicException>().WithMessage(SnufflePoly1305.AEAD_EXCEPTION_INVALID_TAG);
+            act.Should().Throw<CryptographicException>().WithMessage(EXCEPTION_MESSAGE_TAG_LENGTH);
         }
 
         [Fact]
@@ -201,7 +201,7 @@
 
             // Act & Assert
             Action act = () => aead.Decrypt(nonce, plaintext, tag, ciphertext, aad);
-            act.Should().Throw<CryptographicException>().WithMessage(SnufflePoly1305.AEAD_EXCEPTION_INVALID_TAG);
+            act.Should().Throw<CryptographicException>().WithMessage(EXCEPTION_MESSAGE_TAG_LENGTH);
         }
 
         [Fact]

@@ -251,6 +251,10 @@
             {
                 Poly1305.VerifyMac(GetMacKey(nonce), GetMacDataRfc8439(associatedData, ciphertext), tag);
             }
+            catch (CryptographicException ex) when (ex.Message.Contains("length"))
+            {
+                throw;
+            }
             catch (Exception ex)
             {
                 throw new CryptographicException(AEAD_EXCEPTION_INVALID_TAG, ex);
