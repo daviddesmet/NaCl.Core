@@ -404,6 +404,7 @@
             //var stateHex = CryptoBytes.ToHexStringLower(subKey.ToArray());
 
             // Assert
+            // HChaCha20 returns only the first and last rows
             var expectedState = new uint[]
             {
                 0x423b4182, 0xfe7bb227, 0x50420ed3, 0x737d878a,
@@ -412,6 +413,7 @@
                 0xd5e4f9a0, 0x53a8748a, 0x13c42ec1, 0xdcecd326
             };
 
+            // Same as above but in HEX
             //var expectedStateHex = "82413b4" + "227b27bfe" + "d30e4250" + "8a877d73"
             //                     + "a0f9e4d" + "58a74a853" + "c12ec413" + "26d3ecdc";
 

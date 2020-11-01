@@ -76,7 +76,7 @@
         }
 
         /// <summary>
-        /// Sets the initial state of the HChaCha20 from <paramref name="nonce"/>.
+        /// Sets the initial state of the HChaCha20 using the key and the <paramref name="nonce"/>.
         /// </summary>
         /// <param name="state">The state.</param>
         /// <param name="nonce">The nonce.</param>
