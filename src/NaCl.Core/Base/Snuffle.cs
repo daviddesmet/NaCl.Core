@@ -47,7 +47,7 @@
         }
 
         /// <summary>
-        /// Process the keystream block <paramref name="block"> from <paramref name="nonce"> and <paramref name="counter">.
+        /// Process the keystream block <paramref name="block"/> from <paramref name="nonce"/> and <paramref name="counter"/>.
         ///
         /// From this function, the Snuffle encryption function can be constructed using the counter
         /// mode of operation. For example, the ChaCha20 block function and how it can be used to
@@ -67,7 +67,7 @@
         public abstract int NonceSizeInBytes { get; }
 
         /// <summary>
-        /// Encrypts the <paramref name="plaintext"> using an unique generated nonce.
+        /// Encrypts the <paramref name="plaintext"/> using an unique generated nonce.
         /// </summary>
         /// <param name="plaintext">The content to encrypt.</param>
         /// <returns>The encrypted contents.</returns>
@@ -75,7 +75,7 @@
         public virtual byte[] Encrypt(byte[] plaintext) => Encrypt((ReadOnlySpan<byte>)plaintext);
 
         /// <summary>
-        /// Encrypts the <paramref name="plaintext"> using an unique generated nonce.
+        /// Encrypts the <paramref name="plaintext"/> using an unique generated nonce.
         /// </summary>
         /// <param name="plaintext">The content to encrypt.</param>
         /// <returns>The encrypted contents.</returns>
@@ -105,7 +105,7 @@
         }
 
         /// <summary>
-        /// Encrypts the <paramref name="plaintext"> using the associated <paramref name="nonce">.
+        /// Encrypts the <paramref name="plaintext"/> using the associated <paramref name="nonce"/>.
         /// </summary>
         /// <param name="plaintext">The content to encrypt.</param>
         /// <param name="nonce">The nonce associated with this message, which should be a unique value for every operation with the same key.</param>
@@ -114,7 +114,7 @@
         public virtual byte[] Encrypt(byte[] plaintext, byte[] nonce) => Encrypt((ReadOnlySpan<byte>)plaintext, (ReadOnlySpan<byte>)nonce);
 
         /// <summary>
-        /// Encrypts the <paramref name="plaintext"> using the associated <paramref name="nonce">.
+        /// Encrypts the <paramref name="plaintext"/> using the associated <paramref name="nonce"/>.
         /// </summary>
         /// <param name="plaintext">The content to encrypt.</param>
         /// <param name="nonce">The nonce associated with this message, which should be a unique value for every operation with the same key.</param>
@@ -128,7 +128,7 @@
         }
 
         /// <summary>
-        /// Encrypts the <paramref name="plaintext"> into the <paramref name="ciphertext"> destination buffer using the associated <paramref name="nonce">.
+        /// Encrypts the <paramref name="plaintext"/> into the <paramref name="ciphertext"/> destination buffer using the associated <paramref name="nonce"/>.
         /// </summary>
         /// <param name="plaintext">The content to encrypt.</param>
         /// <param name="nonce">The nonce associated with this message, which should be a unique value for every operation with the same key.</param>
@@ -165,7 +165,7 @@
         }
 
         /// <summary>
-        /// Decrypts the <paramref name="ciphertext"> using the associated <paramref name="nonce">.
+        /// Decrypts the <paramref name="ciphertext"/> using the associated <paramref name="nonce"/>.
         /// </summary>
         /// <param name="ciphertext">The encrypted content to decrypt.</param>
         /// <param name="nonce">The nonce associated with this message, which must match the value provided during encryption.</param>
@@ -179,7 +179,7 @@
         }
 
         /// <summary>
-        /// Decrypts the <paramref name="ciphertext"> into the <paramref name="plaintext"> provided destination buffer using the associated <paramref name="nonce">.
+        /// Decrypts the <paramref name="ciphertext"/> into the <paramref name="plaintext"/> provided destination buffer using the associated <paramref name="nonce"/>.
         /// </summary>
         /// <param name="ciphertext">The encrypted content to decrypt.</param>
         /// <param name="nonce">The nonce associated with this message, which must match the value provided during encryption.</param>

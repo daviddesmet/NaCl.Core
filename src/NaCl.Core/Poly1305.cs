@@ -114,7 +114,7 @@
         }
 
         /// <summary>
-        /// Computes the authentication <paramref name="tag"> into a destination buffer using the specified <paramref name="key"> and <paramref name="data">.
+        /// Computes the authentication <paramref name="tag"/> into a destination buffer using the specified <paramref name="key"/> and <paramref name="data"/>.
         /// </summary>
         /// <param name="key">The secret key.</param>
         /// <param name="data">The input to compute the authentication tag.</param>
@@ -125,7 +125,7 @@
             => ComputeMac((ReadOnlySpan<byte>)key, (ReadOnlySpan<byte>)data, (Span<byte>)tag);
 
         /// <summary>
-        /// Computes the authentication <paramref name="tag"> into a destination buffer using the specified <paramref name="key"> and <paramref name="data">.
+        /// Computes the authentication <paramref name="tag"/> into a destination buffer using the specified <paramref name="key"/> and <paramref name="data"/>.
         /// </summary>
         /// <param name="key">The secret key.</param>
         /// <param name="data">The input to compute the authentication tag.</param>
@@ -415,7 +415,7 @@
         */
 
         /// <summary>
-        /// Verifies the authentication <paramref name="mac"> using the specified <paramref name="key"> and <paramref name="data">.
+        /// Verifies the authentication <paramref name="mac"/> using the specified <paramref name="key"/> and <paramref name="data"/>.
         /// </summary>
         /// <param name="key">The secret key.</param>
         /// <param name="data">The data.</param>
@@ -424,7 +424,7 @@
         public static void VerifyMac(byte[] key, byte[] data, byte[] tag) => VerifyMac((ReadOnlySpan<byte>)key, (ReadOnlySpan<byte>)data, (ReadOnlySpan<byte>)tag);
 
         /// <summary>
-        /// Verifies the authentication <paramref name="mac"> using the specified <paramref name="key"> and <paramref name="data">.
+        /// Verifies the authentication <paramref name="mac"/> using the specified <paramref name="key"/> and <paramref name="data"/>.
         /// </summary>
         /// <param name="key">The secret key.</param>
         /// <param name="data">The data.</param>

@@ -19,7 +19,7 @@
         public ChaCha20Base(ReadOnlyMemory<byte> key, int initialCounter) : base(key, initialCounter) { }
 
         /// <summary>
-        /// Sets the initial <paramref name="state"/> from <paramref name="nonce"/> and <paramref name="counter">.
+        /// Sets the initial <paramref name="state"/> from <paramref name="nonce"/> and <paramref name="counter"/>.
         /// ChaCha20 has a different logic than XChaCha20, because the former uses a 12-byte nonce, but the later uses 24-byte.
         /// </summary>
         /// <param name="state">The state.</param>
@@ -51,7 +51,7 @@
         }
 
         /// <summary>
-        /// Process a pseudorandom keystream block, converting the key and part of the <paramref name="nonce"> into a <paramref name="subkey">, and the remainder of the <paramref name="nonce">.
+        /// Process a pseudorandom keystream block, converting the key and part of the <paramref name="nonce"/> into a <paramref name="subkey"/>, and the remainder of the <paramref name="nonce"/>.
         /// </summary>
         /// <param name="subKey">The subKey.</param>
         /// <param name="nonce">The nonce.</param>
@@ -76,7 +76,7 @@
         }
 
         /// <summary>
-        /// Sets the initial state of the HChaCha20 using the key and the <paramref name="nonce"/>.
+        /// Sets the initial <paramref name="state"/> of the HChaCha20 using the key and the <paramref name="nonce"/>.
         /// </summary>
         /// <param name="state">The state.</param>
         /// <param name="nonce">The nonce.</param>

@@ -40,12 +40,31 @@
 
         #region Array
 
+        /// <summary>
+        /// Stores the byte array in 8 parts split into 4 bytes and places it in the output buffer.
+        /// </summary>
+        /// <param name="output">The output buffer.</param>
+        /// <param name="offset">The starting offset.</param>
+        /// <param name="input">The input buffer.</param>
         public static void StoreArray8UInt32LittleEndian(Span<byte> output, int offset, ReadOnlySpan<uint> input)
             => StoreArrayUInt32LittleEndian(output, offset, input, 8);
 
+        /// <summary>
+        /// Stores the byte array in 16 parts split into 4 bytes and places it in the output buffer.
+        /// </summary>
+        /// <param name="output">The output buffer.</param>
+        /// <param name="offset">The starting offset.</param>
+        /// <param name="input">The input buffer.</param>
         public static void StoreArray16UInt32LittleEndian(Span<byte> output, int offset, ReadOnlySpan<uint> input)
             => StoreArrayUInt32LittleEndian(output, offset, input, 16);
 
+        /// <summary>
+        /// Stores the byte array split in n size parts into 4 bytes and places it in the output buffer.
+        /// </summary>
+        /// <param name="output">The output buffer.</param>
+        /// <param name="offset">The starting offset.</param>
+        /// <param name="input">The input buffer.</param>
+        /// <param name="size">The parts to split the input buffer.</param>
         public static void StoreArrayUInt32LittleEndian(Span<byte> output, int offset, ReadOnlySpan<uint> input, int size)
         {
             var len = sizeof(int);

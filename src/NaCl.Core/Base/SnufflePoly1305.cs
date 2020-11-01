@@ -37,7 +37,7 @@
         protected abstract Snuffle CreateSnuffleInstance(ReadOnlyMemory<byte> key, int initialCounter);
 
         /// <summary>
-        /// Encrypts the <paramref name="plaintext"> and computes a MAC with <see cref="Poly1305"/> authentication based on an optional <paramref name="associatedData"> and a random auto-generated nonce.
+        /// Encrypts the <paramref name="plaintext"/> and computes a MAC with <see cref="Poly1305"/> authentication based on an optional <paramref name="associatedData"/> and a random auto-generated nonce.
         /// </summary>
         /// <param name="plaintext">The content to encrypt.</param>
         /// <param name="associatedData">The optional associated data.</param>
@@ -50,7 +50,7 @@
         public virtual byte[] Encrypt(byte[] plaintext, byte[] associatedData = null) => Encrypt((ReadOnlySpan<byte>)plaintext, (ReadOnlySpan<byte>)associatedData);
 
         /// <summary>
-        /// Encrypts the <paramref name="plaintext"> and computes a MAC with <see cref="Poly1305"/> authentication based on an optional <paramref name="associatedData"> and a random auto-generated nonce.
+        /// Encrypts the <paramref name="plaintext"/> and computes a MAC with <see cref="Poly1305"/> authentication based on an optional <paramref name="associatedData"/> and a random auto-generated nonce.
         /// </summary>
         /// <param name="plaintext">The content to encrypt.</param>
         /// <param name="associatedData">The optional associated data.</param>
@@ -75,7 +75,7 @@
         }
 
         /// <summary>
-        /// Encrypts the <paramref name="plaintext"> and computes a MAC with <see cref="Poly1305"/> authentication based on an optional <paramref name="associatedData"> and a <paramref name="nonce">.
+        /// Encrypts the <paramref name="plaintext"/> and computes a MAC with <see cref="Poly1305"/> authentication based on an optional <paramref name="associatedData"/> and a <paramref name="nonce"/>.
         /// </summary>
         /// <param name="nonce">The nonce associated with this message, which should be a unique value for every operation with the same key.</param>
         /// <param name="plaintext">The content to encrypt.</param>
@@ -89,7 +89,7 @@
         public virtual byte[] Encrypt(byte[] nonce, byte[] plaintext, byte[] associatedData = null) => Encrypt((ReadOnlySpan<byte>)nonce, (ReadOnlySpan<byte>)plaintext, (ReadOnlySpan<byte>)associatedData);
 
         /// <summary>
-        /// Encrypts the <paramref name="plaintext"> and computes a MAC with <see cref="Poly1305"/> authentication based on an optional <paramref name="associatedData"> and a <paramref name="nonce">.
+        /// Encrypts the <paramref name="plaintext"/> and computes a MAC with <see cref="Poly1305"/> authentication based on an optional <paramref name="associatedData"/> and a <paramref name="nonce"/>.
         /// </summary>
         /// <param name="nonce">The nonce associated with this message, which should be a unique value for every operation with the same key.</param>
         /// <param name="plaintext">The content to encrypt.</param>
@@ -112,7 +112,7 @@
         }
 
         /// <summary>
-        /// Encrypts the <paramref name="plaintext"> into the <paramref name="ciphertext"> destination buffer and computes an authentication tag into a separate buffer with <see cref="Poly1305"/> authentication based on an <paramref name="associatedData"> and a <paramref name="nonce">.
+        /// Encrypts the <paramref name="plaintext"/> into the <paramref name="ciphertext"/> destination buffer and computes an authentication tag into a separate buffer with <see cref="Poly1305"/> authentication based on an <paramref name="associatedData"/> and a <paramref name="nonce"/>.
         /// </summary>
         /// <param name="nonce">The nonce associated with this message, which should be a unique value for every operation with the same key.</param>
         /// <param name="plaintext">The content to encrypt.</param>
@@ -124,7 +124,7 @@
             => Encrypt((ReadOnlySpan<byte>)nonce, (ReadOnlySpan<byte>)plaintext, (Span<byte>)ciphertext, (Span<byte>)tag, (ReadOnlySpan<byte>)associatedData);
 
         /// <summary>
-        /// Encrypts the <paramref name="plaintext"> into the <paramref name="ciphertext"> destination buffer and computes an authentication tag into a separate buffer with <see cref="Poly1305"/> authentication based on an <paramref name="associatedData"> and a <paramref name="nonce">.
+        /// Encrypts the <paramref name="plaintext"/> into the <paramref name="ciphertext"/> destination buffer and computes an authentication tag into a separate buffer with <see cref="Poly1305"/> authentication based on an <paramref name="associatedData"/> and a <paramref name="nonce"/>.
         /// </summary>
         /// <param name="nonce">The nonce associated with this message, which should be a unique value for every operation with the same key.</param>
         /// <param name="plaintext">The content to encrypt.</param>
@@ -142,7 +142,7 @@
         }
 
         /// <summary>
-        /// Decrypts the specified <paramref name="ciphertext"> and computes a MAC with <see cref="Poly1305"/> authentication based on an optional <paramref name="associatedData">.
+        /// Decrypts the specified <paramref name="ciphertext"/> and computes a MAC with <see cref="Poly1305"/> authentication based on an optional <paramref name="associatedData"/>.
         /// </summary>
         /// <param name="ciphertext">The ciphertext.</param>
         /// <param name="associatedData">The optional associated data.</param>
@@ -155,7 +155,7 @@
         public virtual byte[] Decrypt(byte[] ciphertext, byte[] associatedData = null) => Decrypt((ReadOnlySpan<byte>)ciphertext, (ReadOnlySpan<byte>)associatedData);
 
         /// <summary>
-        /// Decrypts the specified <paramref name="ciphertext"> and computes a MAC with <see cref="Poly1305"/> authentication based on an optional <paramref name="associatedData">.
+        /// Decrypts the specified <paramref name="ciphertext"/> and computes a MAC with <see cref="Poly1305"/> authentication based on an optional <paramref name="associatedData"/>.
         /// </summary>
         /// <param name="ciphertext">The ciphertext.</param>
         /// <param name="associatedData">The optional associated data.</param>
@@ -174,7 +174,7 @@
         }
 
         /// <summary>
-        /// Decrypts the specified <paramref name="ciphertext"> and computes a MAC with <see cref="Poly1305"/> authentication based on an <paramref name="associatedData"> and a <paramref name="nonce">.
+        /// Decrypts the specified <paramref name="ciphertext"/> and computes a MAC with <see cref="Poly1305"/> authentication based on an <paramref name="associatedData"/> and a <paramref name="nonce"/>.
         /// </summary>
         /// <param name="nonce">The nonce associated with this message, which must match the value provided during encryption.</param>
         /// <param name="ciphertext">The encrypted content to decrypt.</param>
@@ -188,7 +188,7 @@
         public virtual byte[] Decrypt(byte[] nonce, byte[] ciphertext, byte[] associatedData = null) => Decrypt((ReadOnlySpan<byte>)nonce, (ReadOnlySpan<byte>)ciphertext, (ReadOnlySpan<byte>)associatedData);
 
         /// <summary>
-        /// Decrypts the specified <paramref name="ciphertext"> and computes a MAC with <see cref="Poly1305"/> authentication based on an <paramref name="associatedData"> and a <paramref name="nonce">.
+        /// Decrypts the specified <paramref name="ciphertext"/> and computes a MAC with <see cref="Poly1305"/> authentication based on an <paramref name="associatedData"/> and a <paramref name="nonce"/>.
         /// </summary>
         /// <param name="nonce">The nonce associated with this message, which must match the value provided during encryption.</param>
         /// <param name="ciphertext">The encrypted content to decrypt.</param>
@@ -222,7 +222,7 @@
         }
 
         /// <summary>
-        /// Decrypts the <paramref name="ciphertext"> into the <paramref name="plaintext"> provided destination buffer if the authentication <paramref name="tag"> can be validated.
+        /// Decrypts the <paramref name="ciphertext"/> into the <paramref name="plaintext"/> provided destination buffer if the authentication <paramref name="tag"/> can be validated.
         /// </summary>
         /// <param name="nonce">The nonce associated with this message, which must match the value provided during encryption.</param>
         /// <param name="ciphertext">The encrypted content to decrypt.</param>
@@ -234,7 +234,7 @@
             => Decrypt((ReadOnlySpan<byte>)nonce, (ReadOnlySpan<byte>)ciphertext, (ReadOnlySpan<byte>)tag, (Span<byte>)plaintext, (ReadOnlySpan<byte>)associatedData);
 
         /// <summary>
-        /// Decrypts the <paramref name="ciphertext"> into the <paramref name="plaintext"> provided destination buffer if the authentication <paramref name="tag"> can be validated.
+        /// Decrypts the <paramref name="ciphertext"/> into the <paramref name="plaintext"/> provided destination buffer if the authentication <paramref name="tag"/> can be validated.
         /// </summary>
         /// <param name="nonce">The nonce associated with this message, which must match the value provided during encryption.</param>
         /// <param name="ciphertext">The encrypted content to decrypt.</param>
