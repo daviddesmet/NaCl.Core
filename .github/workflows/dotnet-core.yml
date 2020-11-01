@@ -64,10 +64,10 @@ jobs:
         uses: actions/download-artifact@v1
         with:
           name: 'windows-latest'
-      - name: 'Add NuGet Source'
-        run: dotnet nuget add source https://nuget.pkg.github.com/daviddesmet/index.json --name GitHub --username daviddesmet --password ${{secrets.GITHUB_TOKEN}}
       - name: 'NuGet Push'
-        run: dotnet nuget push .\windows-latest\*.nupkg --source GitHub --skip-duplicate
+        run: dotnet nuget push .\windows-latest\*.nupkg -k ${GITHUB_TOKEN} -s https://nuget.pkg.github.com/daviddesmet/index.json --skip-duplicate
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   push-nuget:
     name: 'Push NuGet Packages'
