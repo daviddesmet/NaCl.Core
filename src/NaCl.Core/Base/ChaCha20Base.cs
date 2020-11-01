@@ -44,22 +44,8 @@
             ShuffleState(workingState);
 
             // At the end of the rounds, add the result to the original state.
-            state[0] += workingState[0];
-            state[1] += workingState[1];
-            state[2] += workingState[2];
-            state[3] += workingState[3];
-            state[4] += workingState[4];
-            state[5] += workingState[5];
-            state[6] += workingState[6];
-            state[7] += workingState[7];
-            state[8] += workingState[8];
-            state[9] += workingState[9];
-            state[10] += workingState[10];
-            state[11] += workingState[11];
-            state[12] += workingState[12];
-            state[13] += workingState[13];
-            state[14] += workingState[14];
-            state[15] += workingState[15];
+            for (var i = 0; i < BLOCK_SIZE_IN_INTS; i++)
+                state[i] += workingState[i];
 
             ArrayUtils.StoreArray16UInt32LittleEndian(block, 0, state);
         }
@@ -75,6 +61,29 @@
 
             Span<uint> state = stackalloc uint[BLOCK_SIZE_IN_INTS];
 
+            // Setting HChaCha20 initial state
+            HChaCha20InitialState(state, nonce);
+
+            // Block function
+            ShuffleState(state);
+
+            state[4] = state[12];
+            state[5] = state[13];
+            state[6] = state[14];
+            state[7] = state[15];
+
+            ArrayUtils.StoreArray8UInt32LittleEndian(subKey, 0, state);
+        }
+
+        /// <summary>
+        /// Sets the initial state of the HChaCha20 from <paramref name="nonce"/>.
+        /// </summary>
+        /// <param name="state">The state.</param>
+        /// <param name="nonce">The nonce.</param>
+        public void HChaCha20InitialState(Span<uint> state, ReadOnlySpan<byte> nonce)
+        {
+            // See https://tools.ietf.org/html/draft-arciszewski-xchacha-01#section-2.2.
+
             // Set ChaCha20 constant
             SetSigma(state);
 
@@ -86,16 +95,6 @@
             state[13] = ArrayUtils.LoadUInt32LittleEndian(nonce, 4);
             state[14] = ArrayUtils.LoadUInt32LittleEndian(nonce, 8);
             state[15] = ArrayUtils.LoadUInt32LittleEndian(nonce, 12);
-
-            // Block function
-            ShuffleState(state);
-
-            state[4] = state[12];
-            state[5] = state[13];
-            state[6] = state[14];
-            state[7] = state[15];
-
-            ArrayUtils.StoreArray8UInt32LittleEndian(subKey, 0, state);
         }
 
         /*

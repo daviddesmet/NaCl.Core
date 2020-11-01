@@ -6,8 +6,6 @@
 
     using FluentAssertions;
 
-    using Internal;
-
     public static class TestHelpers
     {
         private static readonly Random _random = new Random();
@@ -22,14 +20,10 @@
         }
 
         public static void AssertEqualBytes(byte[] expected, byte[] actual)
-        {
-            BitConverter.ToString(actual).Should().Be(BitConverter.ToString(expected));
-        }
+            => BitConverter.ToString(actual).Should().Be(BitConverter.ToString(expected));
 
         public static ArraySegment<byte> Pad(this byte[] array)
-        {
-            return array.Pad(Random(1, 100), Random(0, 50));
-        }
+            => array.Pad(Random(1, 100), Random(0, 50));
 
         private static ArraySegment<byte> Pad(this byte[] array, int paddingLeft, int paddingRight)
         {

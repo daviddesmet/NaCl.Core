@@ -361,68 +361,62 @@
             }
         }
 
-        /*
         [Fact]
-        public void HChaCha20BlockTestVector()
+        public void HChaCha20StateTestVector()
         {
-            // Arrange
-            var key = CryptoBytes.FromHexString("00:01:02:03:04:05:06:07:08:09:0a:0b:0c:0d:0e:0f:10:11:12:13:14:15:16:17:18:19:1a:1b:1c:1d:1e:1f".Replace(":", string.Empty));
-            var nonce = CryptoBytes.FromHexString("00:00:00:09:00:00:00:4a:00:00:00:00:31:41:59:27:00:00:00:00:00:00:00:00".Replace(":", string.Empty));
+            // https://tools.ietf.org/html/draft-irtf-cfrg-xchacha-03#section-2.2.1
 
-            // Act
-            var output = XChaCha20.HChaCha20(key, nonce);
-            var hex = CryptoBytes.ToHexStringLower(output); // is equal to 'expected' on the first and last rows...
-
-            // Assert
-            //var expected = new uint[8]
-            //{
-            //    0x82413b42, 0x27b27bfe, 0xd30e4250, 0x8a877d73,
-            //    //0x4864a70a, 0xf3cd5479, 0x37cd6a84, 0xad583c7b,
-            //    //0x8355e377, 0x127ce783, 0x2d6a07e0, 0xe5d06cbc,
-            //    0xa0f9e4d5, 0x8a74a853, 0xc12ec413, 0x26d3ecdc
-            //};
-
-            var expected = new Array8<uint>
-            {
-                x0 = 0x82413b42,
-                x1 = 0x27b27bfe,
-                x2 = 0xd30e4250,
-                x3 = 0x8a877d73,
-
-                x4 = 0xa0f9e4d5,
-                x5 = 0x8a74a853,
-                x6 = 0xc12ec413,
-                x7 = 0x26d3ecdc
-            };
-
-            Assert.AreEqual(expected, output.ToArray8());
-        }
-        */
-
-        /*
-        [Fact]
-        public void XChaCha20BlockTestVector()
-        {
             // Arrange
             var key = CryptoBytes.FromHexString("00:01:02:03:04:05:06:07:08:09:0a:0b:0c:0d:0e:0f:10:11:12:13:14:15:16:17:18:19:1a:1b:1c:1d:1e:1f".Replace(":", string.Empty));
             var nonce = CryptoBytes.FromHexString("00:00:00:09:00:00:00:4a:00:00:00:00:31:41:59:27".Replace(":", string.Empty));
-            var counter = 1;
+            var cipher = new XChaCha20(key, 0);
 
             // Act
-            var xchacha20 = new XChaCha20(key, 1);
-            var output = xchacha20.GetKeyStreamBlock(nonce, counter);
+            var initialState = new uint[16];
+            cipher.HChaCha20InitialState(initialState, nonce);
 
             // Assert
-            var expected = new uint[16]
+            var expectedInitialState = new uint[]
             {
-                0x82413b42, 0x27b27bfe, 0xd30e4250, 0x8a877d73,
-                0x4864a70a, 0xf3cd5479, 0x37cd6a84, 0xad583c7b,
-                0x8355e377, 0x127ce783, 0x2d6a07e0, 0xe5d06cbc,
-                0xa0f9e4d5, 0x8a74a853, 0xc12ec413, 0x26d3ecdc,
+                0x61707865, 0x3320646e, 0x79622d32, 0x6b206574,
+                0x03020100, 0x07060504, 0x0b0a0908, 0x0f0e0d0c,
+                0x13121110, 0x17161514, 0x1b1a1918, 0x1f1e1d1c,
+                0x09000000, 0x4a000000, 0x00000000, 0x27594131
             };
 
-            Assert.AreEqual(expected, TestHelpers.ToUInt16Array(output));
+            initialState.Should().BeEquivalentTo(expectedInitialState);
         }
-        */
+
+        [Fact]
+        public void HChaCha20BlockTestVector()
+        {
+            // https://tools.ietf.org/html/draft-irtf-cfrg-xchacha-03#section-2.2.1
+
+            // Arrange
+            var key = CryptoBytes.FromHexString("00:01:02:03:04:05:06:07:08:09:0a:0b:0c:0d:0e:0f:10:11:12:13:14:15:16:17:18:19:1a:1b:1c:1d:1e:1f".Replace(":", string.Empty));
+            var nonce = CryptoBytes.FromHexString("00:00:00:09:00:00:00:4a:00:00:00:00:31:41:59:27".Replace(":", string.Empty));
+            var cipher = new XChaCha20(key, 0);
+
+            // Act
+            var subKey = new byte[32];
+            cipher.HChaCha20(subKey, nonce);
+            var state = subKey.ToUInt16Array();
+            //var stateHex = CryptoBytes.ToHexStringLower(subKey.ToArray());
+
+            // Assert
+            var expectedState = new uint[]
+            {
+                0x423b4182, 0xfe7bb227, 0x50420ed3, 0x737d878a,
+                //0x0aa76448, 0x7954cdf3, 0x846acd37, 0x7b3c58ad,
+                //0x77e35583, 0x83e77c12, 0xe0076a2d, 0xbc6cd0e5,
+                0xd5e4f9a0, 0x53a8748a, 0x13c42ec1, 0xdcecd326
+            };
+
+            //var expectedStateHex = "82413b4" + "227b27bfe" + "d30e4250" + "8a877d73"
+            //                     + "a0f9e4d" + "58a74a853" + "c12ec413" + "26d3ecdc";
+
+            state.Should().BeEquivalentTo(expectedState);
+            //stateHex.Should().Be(expectedStateHex);
+        }
     }
 }

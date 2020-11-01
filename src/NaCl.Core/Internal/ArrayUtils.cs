@@ -41,39 +41,21 @@
         #region Array
 
         public static void StoreArray8UInt32LittleEndian(Span<byte> output, int offset, ReadOnlySpan<uint> input)
-        {
-            var len = sizeof(int);
-
-            BinaryPrimitives.WriteUInt32LittleEndian(output.Slice(offset + 0, len), input[0]);
-            BinaryPrimitives.WriteUInt32LittleEndian(output.Slice(offset + 4, len), input[1]);
-            BinaryPrimitives.WriteUInt32LittleEndian(output.Slice(offset + 8, len), input[2]);
-            BinaryPrimitives.WriteUInt32LittleEndian(output.Slice(offset + 12, len), input[3]);
-            BinaryPrimitives.WriteUInt32LittleEndian(output.Slice(offset + 16, len), input[4]);
-            BinaryPrimitives.WriteUInt32LittleEndian(output.Slice(offset + 20, len), input[5]);
-            BinaryPrimitives.WriteUInt32LittleEndian(output.Slice(offset + 24, len), input[6]);
-            BinaryPrimitives.WriteUInt32LittleEndian(output.Slice(offset + 28, len), input[7]);
-        }
+            => StoreArrayUInt32LittleEndian(output, offset, input, 8);
 
         public static void StoreArray16UInt32LittleEndian(Span<byte> output, int offset, ReadOnlySpan<uint> input)
+            => StoreArrayUInt32LittleEndian(output, offset, input, 16);
+
+        public static void StoreArrayUInt32LittleEndian(Span<byte> output, int offset, ReadOnlySpan<uint> input, int size)
         {
             var len = sizeof(int);
 
-            BinaryPrimitives.WriteUInt32LittleEndian(output.Slice(offset + 0, len), input[0]);
-            BinaryPrimitives.WriteUInt32LittleEndian(output.Slice(offset + 4, len), input[1]);
-            BinaryPrimitives.WriteUInt32LittleEndian(output.Slice(offset + 8, len), input[2]);
-            BinaryPrimitives.WriteUInt32LittleEndian(output.Slice(offset + 12, len), input[3]);
-            BinaryPrimitives.WriteUInt32LittleEndian(output.Slice(offset + 16, len), input[4]);
-            BinaryPrimitives.WriteUInt32LittleEndian(output.Slice(offset + 20, len), input[5]);
-            BinaryPrimitives.WriteUInt32LittleEndian(output.Slice(offset + 24, len), input[6]);
-            BinaryPrimitives.WriteUInt32LittleEndian(output.Slice(offset + 28, len), input[7]);
-            BinaryPrimitives.WriteUInt32LittleEndian(output.Slice(offset + 32, len), input[8]);
-            BinaryPrimitives.WriteUInt32LittleEndian(output.Slice(offset + 36, len), input[9]);
-            BinaryPrimitives.WriteUInt32LittleEndian(output.Slice(offset + 40, len), input[10]);
-            BinaryPrimitives.WriteUInt32LittleEndian(output.Slice(offset + 44, len), input[11]);
-            BinaryPrimitives.WriteUInt32LittleEndian(output.Slice(offset + 48, len), input[12]);
-            BinaryPrimitives.WriteUInt32LittleEndian(output.Slice(offset + 52, len), input[13]);
-            BinaryPrimitives.WriteUInt32LittleEndian(output.Slice(offset + 56, len), input[14]);
-            BinaryPrimitives.WriteUInt32LittleEndian(output.Slice(offset + 60, len), input[15]);
+            var start = offset + 0;
+            for (var i = 0; i < size; i++)
+            {
+                BinaryPrimitives.WriteUInt32LittleEndian(output.Slice(start, len), input[i]);
+                start += len;
+            }
         }
 
         #endregion
