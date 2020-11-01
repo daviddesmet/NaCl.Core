@@ -65,9 +65,7 @@ jobs:
         with:
           name: 'windows-latest'
       - name: 'NuGet Push'
-        run: dotnet nuget push .\windows-latest\*.nupkg -k ${GITHUB_TOKEN} -s https://nuget.pkg.github.com/daviddesmet/index.json --skip-duplicate
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: dotnet nuget push .\windows-latest\*.nupkg --source https://nuget.pkg.github.com/daviddesmet/index.json --skip-duplicate --api-key ${{secrets.GITHUB_TOKEN}}
 
   push-nuget:
     name: 'Push NuGet Packages'
