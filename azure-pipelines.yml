@@ -86,7 +86,7 @@ jobs:
       targetdir: '$(Build.ArtifactStagingDirectory)/TestResults/'
       reporttypes: 'HtmlInline_AzurePipelines_Dark;Cobertura;Badges'
     enabled: false
-  - script: dotnet test -f netcoreapp3.1 test/NaCl.Core.Tests --logger trx
+  - script: dotnet test -f net5.0 test/NaCl.Core.Tests --logger trx
     displayName: 'Run Unit Tests'
   - task: PublishTestResults@2
     displayName: 'Publish Test Results'
@@ -108,7 +108,7 @@ jobs:
     displayName: 'Publish Library'
     inputs:
       command: 'publish'
-      arguments: '-c $(BuildConfiguration) -f netcoreapp3.1 -o $(Build.ArtifactStagingDirectory) --no-restore'
+      arguments: '-c $(BuildConfiguration) -f net5.0 -o $(Build.ArtifactStagingDirectory) --no-restore'
       projects: src/NaCl.Core/NaCl.Core.csproj
       publishWebProjects: false
       modifyOutputPath: true
@@ -131,6 +131,12 @@ jobs:
   variables:
     BuildConfiguration: 'release'
   steps:
+  - task: UseDotNet@2
+    displayName: 'Use .NET SDK 5.0'
+    inputs:
+      packageType: 'sdk'
+      version: '5.0.x'
+      installationPath: $(Agent.ToolsDirectory)/dotnet
   - script: dotnet restore
     displayName: 'Restore Project'
   - script: dotnet build -c $(BuildConfiguration) --no-restore
