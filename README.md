@@ -1,7 +1,7 @@
 # NaCl.Core, a cryptography library for .NET
 
 [![Build Status](https://dev.azure.com/idaviddesmet/NaCl.Core/_apis/build/status/NaCl.Core-CI?branchName=master)](https://dev.azure.com/idaviddesmet/NaCl.Core/_build/latest?definitionId=3&branchName=master)
-[![CI](https://github.com/idaviddesmet/NaCl.Core/workflows/CI/badge.svg?branch=master)](https://github.com/daviddesmet/NaCl.Core/actions)
+[![CI](https://github.com/daviddesmet/NaCl.Core/workflows/CI/badge.svg?branch=master)](https://github.com/daviddesmet/NaCl.Core/actions)
 [![Build status](https://ci.appveyor.com/api/projects/status/2k3cxt2e1r2jyinx?svg=true)](https://ci.appveyor.com/project/idaviddesmet/nacl-core)
 [![Build Status](https://travis-ci.org/idaviddesmet/NaCl.Core.svg?branch=master)](https://travis-ci.org/idaviddesmet/NaCl.Core)
 [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/daviddesmet/NaCl.Core/issues)
