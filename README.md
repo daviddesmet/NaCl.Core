@@ -79,7 +79,6 @@ Poly1305.VerifyMac(key, data, tag);
 ## Learn More
 
 [![License](https://img.shields.io/github/license/daviddesmet/NaCl.Core.svg)](https://github.com/daviddesmet/NaCl.Core/blob/master/LICENSE)
-[![Dependabot Status](https://api.dependabot.com/badges/status?host=github&repo=daviddesmet/NaCl.Core)](https://dependabot.com)
 
 - [ChaCha, a variant of Salsa20](http://cr.yp.to/chacha/chacha-20080128.pdf) by Daniel J. Bernstein.
 - [The Poly1305-AES message-authentication code](http://cr.yp.to/mac/poly1305-20050329.pdf) by Daniel J. Bernstein.

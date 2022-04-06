@@ -12,10 +12,11 @@
     <Authors>David De Smet</Authors>
     <Company />
     <Description>A managed-only cryptography library for .NET which provides modern cryptographic primitives.</Description>
-    <Copyright>Copyright © 2018-2020 David De Smet</Copyright>
+    <Copyright>Copyright © 2018-2022 David De Smet</Copyright>
     <PackageTags>NaCl cryptography dotnet dotnet-core netstandard</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/daviddesmet/NaCl.Core</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageReleaseNotes>https://github.com/daviddesmet/NaCl.Core/releases</PackageReleaseNotes>
     <RepositoryUrl>https://github.com/daviddesmet/NaCl.Core.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
@@ -45,6 +46,10 @@
     <!-- Optional: Include PDB in the built .nupkg -->
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="../../README.md" Pack="true" Visible="false" PackagePath="" />
+  </ItemGroup>
 
   <ItemGroup Label="Package References">
     <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" Version="1.0.0" />
