@@ -87,7 +87,7 @@
 
             var ciphertext = new byte[plaintext.Length + NonceSizeInBytes];
 
-#if NETCOREAPP3_1
+#if NETCOREAPP3_1_OR_GREATER
             Span<byte> nonce = stackalloc byte[NonceSizeInBytes];
             RandomNumberGenerator.Fill(nonce);
 

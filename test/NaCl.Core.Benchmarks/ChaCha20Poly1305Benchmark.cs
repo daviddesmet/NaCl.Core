@@ -52,7 +52,7 @@
 
             ciphertext = new byte[message.Length];
 
-            aead = new ChaCha20Poly1305(key);
+            aead = new ChaCha20Poly1305(key.Span);
         }
 
         [Benchmark]
