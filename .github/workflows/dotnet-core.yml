@@ -8,11 +8,23 @@ on:
       - master
     paths:
      - 'src/**'
+     - build.cake
+     - CodeCoverage.runsettings
+     - dotnet-tools.json
+     - global.json
+     - Key.snk
+     - NaCl.Core.sln
   pull_request:
     branches:
       - master
     paths:
      - 'src/**'
+     - build.cake
+     - CodeCoverage.runsettings
+     - dotnet-tools.json
+     - global.json
+     - Key.snk
+     - NaCl.Core.sln
   release:
     types:
       - published

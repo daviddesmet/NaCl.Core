@@ -58,7 +58,7 @@ Task("Test")
     });
 
 Task("Pack")
-    .Description("Creates NuGet packages and outputs them to the artifacts directory.")
+    .Description("Creates the NuGet package and outputs them to the artifacts directory.")
     .Does(() =>
     {
         DotNetCorePack(
@@ -75,7 +75,7 @@ Task("Pack")
     });
 
 Task("Default")
-    .Description("Cleans, restores NuGet packages, builds the solution, runs unit tests and then creates NuGet packages.")
+    .Description("Clean, restore, build the solution, runs unit tests and then create the NuGet package.")
     .IsDependentOn("Build")
     .IsDependentOn("Test")
     .IsDependentOn("Pack");
