@@ -13,7 +13,7 @@
     <Company />
     <Description>A managed-only cryptography library for .NET which provides modern cryptographic primitives.</Description>
     <Copyright>Copyright © 2018-2022 David De Smet</Copyright>
-    <PackageTags>NaCl cryptography dotnet dotnet-core netstandard</PackageTags>
+    <PackageTags>NaCl cryptography sodium libsodium dotnet dotnet-core netstandard</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/daviddesmet/NaCl.Core</PackageProjectUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
