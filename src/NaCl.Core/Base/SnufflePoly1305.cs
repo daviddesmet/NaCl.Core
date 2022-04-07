@@ -140,7 +140,14 @@
             //    throw new ArgumentException($"The {nameof(plaintext)} is too long.");
 
             _snuffle.Encrypt(plaintext, nonce, ciphertext);
-            Poly1305.ComputeMac(GetMacKey(nonce), GetMacDataRfc8439(associatedData, ciphertext), tag);
+
+            var aadPaddedLen = GetPaddedLength(associatedData, Poly1305.MAC_TAG_SIZE_IN_BYTES);
+            var ciphertextPaddedLen = GetPaddedLength(ciphertext, Poly1305.MAC_TAG_SIZE_IN_BYTES);
+            var macData = new Span<byte>(new byte[aadPaddedLen + ciphertextPaddedLen + Poly1305.MAC_TAG_SIZE_IN_BYTES]);
+
+            PrepareMacDataRfc8439(macData, associatedData, aadPaddedLen, ciphertext, ciphertextPaddedLen);
+
+            Poly1305.ComputeMac(GetMacKey(nonce), macData, tag);
         }
 
         /// <summary>
@@ -253,11 +260,9 @@
             {
                 var aadPaddedLen = GetPaddedLength(associatedData, Poly1305.MAC_TAG_SIZE_IN_BYTES);
                 var ciphertextPaddedLen = GetPaddedLength(ciphertext, Poly1305.MAC_TAG_SIZE_IN_BYTES);
+                var macData = new Span<byte>(new byte[aadPaddedLen + ciphertextPaddedLen + Poly1305.MAC_TAG_SIZE_IN_BYTES]);
 
-                var macBuffer = new byte[aadPaddedLen + ciphertextPaddedLen + Poly1305.MAC_TAG_SIZE_IN_BYTES];
-                var macData = new Span<byte>(macBuffer);
-
-                GetMacDataRfc8439(macData, associatedData, aadPaddedLen, ciphertext, ciphertextPaddedLen);
+                PrepareMacDataRfc8439(macData, associatedData, aadPaddedLen, ciphertext, ciphertextPaddedLen);
                 Poly1305.VerifyMac(GetMacKey(nonce), macData, tag);
             }
             catch (CryptographicException ex) when (ex.Message.Contains("length"))
@@ -319,7 +324,7 @@
         /// <param name="ciphertext">The ciphertext.</param>
         /// <param name="ciphertextPaddedLen">The ciphertext padded length.</param>
         /// <returns>System.Byte[].</returns>
-        private static void GetMacDataRfc8439(Span<byte> mac, ReadOnlySpan<byte> aad, int aadPaddedLen, ReadOnlySpan<byte> ciphertext, int ciphertextPaddedLen)
+        private static void PrepareMacDataRfc8439(Span<byte> mac, ReadOnlySpan<byte> aad, int aadPaddedLen, ReadOnlySpan<byte> ciphertext, int ciphertextPaddedLen)
         {
             // Mac Text
             aad.CopyTo(mac[..aad.Length]);
