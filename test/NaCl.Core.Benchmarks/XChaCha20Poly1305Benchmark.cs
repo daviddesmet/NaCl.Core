@@ -4,8 +4,7 @@
     using System.Collections.Generic;
     using System.Security.Cryptography;
 
-    using Base;
-    using Internal;
+    using NaCl.Core.Base;
 
     using BenchmarkDotNet.Attributes;
 
@@ -70,7 +69,7 @@
             aead.Decrypt(test.Nonce, test.CipherText, test.Tag, plaintext, test.Aad);
         }
 
-        public IEnumerable<object> TestVectors()
+        public static IEnumerable<object> TestVectors()
         {
             //foreach (var test in Tests.Rfc8439TestVector.Rfc7634AeadTestVectors)
             //    yield return test;

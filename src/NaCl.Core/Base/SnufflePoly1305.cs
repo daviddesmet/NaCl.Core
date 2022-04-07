@@ -1,8 +1,10 @@
 ﻿namespace NaCl.Core.Base
 {
     using System;
+    using System.Buffers;
     using System.Diagnostics.CodeAnalysis;
     using System.Linq;
+    using System.Runtime.InteropServices;
     using System.Security.Cryptography;
 
     using Internal;
@@ -249,7 +251,14 @@
 
             try
             {
-                Poly1305.VerifyMac(GetMacKey(nonce), GetMacDataRfc8439(associatedData, ciphertext), tag);
+                var aadPaddedLen = GetPaddedLength(associatedData, Poly1305.MAC_TAG_SIZE_IN_BYTES);
+                var ciphertextPaddedLen = GetPaddedLength(ciphertext, Poly1305.MAC_TAG_SIZE_IN_BYTES);
+
+                var macBuffer = new byte[aadPaddedLen + ciphertextPaddedLen + Poly1305.MAC_TAG_SIZE_IN_BYTES];
+                var macData = new Span<byte>(macBuffer);
+
+                GetMacDataRfc8439(macData, associatedData, aadPaddedLen, ciphertext, ciphertextPaddedLen);
+                Poly1305.VerifyMac(GetMacKey(nonce), macData, tag);
             }
             catch (CryptographicException ex) when (ex.Message.Contains("length"))
             {
@@ -273,7 +282,7 @@
             Span<byte> firstBlock = new byte[Snuffle.BLOCK_SIZE_IN_BYTES];
             _macKeySnuffle.ProcessKeyStreamBlock(nonce, 0, firstBlock);
 
-            return firstBlock.Slice(0, Poly1305.MAC_KEY_SIZE_IN_BYTES);
+            return firstBlock[..Poly1305.MAC_KEY_SIZE_IN_BYTES];
         }
 
         /// <summary>
@@ -284,11 +293,11 @@
         /// <returns>System.Byte[].</returns>
         private byte[] GetMacDataRfc8439(ReadOnlySpan<byte> aad, ReadOnlySpan<byte> ciphertext)
         {
-            var aadPaddedLen = (aad.Length % 16 == 0) ? aad.Length : (aad.Length + 16 - aad.Length % 16);
+            var aadPaddedLen = GetPaddedLength(aad, Poly1305.MAC_TAG_SIZE_IN_BYTES);
             var ciphertextLen = ciphertext.Length;
-            var ciphertextPaddedLen = (ciphertextLen % 16 == 0) ? ciphertextLen : (ciphertextLen + 16 - ciphertextLen % 16);
+            var ciphertextPaddedLen = GetPaddedLength(ciphertext, Poly1305.MAC_TAG_SIZE_IN_BYTES);
 
-            var macData = new byte[aadPaddedLen + ciphertextPaddedLen + 16];
+            var macData = new byte[aadPaddedLen + ciphertextPaddedLen + Poly1305.MAC_TAG_SIZE_IN_BYTES];
 
             // Mac Text
             Array.Copy(aad.ToArray(), macData, aad.Length);
@@ -301,6 +310,28 @@
             return macData;
         }
 
-        private void SetMacLength(Span<byte> macData, int offset, int value) => ArrayUtils.StoreUInt64LittleEndian(macData, offset, (ulong)value);
+        /// <summary>
+        /// Prepares the input to MAC, following RFC 8439, section 2.8.
+        /// </summary>
+        /// <param name="mac">The resulting mac content.</param>
+        /// <param name="aad">The associated data.</param>
+        /// <param name="aadPaddedLen">The associated data padded length.</param>
+        /// <param name="ciphertext">The ciphertext.</param>
+        /// <param name="ciphertextPaddedLen">The ciphertext padded length.</param>
+        /// <returns>System.Byte[].</returns>
+        private static void GetMacDataRfc8439(Span<byte> mac, ReadOnlySpan<byte> aad, int aadPaddedLen, ReadOnlySpan<byte> ciphertext, int ciphertextPaddedLen)
+        {
+            // Mac Text
+            aad.CopyTo(mac[..aad.Length]);
+            ciphertext.CopyTo(mac.Slice(aadPaddedLen, ciphertext.Length));
+
+            // Mac Length
+            SetMacLength(mac, aadPaddedLen + ciphertextPaddedLen, aad.Length);
+            SetMacLength(mac, aadPaddedLen + ciphertextPaddedLen + sizeof(ulong), ciphertext.Length);
+        }
+
+        private static int GetPaddedLength(ReadOnlySpan<byte> input, int size) => (input.Length % size == 0) ? input.Length : (input.Length + size - input.Length % size);
+
+        private static void SetMacLength(Span<byte> macData, int offset, int value) => ArrayUtils.StoreUInt64LittleEndian(macData, offset, (ulong)value);
     }
 }

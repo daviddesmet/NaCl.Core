@@ -22,9 +22,9 @@
     public abstract class Snuffle
     {
         public const int BLOCK_SIZE_IN_INTS = 16;
-        public static int BLOCK_SIZE_IN_BYTES = BLOCK_SIZE_IN_INTS * 4; // 64
+        public const int BLOCK_SIZE_IN_BYTES = BLOCK_SIZE_IN_INTS * 4; // 64
         public const int KEY_SIZE_IN_INTS = 8;
-        public static int KEY_SIZE_IN_BYTES = KEY_SIZE_IN_INTS * 4; // 32
+        public const int KEY_SIZE_IN_BYTES = KEY_SIZE_IN_INTS * 4; // 32
 
         public static uint[] SIGMA = new uint[] { 0x61707865, 0x3320646E, 0x79622D32, 0x6B206574 }; //Encoding.ASCII.GetBytes("expand 32-byte k");
 
@@ -160,7 +160,7 @@
                 throw new ArgumentException($"The {nameof(ciphertext)} is too short.");
 
             var plaintext = new byte[ciphertext.Length - NonceSizeInBytes];
-            Decrypt(ciphertext.Slice(NonceSizeInBytes), ciphertext.Slice(0, NonceSizeInBytes), plaintext); //Process(ciphertext.Slice(0, NonceSizeInBytes), plaintext, ciphertext.Slice(NonceSizeInBytes));
+            Decrypt(ciphertext[NonceSizeInBytes..], ciphertext[..NonceSizeInBytes], plaintext); //Process(ciphertext.Slice(0, NonceSizeInBytes), plaintext, ciphertext.Slice(NonceSizeInBytes));
             return plaintext;
         }
 
@@ -222,19 +222,17 @@
             }
             */
 
-            using (var owner = MemoryPool<byte>.Shared.Rent(BLOCK_SIZE_IN_BYTES))
+            using var owner = MemoryPool<byte>.Shared.Rent(BLOCK_SIZE_IN_BYTES);
+            for (var i = 0; i < numBlocks; i++)
             {
-                for (var i = 0; i < numBlocks; i++)
-                {
-                    ProcessKeyStreamBlock(nonce, i + InitialCounter, owner.Memory.Span);
+                ProcessKeyStreamBlock(nonce, i + InitialCounter, owner.Memory.Span);
 
-                    if (i == numBlocks - 1)
-                        Xor(output, input, owner.Memory.Span, length % BLOCK_SIZE_IN_BYTES, offset, i); // last block
-                    else
-                        Xor(output, input, owner.Memory.Span, BLOCK_SIZE_IN_BYTES, offset, i);
+                if (i == numBlocks - 1)
+                    Xor(output, input, owner.Memory.Span, length % BLOCK_SIZE_IN_BYTES, offset, i); // last block
+                else
+                    Xor(output, input, owner.Memory.Span, BLOCK_SIZE_IN_BYTES, offset, i);
 
-                    owner.Memory.Span.Clear();
-                }
+                owner.Memory.Span.Clear();
             }
         }
 

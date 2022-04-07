@@ -1,6 +1,7 @@
 ﻿namespace NaCl.Core.Base
 {
     using System;
+    using System.Runtime.CompilerServices;
     using System.Security.Cryptography;
 
     using Internal;
@@ -55,6 +56,7 @@
         /// </summary>
         /// <param name="subKey">The subKey.</param>
         /// <param name="nonce">The nonce.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void HChaCha20(Span<byte> subKey, ReadOnlySpan<byte> nonce)
         {
             // See https://tools.ietf.org/html/draft-arciszewski-xchacha-01#section-2.2.
@@ -80,6 +82,7 @@
         /// </summary>
         /// <param name="state">The state.</param>
         /// <param name="nonce">The nonce.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void HChaCha20InitialState(Span<uint> state, ReadOnlySpan<byte> nonce)
         {
             // See https://tools.ietf.org/html/draft-arciszewski-xchacha-01#section-2.2.
@@ -217,6 +220,7 @@
         }
         */
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected static void ShuffleState(Span<uint> state)
         {
             for (var i = 0; i < 10; i++)
@@ -232,6 +236,7 @@
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void QuarterRound(ref uint a, ref uint b, ref uint c, ref uint d)
         {
             a += b;
