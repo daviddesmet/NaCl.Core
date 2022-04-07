@@ -323,7 +323,6 @@
         /// <param name="aadPaddedLen">The associated data padded length.</param>
         /// <param name="ciphertext">The ciphertext.</param>
         /// <param name="ciphertextPaddedLen">The ciphertext padded length.</param>
-        /// <returns>System.Byte[].</returns>
         private static void PrepareMacDataRfc8439(Span<byte> mac, ReadOnlySpan<byte> aad, int aadPaddedLen, ReadOnlySpan<byte> ciphertext, int ciphertextPaddedLen)
         {
             // Mac Text
