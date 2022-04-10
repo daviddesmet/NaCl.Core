@@ -296,6 +296,9 @@
         /// <param name="aad">The associated data.</param>
         /// <param name="ciphertext">The ciphertext.</param>
         /// <returns>System.Byte[].</returns>
+#if !NETSTANDARD1_6
+        [ExcludeFromCodeCoverage] // It will be removed along with the obsolete methods
+#endif
         private byte[] GetMacDataRfc8439(ReadOnlySpan<byte> aad, ReadOnlySpan<byte> ciphertext)
         {
             var aadPaddedLen = GetPaddedLength(aad, Poly1305.MAC_TAG_SIZE_IN_BYTES);
