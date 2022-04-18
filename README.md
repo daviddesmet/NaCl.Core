@@ -25,7 +25,7 @@
 [![NuGet](https://buildstats.info/nuget/NaCl.Core)](https://www.nuget.org/packages/NaCl.Core/)
 [![CI NuGet](https://img.shields.io/badge/nuget-CI%20builds-4da2db?logo=azure-devops)](https://dev.azure.com/idaviddesmet/NaCl.Core/_packaging?_a=feed&feed=NaCl.Core-CI)
 
-Install the NaCl.Core NuGet package from the .NET Core CLI using:
+Install the NaCl.Core NuGet package from the .NET CLI using:
 ```
 dotnet add package NaCl.Core
 ```
