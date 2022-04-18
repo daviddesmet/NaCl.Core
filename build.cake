@@ -1,8 +1,7 @@
 var target = Argument("Target", "Default");
 var configuration =
     HasArgument("Configuration") ? Argument<string>("Configuration") :
-    EnvironmentVariable("Configuration") is object ? EnvironmentVariable("Configuration") :
-    "Release";
+    EnvironmentVariable("Configuration", "Release");
 
 var artefactsDirectory = Directory("./Artifacts");
 
@@ -20,7 +19,7 @@ Task("Restore")
     .IsDependentOn("Clean")
     .Does(() =>
     {
-        DotNetCoreRestore();
+        DotNetRestore();
     });
 
 Task("Build")
@@ -28,9 +27,9 @@ Task("Build")
     .IsDependentOn("Restore")
     .Does(() =>
     {
-        DotNetCoreBuild(
+        DotNetBuild(
             ".",
-            new DotNetCoreBuildSettings()
+            new DotNetBuildSettings()
             {
                 Configuration = configuration,
                 NoRestore = true,
@@ -41,33 +40,40 @@ Task("Test")
     .Description("Runs unit tests and outputs test results to the artifacts directory.")
     .DoesForEach(GetFiles("./test/**/*.Tests.csproj"), project =>
     {
-        DotNetCoreTest(
+        Information($"Preparing {project.GetFilename()} for test");
+
+        DotNetTest(
             project.ToString(),
-            new DotNetCoreTestSettings()
+            new DotNetTestSettings()
             {
+                Blame = true,
+                Collectors = new string[] { "XPlat Code Coverage" },
                 Configuration = configuration,
-                Logger = $"trx;LogFileName={project.GetFilenameWithoutExtension()}.trx",
+                Loggers = new string[]
+                {
+                    $"trx;LogFileName={project.GetFilenameWithoutExtension()}.trx",
+                    $"html;LogFileName={project.GetFilenameWithoutExtension()}.html",
+                },
                 NoBuild = true,
                 NoRestore = true,
                 ResultsDirectory = artefactsDirectory,
-                ArgumentCustomization = x => x
-                    .Append("--blame")
-                    .AppendSwitch("--logger", $"html;LogFileName={project.GetFilenameWithoutExtension()}.html")
-                    .Append("--collect:\"XPlat Code Coverage\""),
             });
     });
 
 Task("Pack")
-    .Description("Creates the NuGet package and outputs them to the artifacts directory.")
+    .Description("Creates the NuGet packages and outputs them to the artifacts directory.")
     .Does(() =>
     {
-        DotNetCorePack(
+        DotNetPack(
             "./src/NaCl.Core/",
-            new DotNetCorePackSettings()
+            new DotNetPackSettings()
             {
                 Configuration = configuration,
                 IncludeSymbols = false,
-                MSBuildSettings = new DotNetCoreMSBuildSettings(),
+                MSBuildSettings = new DotNetMSBuildSettings()
+                {
+                    ContinuousIntegrationBuild = !BuildSystem.IsLocalBuild,
+                },
                 NoBuild = true,
                 NoRestore = true,
                 OutputDirectory = artefactsDirectory,
@@ -75,7 +81,7 @@ Task("Pack")
     });
 
 Task("Default")
-    .Description("Clean, restore, build the solution, runs unit tests and then create the NuGet package.")
+    .Description("Cleans, restores, builds the solution, runs unit tests and then create the NuGet packages.")
     .IsDependentOn("Build")
     .IsDependentOn("Test")
     .IsDependentOn("Pack");
