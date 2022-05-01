@@ -47,7 +47,7 @@
         }
 
         /// <summary>
-        /// The size of the randomly generated nonces.
+        /// The size of the nonce in bytes.
         /// </summary>
         /// <returns>System.Int32.</returns>
         public override int NonceSizeInBytes => NONCE_SIZE_IN_BYTES;

@@ -47,15 +47,20 @@
 
         [Benchmark]
         [BenchmarkCategory("Encryption")]
-        public byte[] Encrypt() => cipher.Encrypt(message.Span, nonce.Span);
+        public void Encrypt()
+        {
+            var ciphertext = new byte[message.Length];
+            cipher.Encrypt(message.Span, nonce.Span, ciphertext);
+        }
 
         [Benchmark]
         [BenchmarkCategory("Decryption")]
         [ArgumentsSource(nameof(TestVectors))]
-        public byte[] Decrypt(Tests.Vectors.Rfc8439TestVector test)
+        public void Decrypt(Tests.Vectors.Rfc8439TestVector test)
         {
+            var plaintext = new byte[test.CipherText.Length];
             var cipher = new ChaCha20(test.Key, test.InitialCounter);
-            return cipher.Decrypt(CryptoBytes.Combine(test.Nonce, test.CipherText));
+            cipher.Decrypt(test.CipherText, test.Nonce, plaintext);
         }
 
         public IEnumerable<object> TestVectors()

@@ -32,7 +32,7 @@
             // The first four words (0-3) are constants: 0x61707865, 0x3320646e, 0x79622d32, 0x6b206574.
             SetSigma(state);
 
-            // The next eight words (4-11) are taken from the 256-bit key in little-endian order, in 4-byte chunks; and the first 16 bytes of the 24-byte nonce to obtain the subkey.
+            // The next eight words (4-11) are taken from the 256-bit key in little-endian order, in 4-byte chunks; and the first 16 bytes of the 24-byte nonce to obtain the subKey.
             Span<byte> subKey = stackalloc byte[KEY_SIZE_IN_BYTES];
             HChaCha20(subKey, nonce);
             SetKey(state, subKey);
@@ -49,7 +49,7 @@
         }
 
         /// <summary>
-        /// The size of the randomly generated nonces.
+        /// The size of the nonce in bytes.
         /// </summary>
         /// <returns>System.Int32.</returns>
         public override int NonceSizeInBytes => NONCE_SIZE_IN_BYTES;

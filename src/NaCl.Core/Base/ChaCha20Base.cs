@@ -9,15 +9,21 @@
     /// <summary>
     /// Base class for <seealso cref="NaCl.Core.ChaCha20" /> and <seealso cref="NaCl.Core.XChaCha20" />.
     /// </summary>
-    /// <seealso cref="NaCl.Core.Internal.Snuffle" />
+    /// <seealso cref="NaCl.Core.Base.Snuffle" />
     public abstract class ChaCha20Base : Snuffle
     {
+        protected const int BLOCK_SIZE_IN_INTS = 16;
+        public const int BLOCK_SIZE_IN_BYTES = BLOCK_SIZE_IN_INTS * 4; // 64
+
         /// <summary>
         /// Initializes a new instance of the <see cref="ChaCha20Base"/> class.
         /// </summary>
         /// <param name="key">The key.</param>
         /// <param name="initialCounter">The initial counter.</param>
-        public ChaCha20Base(ReadOnlyMemory<byte> key, int initialCounter) : base(key, initialCounter) { }
+        protected ChaCha20Base(ReadOnlyMemory<byte> key, int initialCounter) : base(key, initialCounter) { }
+
+        /// <inheritdoc />
+        public override int BlockSizeInBytes => BLOCK_SIZE_IN_BYTES;
 
         /// <summary>
         /// Sets the initial <paramref name="state"/> from <paramref name="nonce"/> and <paramref name="counter"/>.
@@ -32,7 +38,7 @@
         public override void ProcessKeyStreamBlock(ReadOnlySpan<byte> nonce, int counter, Span<byte> block)
         {
             if (block.Length != BLOCK_SIZE_IN_BYTES)
-                throw new CryptographicException($"The keystream block length is not valid. The length in bytes must be {BLOCK_SIZE_IN_BYTES}.");
+                throw new CryptographicException($"The key stream block length is not valid. The length in bytes must be {BLOCK_SIZE_IN_BYTES}.");
 
             // Set the initial state based on https://tools.ietf.org/html/rfc8439#section-2.3
             Span<uint> state = stackalloc uint[BLOCK_SIZE_IN_INTS];
@@ -52,7 +58,7 @@
         }
 
         /// <summary>
-        /// Process a pseudorandom keystream block, converting the key and part of the <paramref name="nonce"/> into a <paramref name="subkey"/>, and the remainder of the <paramref name="nonce"/>.
+        /// Process a pseudorandom key stream block, converting the key and part of the <paramref name="nonce"/> into a <paramref name="subKey"/>, and the remainder of the <paramref name="nonce"/>.
         /// </summary>
         /// <param name="subKey">The subKey.</param>
         /// <param name="nonce">The nonce.</param>
@@ -223,16 +229,20 @@
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected static void ShuffleState(Span<uint> state)
         {
+            // 10 loops × 2 rounds/loop = 20 rounds
             for (var i = 0; i < 10; i++)
             {
-                QuarterRound(ref state[0], ref state[4], ref state[8], ref state[12]);
-                QuarterRound(ref state[1], ref state[5], ref state[9], ref state[13]);
-                QuarterRound(ref state[2], ref state[6], ref state[10], ref state[14]);
-                QuarterRound(ref state[3], ref state[7], ref state[11], ref state[15]);
-                QuarterRound(ref state[0], ref state[5], ref state[10], ref state[15]);
-                QuarterRound(ref state[1], ref state[6], ref state[11], ref state[12]);
-                QuarterRound(ref state[2], ref state[7], ref state[8], ref state[13]);
-                QuarterRound(ref state[3], ref state[4], ref state[9], ref state[14]);
+                // Odd round
+                QuarterRound(ref state[0], ref state[4], ref state[8], ref state[12]);  // column 0
+                QuarterRound(ref state[1], ref state[5], ref state[9], ref state[13]);  // column 1
+                QuarterRound(ref state[2], ref state[6], ref state[10], ref state[14]); // column 2
+                QuarterRound(ref state[3], ref state[7], ref state[11], ref state[15]); // column 3
+
+                // Even round
+                QuarterRound(ref state[0], ref state[5], ref state[10], ref state[15]); // column 1 (main diagonal)
+                QuarterRound(ref state[1], ref state[6], ref state[11], ref state[12]); // column 2
+                QuarterRound(ref state[2], ref state[7], ref state[8], ref state[13]);  // column 3
+                QuarterRound(ref state[3], ref state[4], ref state[9], ref state[14]);  // column 4
             }
         }
 
