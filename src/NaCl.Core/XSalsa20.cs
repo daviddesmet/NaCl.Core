@@ -28,6 +28,8 @@
             if (nonce.IsEmpty || nonce.Length != NonceSizeInBytes)
                 throw new CryptographicException(FormatNonceLengthExceptionMessage(GetType().Name, nonce.Length, NonceSizeInBytes));
 
+            // Ref: http://cr.yp.to/snuffle/xsalsa-20081128.pdf under 2. Specification - Definition of XSalsa20
+
             // The first four words in diagonal (0,5,10,15) are constants: 0x61707865, 0x3320646e, 0x79622d32, 0x6b206574.
             SetSigma(state);
 
@@ -36,7 +38,7 @@
             HSalsa20(subKey, nonce);
             SetKey(state, subKey);
 
-            // Words 6-7 is the last 64-bits of the 192-bit nonce, which must not be repeated for the same key. Ref: http://cr.yp.to/snuffle/xsalsa-20081128.pdf under 2. Specification - Definition of XSalsa20
+            // Words 6-7 is the last 64-bits of the 192-bit nonce, which must not be repeated for the same key.
             state[6] = ArrayUtils.LoadUInt32LittleEndian(nonce, 16); // or ArrayUtils.LoadUInt32LittleEndian(nonce, 0)
             state[7] = ArrayUtils.LoadUInt32LittleEndian(nonce, 20); // or ArrayUtils.LoadUInt32LittleEndian(nonce, 4)
 

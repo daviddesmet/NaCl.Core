@@ -1,10 +1,7 @@
 ﻿namespace NaCl.Core.Base
 {
     using System;
-    using System.Buffers;
     using System.Diagnostics.CodeAnalysis;
-    using System.Linq;
-    using System.Runtime.InteropServices;
     using System.Security.Cryptography;
 
     using Internal;
