@@ -43,43 +43,6 @@
             }
         }
 
-        [Fact]
-        public void Salsa20NaclTestVector()
-        {
-            // 8. Example of the long stream, ref: https://cr.yp.to/highspeed/naclcrypto-20090310.pdf
-
-            // Arrange
-            var secondKey = new byte[32]
-            {
-                0xdc, 0x90, 0x8d, 0xda, 0x0b, 0x93, 0x44, 0xa9,
-                0x53, 0x62, 0x9b, 0x73, 0x38, 0x20, 0x77, 0x88,
-                0x80, 0xf3, 0xce, 0xb4, 0x21, 0xbb, 0x61, 0xb9,
-                0x1c, 0xbd, 0x4c, 0x3e, 0x66, 0x25, 0x6c, 0xe4
-            };
-            var nonceSuffix = new byte[8]
-            {
-                0x82, 0x19, 0xe0, 0x03, 0x6b, 0x7a, 0x0b, 0x37
-            };
-
-            var cipher = new Salsa20(secondKey, 0);
-
-            var input = new byte[16];
-            var output = new byte[64];
-
-            // Act
-            for (var i = 0; i < 8; i++)
-                input[i] = nonceSuffix[i];
-
-            cipher.ProcessKeyStreamBlock(nonceSuffix, 0, output);
-
-            // Assert
-            using var sha = SHA256.Create();
-            var hash = sha.ComputeHash(output);
-            var result = CryptoBytes.ToHexStringLower(hash);
-
-            result.Should().Be("662b9d0e3463029156069b12f918691a98f7dfb2ca0393c96bbfc6b1fbd630a2");
-        }
-
         private string GetTestVector()
         {
             try
