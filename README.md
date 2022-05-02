@@ -14,6 +14,7 @@
 
 | Crypto | Description |
 |--------|-------------|
+| **Salsa20** | A high-speed stream cipher part of the family of 256-bit stream ciphers designed in 2005 and submitted to [eSTREAM](https://www.ecrypt.eu.org/stream/salsa20pf.html), the ECRYPT Stream Cipher Project |
 | **ChaCha20** | A high-speed stream cipher based on Salsa20 |
 | **XChaCha20** | Based on ChaCha20 IETF with extended nonce (192-bit instead of 96-bit) |
 | **Poly1305** | A state-of-the-art secret-key message-authentication code (MAC) based on [RFC8439](https://tools.ietf.org/html/rfc8439) |
@@ -83,5 +84,6 @@ Poly1305.VerifyMac(key, data, tag);
 - [ChaCha, a variant of Salsa20](http://cr.yp.to/chacha/chacha-20080128.pdf) by Daniel J. Bernstein.
 - [The Poly1305-AES message-authentication code](http://cr.yp.to/mac/poly1305-20050329.pdf) by Daniel J. Bernstein.
 - [ChaCha20 and Poly1305 for IETF Protocols](https://tools.ietf.org/html/rfc8439) RFC.
+- [Salsa20](https://cr.yp.to/snuffle.html), also known as Snuffle 2005, uses the [Salsa20 core](https://cr.yp.to/salsa20.html) to encrypt data.
 - [XSalsa20](https://cr.yp.to/snuffle/xsalsa-20110204.pdf), an extended-nonce Salsa20 variant used in [NaCl](https://nacl.cr.yp.to).
 - [XChaCha20-Poly1305](https://tools.ietf.org/html/draft-arciszewski-xchacha-02), an extended-nonce ChaCha20-Poly1305 IETF variant.
