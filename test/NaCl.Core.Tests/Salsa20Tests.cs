@@ -5,12 +5,14 @@
     using System.IO;
     using System.Net.Http;
     using System.Security.Cryptography;
+    using System.Text;
 
     using FluentAssertions;
     using Xunit;
     using Xunit.Abstractions;
     using Xunit.Categories;
 
+    using Base;
     using Internal;
     using Vectors;
 
@@ -20,6 +22,245 @@
         private readonly ITestOutputHelper _output;
 
         public Salsa20Tests(ITestOutputHelper output) => _output = output;
+
+        private const string EXCEPTION_MESSAGE_NONCE_LENGTH = "*The nonce length in bytes must be 8.";
+
+        [Fact]
+        public void CreateInstanceWhenKeyLengthIsInvalidFails()
+        {
+            // Arrange, Act & Assert
+            Action act = () => new Salsa20(new byte[Snuffle.KEY_SIZE_IN_BYTES + TestHelpers.ReturnRandomPositiveNegative()], 0);
+            act.Should().Throw<CryptographicException>();
+        }
+
+        [Theory]
+        [InlineData(2, 4)]
+        [InlineData(3, 4)]
+        [InlineData(4, 3)]
+        [InlineData(4, 2)]
+        public void EncryptWhenPlaintextIsNotEqualToCiphertextFails(int plaintextLen, int ciphertextLen)
+        {
+            // Arrange
+            var cipher = new Salsa20(new byte[Snuffle.KEY_SIZE_IN_BYTES], 0);
+
+            // Act
+            var act = () => cipher.Encrypt(new byte[plaintextLen], new byte[cipher.NonceSizeInBytes], new byte[ciphertextLen]);
+
+            // Assert
+            act.Should().Throw<ArgumentException>().WithMessage("The plaintext parameter and the ciphertext do not have the same length.");
+        }
+
+        [Fact]
+        public void EncryptWhenNonceLengthIsInvalidFails()
+        {
+            // Arrange
+            var nonce = new byte[Salsa20.NONCE_SIZE_IN_BYTES + TestHelpers.ReturnRandomPositiveNegative()];
+            var plaintext = new byte[0];
+            var ciphertext = new byte[0];
+
+            var cipher = new Salsa20(new byte[Snuffle.KEY_SIZE_IN_BYTES], 0);
+
+            // Act & Assert
+            var act = () => cipher.Encrypt(plaintext, nonce, ciphertext);
+            act.Should().Throw<ArgumentException>().WithMessage(EXCEPTION_MESSAGE_NONCE_LENGTH);
+        }
+
+        [Fact]
+        public void EncryptWhenNonceIsEmptyFails()
+        {
+            // Arrange
+            var nonce = new byte[0];
+            var plaintext = new byte[0];
+            var ciphertext = new byte[0];
+
+            var cipher = new Salsa20(new byte[Snuffle.KEY_SIZE_IN_BYTES], 0);
+
+            // Act & Assert
+            var act = () => cipher.Encrypt(plaintext, nonce, ciphertext);
+            act.Should().Throw<ArgumentException>().WithMessage(EXCEPTION_MESSAGE_NONCE_LENGTH);
+        }
+
+        [Fact]
+        public void DecryptWhenNonceLengthIsInvalidFails()
+        {
+            // Arrange
+            var nonce = new byte[Salsa20.NONCE_SIZE_IN_BYTES + TestHelpers.ReturnRandomPositiveNegative()];
+            var plaintext = new byte[0];
+            var ciphertext = new byte[0];
+
+            var cipher = new Salsa20(new byte[Snuffle.KEY_SIZE_IN_BYTES], 0);
+
+            // Act & Assert
+            var act = () => cipher.Decrypt(ciphertext, nonce, plaintext);
+            act.Should().Throw<ArgumentException>().WithMessage(EXCEPTION_MESSAGE_NONCE_LENGTH);
+        }
+
+        [Fact]
+        public void DecryptWhenNonceIsEmptyFails()
+        {
+            // Arrange
+            var nonce = new byte[0];
+            var plaintext = new byte[0];
+            var ciphertext = new byte[0];
+
+            var cipher = new Salsa20(new byte[Snuffle.KEY_SIZE_IN_BYTES], 0);
+
+            // Act & Assert
+            var act = () => cipher.Decrypt(ciphertext, nonce, plaintext);
+            act.Should().Throw<ArgumentException>().WithMessage(EXCEPTION_MESSAGE_NONCE_LENGTH);
+        }
+
+        [Theory]
+        [InlineData(2, 4)]
+        [InlineData(3, 4)]
+        [InlineData(4, 3)]
+        [InlineData(4, 2)]
+        public void DecryptWhenCiphertextIsNotEqualToPlaintextFails(int ciphertextLen, int plaintextLen)
+        {
+            // Arrange
+            var key = new byte[Snuffle.KEY_SIZE_IN_BYTES];
+            var cipher = new Salsa20(key, 0);
+            var nonce = new byte[cipher.NonceSizeInBytes];
+
+            // Act
+            var act = () => cipher.Decrypt(new byte[ciphertextLen], nonce, new byte[plaintextLen]);
+
+            // Assert
+            act.Should().Throw<ArgumentException>().WithMessage("The ciphertext parameter and the plaintext do not have the same length.");
+        }
+
+        [Fact]
+        public void EncryptDecrypt1BlockTest()
+        {
+            // Arrange
+            var key = new byte[Snuffle.KEY_SIZE_IN_BYTES];
+            RandomNumberGenerator.Fill(key);
+
+            var nonce = new byte[Salsa20.NONCE_SIZE_IN_BYTES];
+            RandomNumberGenerator.Fill(nonce);
+
+            var expected = Encoding.UTF8.GetBytes("This is a secret content!!");
+
+            var cipher = new Salsa20(key, 0);
+
+            // Act
+            var ciphertext = new byte[expected.Length];
+            cipher.Encrypt(expected, nonce, ciphertext);
+
+            var plaintext = new byte[expected.Length];
+            cipher.Decrypt(ciphertext, nonce, plaintext);
+
+            // Assert
+            plaintext.Should().Equal(expected);
+        }
+
+        [Fact]
+        public void EncryptDecryptNBlocksTest()
+        {
+            // Arrange
+            var rnd = new Random();
+            var key = new byte[Snuffle.KEY_SIZE_IN_BYTES];
+            var nonce = new byte[Salsa20.NONCE_SIZE_IN_BYTES];
+
+            for (var i = 0; i < 64; i++)
+            {
+                RandomNumberGenerator.Fill(key);
+                RandomNumberGenerator.Fill(nonce);
+
+                var cipher = new Salsa20(key, 0);
+
+                for (var j = 0; j < 64; j++)
+                {
+                    var expected = new byte[rnd.Next(300)];
+                    rnd.NextBytes(expected);
+
+                    var ciphertext = new byte[expected.Length];
+                    var plaintext = new byte[expected.Length];
+
+                    // Act
+                    cipher.Encrypt(expected, nonce, ciphertext);
+                    cipher.Decrypt(ciphertext, nonce, plaintext);
+
+                    // Assert
+                    plaintext.Should().Equal(expected);
+                }
+            }
+        }
+
+        [Fact]
+        public void EncryptDecryptLongMessagesTest()
+        {
+            var rnd = new Random();
+
+            var dataSize = 16;
+            while (dataSize <= (1 << 24))
+            {
+                var plaintext = new byte[dataSize];
+                rnd.NextBytes(plaintext);
+
+                var key = new byte[Snuffle.KEY_SIZE_IN_BYTES];
+                RandomNumberGenerator.Fill(key);
+
+                var nonce = new byte[Salsa20.NONCE_SIZE_IN_BYTES];
+                RandomNumberGenerator.Fill(nonce);
+
+                var cipher = new Salsa20(key, 0);
+
+                var ciphertext = new byte[plaintext.Length];
+                cipher.Encrypt(plaintext, nonce, ciphertext);
+
+                var decrypted = new byte[plaintext.Length];
+                cipher.Decrypt(ciphertext, nonce, decrypted);
+
+                decrypted.Should().Equal(plaintext);
+                dataSize += 5 * dataSize / 11;
+            }
+        }
+
+        [Fact]
+        public void Salsa20BlockWhenNonceLengthIsEmptyFails()
+        {
+            // Arrange
+            var key = new byte[Snuffle.KEY_SIZE_IN_BYTES];
+
+            var salsa20 = new Salsa20(key, 0);
+            var nonce = new byte[0];
+            var block = new byte[Salsa20.BLOCK_SIZE_IN_BYTES];
+
+            // Act & Assert
+            var act = () => salsa20.ProcessKeyStreamBlock(nonce, 0, block);
+            act.Should().Throw<CryptographicException>();
+        }
+
+        [Fact]
+        public void Salsa20BlockWhenNonceLengthIsInvalidFails()
+        {
+            // Arrange
+            var key = new byte[Snuffle.KEY_SIZE_IN_BYTES];
+
+            var salsa20 = new Salsa20(key, 0);
+            var nonce = new byte[salsa20.NonceSizeInBytes + TestHelpers.ReturnRandomPositiveNegative()];
+            var block = new byte[Salsa20.BLOCK_SIZE_IN_BYTES];
+
+            // Act & Assert
+            var act = () => salsa20.ProcessKeyStreamBlock(nonce, 0, block);
+            act.Should().Throw<CryptographicException>();
+        }
+
+        [Fact]
+        public void Salsa20BlockWhenLengthIsInvalidFails()
+        {
+            // Arrange
+            var key = new byte[Snuffle.KEY_SIZE_IN_BYTES];
+
+            var salsa20 = new Salsa20(key, 0);
+            var nonce = new byte[salsa20.NonceSizeInBytes + TestHelpers.ReturnRandomPositiveNegative()];
+            var block = new byte[0];
+
+            // Act & Assert
+            var act = () => salsa20.ProcessKeyStreamBlock(nonce, 0, block);
+            act.Should().Throw<CryptographicException>();
+        }
 
         [Fact]
         public void Salsa20TestVectors()

@@ -130,56 +130,6 @@
             var key = new byte[Snuffle.KEY_SIZE_IN_BYTES];
             RandomNumberGenerator.Fill(key);
 
-            var expected = Encoding.UTF8.GetBytes("This is a secret content!!");
-
-            var cipher = new ChaCha20(key, 0);
-
-            var nonce = new byte[cipher.NonceSizeInBytes];
-            RandomNumberGenerator.Fill(nonce);
-
-            var ciphertext = new byte[expected.Length];
-            var plaintext = new byte[expected.Length];
-
-            // Act
-            cipher.Encrypt(expected, nonce, ciphertext);
-            cipher.Decrypt(ciphertext, nonce, plaintext);
-
-            // Assert
-            plaintext.Should().Equal(expected);
-        }
-
-        [Fact]
-        public void EncryptDecrypt1BlockWithNonceTest()
-        {
-            // Arrange
-            var key = new byte[Snuffle.KEY_SIZE_IN_BYTES];
-            RandomNumberGenerator.Fill(key);
-
-            var nonce = new byte[ChaCha20.NONCE_SIZE_IN_BYTES];
-            RandomNumberGenerator.Fill(nonce);
-
-            var expected = Encoding.UTF8.GetBytes("This is a secret content!!");
-
-            var cipher = new ChaCha20(key, 0);
-
-            var ciphertext = new byte[expected.Length];
-            var plaintext = new byte[expected.Length];
-
-            // Act
-            cipher.Encrypt(expected, nonce, ciphertext);
-            cipher.Decrypt(ciphertext, nonce, plaintext);
-
-            // Assert
-            plaintext.Should().Equal(expected);
-        }
-
-        [Fact]
-        public void EncryptDecrypt1BlockWithDestinationBufferTest()
-        {
-            // Arrange
-            var key = new byte[Snuffle.KEY_SIZE_IN_BYTES];
-            RandomNumberGenerator.Fill(key);
-
             var nonce = new byte[ChaCha20.NONCE_SIZE_IN_BYTES];
             RandomNumberGenerator.Fill(nonce);
 
