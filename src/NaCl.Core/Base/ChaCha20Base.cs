@@ -12,9 +12,6 @@
     /// <seealso cref="NaCl.Core.Base.Snuffle" />
     public abstract class ChaCha20Base : Snuffle
     {
-        protected const int BLOCK_SIZE_IN_INTS = 16;
-        public const int BLOCK_SIZE_IN_BYTES = BLOCK_SIZE_IN_INTS * 4; // 64
-
         /// <summary>
         /// Initializes a new instance of the <see cref="ChaCha20Base"/> class.
         /// </summary>

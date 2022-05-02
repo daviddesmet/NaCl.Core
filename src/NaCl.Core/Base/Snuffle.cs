@@ -10,20 +10,22 @@
     /// <remarks>
     /// Variants of Snuffle have two differences: the size of the nonce and the block function that
     /// produces a key stream block from a key, a nonce, and a counter. Subclasses of this class
-    /// specifying these two information by overriding <seealso cref="NaCl.Core.Base.Snuffle.NonceSizeInBytes()" /> and <seealso cref="NaCl.Core.Base.Snuffle.ProcessKeyStreamBlock(ReadOnlySpan{byte},int,Span{byte})" />.
+    /// specifying these two information by overriding <seealso cref="NaCl.Core.Base.Snuffle.NonceSizeInBytes" /> and <seealso cref="NaCl.Core.Base.Snuffle.BlockSizeInBytes" /> and <seealso cref="NaCl.Core.Base.Snuffle.ProcessKeyStreamBlock(ReadOnlySpan{byte},int,Span{byte})" />.
     ///
-    /// Concrete implementations of this class are meant to be used to construct an Aead with <seealso cref="NaCl.Core.Poly1305" />. The
-    /// base class of these Aead constructions is <seealso cref="NaCl.Core.Base.SnufflePoly1305" />.
+    /// Concrete implementations of this class are meant to be used to construct an AEAD with <seealso cref="NaCl.Core.Poly1305" />. The
+    /// base class of these AEAD constructions is <seealso cref="NaCl.Core.Base.SnufflePoly1305" />.
     /// For example, <seealso cref="NaCl.Core.XChaCha20" /> is a subclass of this class and a
     /// concrete Snuffle implementation, and <seealso cref="NaCl.Core.XChaCha20Poly1305" /> is
-    /// a subclass of <seealso cref="NaCl.Core.Base.SnufflePoly1305" /> and a concrete Aead construction.
+    /// a subclass of <seealso cref="NaCl.Core.Base.SnufflePoly1305" /> and a concrete AEAD construction.
     /// </remarks>
     public abstract class Snuffle
     {
         protected const int KEY_SIZE_IN_INTS = 8;
         public const int KEY_SIZE_IN_BYTES = KEY_SIZE_IN_INTS * 4; // 32
+        protected const int BLOCK_SIZE_IN_INTS = 16;
+        public const int BLOCK_SIZE_IN_BYTES = BLOCK_SIZE_IN_INTS * 4; // 64
 
-        protected static uint[] SIGMA = new uint[] { 0x61707865, 0x3320646E, 0x79622D32, 0x6B206574 }; //Encoding.ASCII.GetBytes("expand 32-byte k");
+        protected static uint[] SIGMA = new uint[] { 0x61707865, 0x3320646E, 0x79622D32, 0x6B206574 }; // "expand 32-byte k" (4 words constant: "expa", "nd 3", "2-by", and "te k")
 
         protected readonly ReadOnlyMemory<byte> Key;
         protected readonly int InitialCounter;
@@ -58,7 +60,7 @@
 
         /// <summary>
         /// The size of the nonce in bytes.
-        /// Salsa20 uses 8-byte nonces, ChaCha20 uses 12-byte nonces, but XSalsa20 and XChaCha20 use 24-byte nonces.
+        /// Salsa20 uses a 8-byte (64-bit) nonce, ChaCha20 uses a 12-byte (96-bit) nonce, but XSalsa20 and XChaCha20 use a 24-byte (192-bit) nonce.
         /// </summary>
         /// <returns>System.Int32.</returns>
         public abstract int NonceSizeInBytes { get; }
@@ -66,7 +68,7 @@
         /// <summary>
         /// The size of the stream block in bytes.
         /// </summary>
-        public abstract int BlockSizeInBytes { get; }
+        public virtual int BlockSizeInBytes => BLOCK_SIZE_IN_BYTES;
 
         /// <summary>
         /// Encrypts the <paramref name="plaintext"/> into the <paramref name="ciphertext"/> destination buffer using the associated <paramref name="nonce"/>.

@@ -18,6 +18,9 @@
     <Content Include="..\vectors\xchacha20_poly1305_test.json" Link="Vectors\xchacha20_poly1305_test.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="..\vectors\salsa20-256.64-verified.test-vectors" Link="Vectors\salsa20-256.64-verified.test-vectors">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup Label="Package References">
