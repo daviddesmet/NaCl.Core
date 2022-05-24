@@ -71,7 +71,8 @@ Task("CoverageReport")
                         {
                             ArgumentCustomization = args => args.Append("-reporttypes:HtmlInline;HTMLChart;Cobertura")
                         });
-
+    });
+        
 Task("Pack")
     .Description("Creates the NuGet packages and outputs them to the artifacts directory.")
     .Does(() =>
