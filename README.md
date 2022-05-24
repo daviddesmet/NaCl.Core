@@ -73,6 +73,7 @@ Poly1305.VerifyMac(key, data, tag);
 
 [![Azure DevOps tests](https://img.shields.io/azure-devops/tests/idaviddesmet/NaCl.Core/3?logo=azure-devops)](https://dev.azure.com/idaviddesmet/NaCl.Core/_build/latest?definitionId=3)
 [![Azure DevOps coverage](https://img.shields.io/azure-devops/coverage/idaviddesmet/NaCl.Core/3.svg)](https://dev.azure.com/idaviddesmet/NaCl.Core/_build/latest?definitionId=3)
+[![codecov](https://codecov.io/gh/daviddesmet/NaCl.Core/branch/master/graph/badge.svg?token=evqDLCtC1K)](https://codecov.io/gh/daviddesmet/NaCl.Core)
 
 - Includes the mandatory RFC [test vectors](https://github.com/daviddesmet/NaCl.Core/tree/master/test/NaCl.Core.Tests).
 - [Project Wycheproof](https://github.com/google/wycheproof) by members of Google Security Team, for testing against known attacks (when applicable).
