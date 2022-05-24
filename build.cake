@@ -56,7 +56,7 @@ Task("Test")
                 },
                 NoBuild = true,
                 NoRestore = true,
-                ResultsDirectory = artifactsDirectory,
+                ResultsDirectory = $"{artifactsDirectory}/TestResults",
                 Settings = "CodeCoverage.runsettings"
             });
     });
