@@ -1,6 +1,7 @@
 ﻿namespace NaCl.Core.Base
 {
     using System;
+    using System.Runtime.CompilerServices;
     using System.Security.Cryptography;
 
     using Internal;
@@ -8,7 +9,7 @@
     /// <summary>
     /// Base class for <seealso cref="NaCl.Core.ChaCha20" /> and <seealso cref="NaCl.Core.XChaCha20" />.
     /// </summary>
-    /// <seealso cref="NaCl.Core.Internal.Snuffle" />
+    /// <seealso cref="NaCl.Core.Base.Snuffle" />
     public abstract class ChaCha20Base : Snuffle
     {
         /// <summary>
@@ -16,10 +17,13 @@
         /// </summary>
         /// <param name="key">The key.</param>
         /// <param name="initialCounter">The initial counter.</param>
-        public ChaCha20Base(ReadOnlyMemory<byte> key, int initialCounter) : base(key, initialCounter) { }
+        protected ChaCha20Base(ReadOnlyMemory<byte> key, int initialCounter) : base(key, initialCounter) { }
+
+        /// <inheritdoc />
+        public override int BlockSizeInBytes => BLOCK_SIZE_IN_BYTES;
 
         /// <summary>
-        /// Sets the initial <paramref name="state"/> from <paramref name="nonce"/> and <paramref name="counter">.
+        /// Sets the initial <paramref name="state"/> from <paramref name="nonce"/> and <paramref name="counter"/>.
         /// ChaCha20 has a different logic than XChaCha20, because the former uses a 12-byte nonce, but the later uses 24-byte.
         /// </summary>
         /// <param name="state">The state.</param>
@@ -31,7 +35,7 @@
         public override void ProcessKeyStreamBlock(ReadOnlySpan<byte> nonce, int counter, Span<byte> block)
         {
             if (block.Length != BLOCK_SIZE_IN_BYTES)
-                throw new CryptographicException($"The keystream block length is not valid. The length in bytes must be {BLOCK_SIZE_IN_BYTES}.");
+                throw new CryptographicException($"The key stream block length is not valid. The length in bytes must be {BLOCK_SIZE_IN_BYTES}.");
 
             // Set the initial state based on https://tools.ietf.org/html/rfc8439#section-2.3
             Span<uint> state = stackalloc uint[BLOCK_SIZE_IN_INTS];
@@ -44,22 +48,8 @@
             ShuffleState(workingState);
 
             // At the end of the rounds, add the result to the original state.
-            state[0] += workingState[0];
-            state[1] += workingState[1];
-            state[2] += workingState[2];
-            state[3] += workingState[3];
-            state[4] += workingState[4];
-            state[5] += workingState[5];
-            state[6] += workingState[6];
-            state[7] += workingState[7];
-            state[8] += workingState[8];
-            state[9] += workingState[9];
-            state[10] += workingState[10];
-            state[11] += workingState[11];
-            state[12] += workingState[12];
-            state[13] += workingState[13];
-            state[14] += workingState[14];
-            state[15] += workingState[15];
+            for (var i = 0; i < BLOCK_SIZE_IN_INTS; i++)
+                state[i] += workingState[i];
 
             ArrayUtils.StoreArray16UInt32LittleEndian(block, 0, state);
         }
@@ -78,15 +68,40 @@
 #endif
 
         /// <summary>
-        /// Process a pseudorandom keystream block, converting the key and part of the <paramref name="nonce"> into a <paramref name="subkey">, and the remainder of the <paramref name="nonce">.
+        /// Process a pseudorandom key stream block, converting the key and part of the <paramref name="nonce"/> into a <paramref name="subKey"/>, and the remainder of the <paramref name="nonce"/>.
         /// </summary>
         /// <param name="subKey">The subKey.</param>
         /// <param name="nonce">The nonce.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void HChaCha20(Span<byte> subKey, ReadOnlySpan<byte> nonce)
         {
             // See https://tools.ietf.org/html/draft-arciszewski-xchacha-01#section-2.2.
 
             Span<uint> state = stackalloc uint[BLOCK_SIZE_IN_INTS];
+
+            // Setting HChaCha20 initial state
+            HChaCha20InitialState(state, nonce);
+
+            // Block function
+            ShuffleState(state);
+
+            state[4] = state[12];
+            state[5] = state[13];
+            state[6] = state[14];
+            state[7] = state[15];
+
+            ArrayUtils.StoreArray8UInt32LittleEndian(subKey, 0, state);
+        }
+
+        /// <summary>
+        /// Sets the initial <paramref name="state"/> of the HChaCha20 using the key and the <paramref name="nonce"/>.
+        /// </summary>
+        /// <param name="state">The state.</param>
+        /// <param name="nonce">The nonce.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void HChaCha20InitialState(Span<uint> state, ReadOnlySpan<byte> nonce)
+        {
+            // See https://tools.ietf.org/html/draft-arciszewski-xchacha-01#section-2.2.
 
             // Set ChaCha20 constant
             SetSigma(state);
@@ -99,16 +114,6 @@
             state[13] = ArrayUtils.LoadUInt32LittleEndian(nonce, 4);
             state[14] = ArrayUtils.LoadUInt32LittleEndian(nonce, 8);
             state[15] = ArrayUtils.LoadUInt32LittleEndian(nonce, 12);
-
-            // Block function
-            ShuffleState(state);
-
-            state[4] = state[12];
-            state[5] = state[13];
-            state[6] = state[14];
-            state[7] = state[15];
-
-            ArrayUtils.StoreArray8UInt32LittleEndian(subKey, 0, state);
         }
 
         /*
@@ -231,21 +236,27 @@
         }
         */
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected static void ShuffleState(Span<uint> state)
         {
+            // 10 loops × 2 rounds/loop = 20 rounds
             for (var i = 0; i < 10; i++)
             {
-                QuarterRound(ref state[0], ref state[4], ref state[8], ref state[12]);
-                QuarterRound(ref state[1], ref state[5], ref state[9], ref state[13]);
-                QuarterRound(ref state[2], ref state[6], ref state[10], ref state[14]);
-                QuarterRound(ref state[3], ref state[7], ref state[11], ref state[15]);
-                QuarterRound(ref state[0], ref state[5], ref state[10], ref state[15]);
-                QuarterRound(ref state[1], ref state[6], ref state[11], ref state[12]);
-                QuarterRound(ref state[2], ref state[7], ref state[8], ref state[13]);
-                QuarterRound(ref state[3], ref state[4], ref state[9], ref state[14]);
+                // Odd round
+                QuarterRound(ref state[0], ref state[4], ref state[8], ref state[12]);  // column 0
+                QuarterRound(ref state[1], ref state[5], ref state[9], ref state[13]);  // column 1
+                QuarterRound(ref state[2], ref state[6], ref state[10], ref state[14]); // column 2
+                QuarterRound(ref state[3], ref state[7], ref state[11], ref state[15]); // column 3
+
+                // Even round
+                QuarterRound(ref state[0], ref state[5], ref state[10], ref state[15]); // column 1 (main diagonal)
+                QuarterRound(ref state[1], ref state[6], ref state[11], ref state[12]); // column 2
+                QuarterRound(ref state[2], ref state[7], ref state[8], ref state[13]);  // column 3
+                QuarterRound(ref state[3], ref state[4], ref state[9], ref state[14]);  // column 4
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void QuarterRound(ref uint a, ref uint b, ref uint c, ref uint d)
         {
             a += b;
@@ -258,6 +269,10 @@
             b = BitUtils.RotateLeft(b ^ c, 7);
         }
 
+        /// <summary>
+        /// Sets the ChaCha20 constant.
+        /// </summary>
+        /// <param name="state">The state.</param>
         protected static void SetSigma(Span<uint> state)
         {
             state[0] = SIGMA[0];
@@ -266,6 +281,11 @@
             state[3] = SIGMA[3];
         }
 
+        /// <summary>
+        /// Sets the 256-bit Key.
+        /// </summary>
+        /// <param name="state">The state.</param>
+        /// <param name="key">The key.</param>
         protected static void SetKey(Span<uint> state, ReadOnlySpan<byte> key)
         {
             state[4] = ArrayUtils.LoadUInt32LittleEndian(key, 0);

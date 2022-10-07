@@ -8,20 +8,17 @@
     using Internal;
 
     using BenchmarkDotNet.Attributes;
-    using BenchmarkDotNet.Jobs;
 
     [BenchmarkCategory("Stream Cipher")]
-    [SimpleJob(RuntimeMoniker.NetCoreApp21, baseline: true)]
-    [SimpleJob(RuntimeMoniker.NetCoreApp31)]
     [MemoryDiagnoser]
     [RPlotExporter, RankColumn]
     public class ChaCha20Benchmark
     {
         private static readonly Random rnd = new Random(42);
 
-        private byte[] key;
-        private byte[] nonce;
-        private byte[] message;
+        private Memory<byte> key;
+        private Memory<byte> nonce;
+        private Memory<byte> message;
         private ChaCha20 cipher;
 
         [Params(
@@ -37,28 +34,33 @@
         public void Setup()
         {
             key = new byte[Snuffle.KEY_SIZE_IN_BYTES];
-            rnd.NextBytes(key);
+            rnd.NextBytes(key.Span);
 
             nonce = new byte[12];
-            rnd.NextBytes(nonce);
+            rnd.NextBytes(nonce.Span);
 
             message = new byte[Size];
-            rnd.NextBytes(message);
+            rnd.NextBytes(message.Span);
 
             cipher = new ChaCha20(key, 0);
         }
 
         [Benchmark]
         [BenchmarkCategory("Encryption")]
-        public byte[] Encrypt() => cipher.Encrypt(message, nonce);
+        public void Encrypt()
+        {
+            var ciphertext = new byte[message.Length];
+            cipher.Encrypt(message.Span, nonce.Span, ciphertext);
+        }
 
         [Benchmark]
         [BenchmarkCategory("Decryption")]
         [ArgumentsSource(nameof(TestVectors))]
-        public byte[] Decrypt(Tests.Vectors.Rfc8439TestVector test)
+        public void Decrypt(Tests.Vectors.Rfc8439TestVector test)
         {
+            var plaintext = new byte[test.CipherText.Length];
             var cipher = new ChaCha20(test.Key, test.InitialCounter);
-            return cipher.Decrypt(CryptoBytes.Combine(test.Nonce, test.CipherText));
+            cipher.Decrypt(test.CipherText, test.Nonce, plaintext);
         }
 
         public IEnumerable<object> TestVectors()

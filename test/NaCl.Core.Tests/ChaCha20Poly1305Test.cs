@@ -30,7 +30,7 @@
         public void CreateInstanceWhenKeyLengthIsInvalidFails()
         {
             // Arrange, Act & Assert
-            Action act = () => new ChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES + TestHelpers.ReturnRandomPositiveNegative()]);
+            Action act = () => new NaCl.Core.ChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES + TestHelpers.ReturnRandomPositiveNegative()]);
             act.Should().Throw<CryptographicException>();
         }
 
@@ -44,7 +44,7 @@
             var tag = new byte[Poly1305.MAC_TAG_SIZE_IN_BYTES];
             var aad = new byte[0];
 
-            var aead = new ChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES]);
+            var aead = new NaCl.Core.ChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES]);
 
             // Act & Assert
             Action act = () => aead.Encrypt(nonce, plaintext, ciphertext, tag, aad);
@@ -61,7 +61,7 @@
             var tag = new byte[Poly1305.MAC_TAG_SIZE_IN_BYTES];
             var aad = new byte[0];
 
-            var aead = new ChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES]);
+            var aead = new NaCl.Core.ChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES]);
 
             // Act & Assert
             Action act = () => aead.Encrypt(nonce, plaintext, ciphertext, tag, aad);
@@ -78,7 +78,7 @@
             var tag = new byte[Poly1305.MAC_TAG_SIZE_IN_BYTES];
             var aad = new byte[0];
 
-            var aead = new ChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES]);
+            var aead = new NaCl.Core.ChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES]);
 
             // Act & Assert
             Action act = () => aead.Encrypt(nonce, plaintext, ciphertext, tag, aad);
@@ -95,7 +95,7 @@
             var tag = new byte[Poly1305.MAC_TAG_SIZE_IN_BYTES + TestHelpers.ReturnRandomPositiveNegative()];
             var aad = new byte[0];
 
-            var aead = new ChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES]);
+            var aead = new NaCl.Core.ChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES]);
 
             // Act & Assert
             Action act = () => aead.Encrypt(nonce, plaintext, ciphertext, tag, aad);
@@ -112,7 +112,7 @@
             var tag = new byte[0];
             var aad = new byte[0];
 
-            var aead = new ChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES]);
+            var aead = new NaCl.Core.ChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES]);
 
             // Act & Assert
             Action act = () => aead.Encrypt(nonce, plaintext, ciphertext, tag, aad);
@@ -129,7 +129,7 @@
             var tag = new byte[Poly1305.MAC_TAG_SIZE_IN_BYTES];
             var aad = new byte[0];
 
-            var aead = new ChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES]);
+            var aead = new NaCl.Core.ChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES]);
 
             // Act & Assert
             Action act = () => aead.Decrypt(nonce, plaintext, tag, ciphertext, aad);
@@ -146,7 +146,7 @@
             var tag = new byte[Poly1305.MAC_TAG_SIZE_IN_BYTES];
             var aad = new byte[0];
 
-            var aead = new ChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES]);
+            var aead = new NaCl.Core.ChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES]);
 
             // Act & Assert
             Action act = () => aead.Decrypt(nonce, plaintext, tag, ciphertext, aad);
@@ -163,7 +163,7 @@
             var tag = new byte[Poly1305.MAC_TAG_SIZE_IN_BYTES];
             var aad = new byte[0];
 
-            var aead = new ChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES]);
+            var aead = new NaCl.Core.ChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES]);
 
             // Act & Assert
             Action act = () => aead.Decrypt(nonce, plaintext, tag, ciphertext, aad);
@@ -180,11 +180,11 @@
             var tag = new byte[Poly1305.MAC_TAG_SIZE_IN_BYTES + TestHelpers.ReturnRandomPositiveNegative()];
             var aad = new byte[0];
 
-            var aead = new ChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES]);
+            var aead = new NaCl.Core.ChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES]);
 
             // Act & Assert
             Action act = () => aead.Decrypt(nonce, plaintext, tag, ciphertext, aad);
-            act.Should().Throw<CryptographicException>().WithMessage(SnufflePoly1305.AEAD_EXCEPTION_INVALID_TAG);
+            act.Should().Throw<CryptographicException>().WithMessage(EXCEPTION_MESSAGE_TAG_LENGTH);
         }
 
         [Fact]
@@ -197,11 +197,11 @@
             var tag = new byte[0];
             var aad = new byte[0];
 
-            var aead = new ChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES]);
+            var aead = new NaCl.Core.ChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES]);
 
             // Act & Assert
             Action act = () => aead.Decrypt(nonce, plaintext, tag, ciphertext, aad);
-            act.Should().Throw<CryptographicException>().WithMessage(SnufflePoly1305.AEAD_EXCEPTION_INVALID_TAG);
+            act.Should().Throw<CryptographicException>().WithMessage(EXCEPTION_MESSAGE_TAG_LENGTH);
         }
 
         [Fact]
@@ -211,7 +211,7 @@
             var key = new byte[Snuffle.KEY_SIZE_IN_BYTES];
             RandomNumberGenerator.Fill(key);
 
-            var aead = new ChaCha20Poly1305(key);
+            var aead = new NaCl.Core.ChaCha20Poly1305(key);
             for (var i = 0; i < 100; i++)
             {
                 var message = new byte[100];
@@ -257,7 +257,7 @@
 
                 var tag = new byte[Poly1305.MAC_TAG_SIZE_IN_BYTES];
 
-                var aead = new ChaCha20Poly1305(key);
+                var aead = new NaCl.Core.ChaCha20Poly1305(key);
 
                 var ciphertext = new byte[plaintext.Length];
                 aead.Encrypt(nonce, plaintext, ciphertext, tag, aad);
@@ -288,7 +288,7 @@
             var message = new byte[32];
             rnd.NextBytes(message);
 
-            var aead = new ChaCha20Poly1305(key);
+            var aead = new NaCl.Core.ChaCha20Poly1305(key);
 
             var ciphertext = new byte[message.Length];
             aead.Encrypt(nonce, message, ciphertext, tag, aad);
@@ -367,7 +367,7 @@
 
             var tag = new byte[Poly1305.MAC_TAG_SIZE_IN_BYTES];
 
-            var aead = new ChaCha20Poly1305(key);
+            var aead = new NaCl.Core.ChaCha20Poly1305(key);
             var aad = new byte[0];
 
             for (var msgSize = 0; msgSize < 75; msgSize++)
@@ -413,7 +413,7 @@
             var nonce = new byte[ChaCha20.NONCE_SIZE_IN_BYTES];
             var tag = new byte[Poly1305.MAC_TAG_SIZE_IN_BYTES];
 
-            var aead = new ChaCha20Poly1305(key);
+            var aead = new NaCl.Core.ChaCha20Poly1305(key);
 
             var message = Encoding.UTF8.GetBytes("This is a secret content!!");
             var aad = new byte[0];
@@ -444,7 +444,7 @@
             foreach (var test in Rfc8439TestVector.Rfc8439AeadTestVectors)
             {
                 // Act
-                var aead = new ChaCha20Poly1305(test.Key);
+                var aead = new NaCl.Core.ChaCha20Poly1305(test.Key);
                 var ct = new byte[test.PlainText.Length];
                 aead.Encrypt(test.Nonce, test.PlainText, ct, test.Tag, test.Aad);
                 ct.Should().BeEquivalentTo(test.CipherText);
@@ -466,7 +466,7 @@
             foreach (var test in Rfc8439TestVector.Rfc7634AeadTestVectors)
             {
                 // Act
-                var aead = new ChaCha20Poly1305(test.Key);
+                var aead = new NaCl.Core.ChaCha20Poly1305(test.Key);
 
                 var ct = new byte[test.PlainText.Length];
                 aead.Encrypt(test.Nonce, test.PlainText, ct, test.Tag, test.Aad);
@@ -512,7 +512,7 @@
 
                     try
                     {
-                        var aead = new ChaCha20Poly1305(key);
+                        var aead = new NaCl.Core.ChaCha20Poly1305(key);
                         var decrypted = new byte[msg.Length];
                         aead.Decrypt(iv, ct, tag, decrypted, aad);
 

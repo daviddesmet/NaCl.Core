@@ -1,11 +1,10 @@
 # NaCl.Core, a cryptography library for .NET
 
-[![Build Status](https://dev.azure.com/idaviddesmet/NaCl.Core/_apis/build/status/idaviddesmet.NaCl.Core)](https://dev.azure.com/idaviddesmet/NaCl.Core/_build/latest?definitionId=1)
-![CI](https://github.com/idaviddesmet/NaCl.Core/workflows/CI/badge.svg)
+[![Build Status](https://dev.azure.com/idaviddesmet/NaCl.Core/_apis/build/status/NaCl.Core-CI?branchName=master)](https://dev.azure.com/idaviddesmet/NaCl.Core/_build/latest?definitionId=3&branchName=master)
+[![CI](https://github.com/daviddesmet/NaCl.Core/workflows/CI/badge.svg?branch=master)](https://github.com/daviddesmet/NaCl.Core/actions)
 [![Build status](https://ci.appveyor.com/api/projects/status/2k3cxt2e1r2jyinx?svg=true)](https://ci.appveyor.com/project/idaviddesmet/nacl-core)
 [![Build Status](https://travis-ci.org/idaviddesmet/NaCl.Core.svg?branch=master)](https://travis-ci.org/idaviddesmet/NaCl.Core)
-[![Maintenance](https://img.shields.io/maintenance/yes/2020.svg)](https://github.com/idaviddesmet/NaCl.Core)
-[![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/idaviddesmet/NaCl.Core/issues)
+[![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/daviddesmet/NaCl.Core/issues)
 
 ## Introduction
 
@@ -15,6 +14,7 @@
 
 | Crypto | Description |
 |--------|-------------|
+| **Salsa20** | A high-speed stream cipher part of the family of 256-bit stream ciphers designed in 2005 and submitted to [eSTREAM](https://www.ecrypt.eu.org/stream/salsa20pf.html), the ECRYPT Stream Cipher Project |
 | **ChaCha20** | A high-speed stream cipher based on Salsa20 |
 | **XChaCha20** | Based on ChaCha20 IETF with extended nonce (192-bit instead of 96-bit) |
 | **Poly1305** | A state-of-the-art secret-key message-authentication code (MAC) based on [RFC8439](https://tools.ietf.org/html/rfc8439) |
@@ -26,7 +26,7 @@
 [![NuGet](https://buildstats.info/nuget/NaCl.Core)](https://www.nuget.org/packages/NaCl.Core/)
 [![CI NuGet](https://img.shields.io/badge/nuget-CI%20builds-4da2db?logo=azure-devops)](https://dev.azure.com/idaviddesmet/NaCl.Core/_packaging?_a=feed&feed=NaCl.Core-CI)
 
-Install the NaCl.Core NuGet package from the .NET Core CLI using:
+Install the NaCl.Core NuGet package from the .NET CLI using:
 ```
 dotnet add package NaCl.Core
 ```
@@ -71,19 +71,20 @@ Poly1305.VerifyMac(key, data, tag);
 
 ## Test Coverage
 
-[![Azure DevOps tests](https://img.shields.io/azure-devops/tests/idaviddesmet/NaCl.Core/1?logo=azure-devops)](https://dev.azure.com/idaviddesmet/NaCl.Core/_build/latest?definitionId=1)
-[![Azure DevOps coverage](https://img.shields.io/azure-devops/coverage/idaviddesmet/NaCl.Core/1.svg)](https://dev.azure.com/idaviddesmet/NaCl.Core/_build/latest?definitionId=1)
+[![Azure DevOps tests](https://img.shields.io/azure-devops/tests/idaviddesmet/NaCl.Core/3?logo=azure-devops)](https://dev.azure.com/idaviddesmet/NaCl.Core/_build/latest?definitionId=3)
+[![Azure DevOps coverage](https://img.shields.io/azure-devops/coverage/idaviddesmet/NaCl.Core/3.svg)](https://dev.azure.com/idaviddesmet/NaCl.Core/_build/latest?definitionId=3)
+[![codecov](https://codecov.io/gh/daviddesmet/NaCl.Core/branch/master/graph/badge.svg?token=evqDLCtC1K)](https://codecov.io/gh/daviddesmet/NaCl.Core)
 
-- Includes the mandatory RFC [test vectors](https://github.com/idaviddesmet/NaCl.Core/tree/master/test/NaCl.Core.Tests).
+- Includes the mandatory RFC [test vectors](https://github.com/daviddesmet/NaCl.Core/tree/master/test/NaCl.Core.Tests).
 - [Project Wycheproof](https://github.com/google/wycheproof) by members of Google Security Team, for testing against known attacks (when applicable).
 
 ## Learn More
 
-[![License](https://img.shields.io/github/license/idaviddesmet/NaCl.Core.svg)](https://github.com/idaviddesmet/NaCl.Core/blob/master/LICENSE)
-[![Dependabot Status](https://api.dependabot.com/badges/status?host=github&repo=idaviddesmet/NaCl.Core)](https://dependabot.com)
+[![License](https://img.shields.io/github/license/daviddesmet/NaCl.Core.svg)](https://github.com/daviddesmet/NaCl.Core/blob/master/LICENSE)
 
 - [ChaCha, a variant of Salsa20](http://cr.yp.to/chacha/chacha-20080128.pdf) by Daniel J. Bernstein.
 - [The Poly1305-AES message-authentication code](http://cr.yp.to/mac/poly1305-20050329.pdf) by Daniel J. Bernstein.
 - [ChaCha20 and Poly1305 for IETF Protocols](https://tools.ietf.org/html/rfc8439) RFC.
+- [Salsa20](https://cr.yp.to/snuffle.html), also known as Snuffle 2005, uses the [Salsa20 core](https://cr.yp.to/salsa20.html) to encrypt data.
 - [XSalsa20](https://cr.yp.to/snuffle/xsalsa-20110204.pdf), an extended-nonce Salsa20 variant used in [NaCl](https://nacl.cr.yp.to).
 - [XChaCha20-Poly1305](https://tools.ietf.org/html/draft-arciszewski-xchacha-02), an extended-nonce ChaCha20-Poly1305 IETF variant.

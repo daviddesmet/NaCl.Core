@@ -15,6 +15,8 @@
     [Category("CI")]
     public class Poly1305Test
     {
+        private const string EXCEPTION_MESSAGE_TAG_LENGTH = "The tag length in bytes must be 16.";
+
         [Fact]
         public void ComputeMacWhenKeyLengthIsGreaterThan32Fails()
         {
@@ -45,6 +47,22 @@
             // Arrange, Act & Assert
             Action act = () => Poly1305.VerifyMac(new byte[Poly1305.MAC_KEY_SIZE_IN_BYTES - 1], new byte[0], new byte[0]);
             act.Should().Throw<CryptographicException>();
+        }
+
+        [Fact]
+        public void VerifyMacWhenTagLengthIsInvalidFails()
+        {
+            // Arrange, Act & Assert
+            Action act = () => Poly1305.VerifyMac(new byte[Poly1305.MAC_KEY_SIZE_IN_BYTES], new byte[0], new byte[Poly1305.MAC_TAG_SIZE_IN_BYTES + TestHelpers.ReturnRandomPositiveNegative()]);
+            act.Should().Throw<CryptographicException>().WithMessage(EXCEPTION_MESSAGE_TAG_LENGTH);
+        }
+
+        [Fact]
+        public void VerifyMacWhenTagLengthIsEmptyFails()
+        {
+            // Arrange, Act & Assert
+            Action act = () => Poly1305.VerifyMac(new byte[Poly1305.MAC_KEY_SIZE_IN_BYTES], new byte[0], new byte[0]);
+            act.Should().Throw<CryptographicException>().WithMessage(EXCEPTION_MESSAGE_TAG_LENGTH);
         }
 
         [Fact]
