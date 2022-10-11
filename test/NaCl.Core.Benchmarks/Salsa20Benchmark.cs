@@ -35,7 +35,7 @@
             key = new byte[Snuffle.KEY_SIZE_IN_BYTES];
             rnd.NextBytes(key.Span);
 
-            nonce = new byte[8];
+            nonce = new byte[12];
             rnd.NextBytes(nonce.Span);
 
             message = new byte[Size];
