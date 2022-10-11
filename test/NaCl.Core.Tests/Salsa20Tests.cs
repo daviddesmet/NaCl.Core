@@ -15,6 +15,7 @@
     using Base;
     using Internal;
     using Vectors;
+    using System.Linq;
 
     [Category("CI")]
     public class Salsa20Tests
@@ -262,29 +263,27 @@
             act.Should().Throw<CryptographicException>();
         }
 
-        [Fact]
-        public void Salsa20TestVectors()
+        public static IEnumerable<object[]> Salsa20TestData => ParseTestVectors(GetTestVector()).Select(d => new object[] { d });
+
+        [Theory]
+        [MemberData(nameof(Salsa20TestData))]
+        public void Salsa20TestVectors(Salsa20TestVector test)
         {
-            var tests = ParseTestVectors(GetTestVector());
+            _output.WriteLine($"Salsa20 - {test.Name}");
 
-            foreach (var test in tests)
-            {
-                _output.WriteLine($"Salsa20 - {test.Name}");
+            var input = new byte[512];
+            var output = new byte[512];
 
-                var input = new byte[512];
-                var output = new byte[512];
+            var cipher = new Salsa20(test.Key, 0);
+            cipher.Encrypt(input, test.IV, output);
 
-                var cipher = new Salsa20(test.Key, 0);
-                cipher.Encrypt(input, test.IV, output);
-
-                ToBlock1(output).Should().Be(test.ExpectedBlock1);
-                ToBlock4(output).Should().Be(test.ExpectedBlock4);
-                ToBlock5(output).Should().Be(test.ExpectedBlock5);
-                ToBlock8(output).Should().Be(test.ExpectedBlock8);
-            }
+            ToBlock1(output).Should().Be(test.ExpectedBlock1);
+            ToBlock4(output).Should().Be(test.ExpectedBlock4);
+            ToBlock5(output).Should().Be(test.ExpectedBlock5);
+            ToBlock8(output).Should().Be(test.ExpectedBlock8);
         }
 
-        private string GetTestVector()
+        private static string GetTestVector()
         {
             try
             {
@@ -297,7 +296,7 @@
             }
         }
 
-        private IList<Salsa20TestVector> ParseTestVectors(string raw)
+        private static IList<Salsa20TestVector> ParseTestVectors(string raw)
         {
             var lines = raw.Split(new[] {'\r', '\n'});
 
