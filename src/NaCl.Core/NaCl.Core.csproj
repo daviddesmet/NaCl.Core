@@ -58,11 +58,7 @@
   </ItemGroup>
 
   <PropertyGroup Label="Constants Definition" Condition="$(TargetFramework) == 'netcoreapp3.1' OR $(TargetFramework) == 'net5.0' OR $(TargetFramework) == 'net6.0'">
-    <DefineConstants>FCL_BITOPS</DefineConstants>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="$(TargetFramework) == 'netcoreapp3.1' OR $(TargetFramework) == 'net5.0' OR $(TargetFramework) == 'net6.0'">
-    <DefineConstants>INTRINSICS</DefineConstants>
+    <DefineConstants>FCL_BITOPS, INTRINSICS</DefineConstants>
   </PropertyGroup>
 
   <Target Name="Versioning" BeforeTargets="MinVer">
