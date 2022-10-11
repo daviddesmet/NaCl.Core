@@ -288,14 +288,32 @@ namespace NaCl.Core.Base
                 Vector128<uint> x_2 = Sse2.LoadVector128(x + 8);
                 Vector128<uint> x_3 = Sse2.LoadVector128(x + 12);
 
-                Transpose(ref x_0, ref x_1, ref x_2, ref x_3);
+                // Transpose
+                Vector128<ulong> w_0 = Sse2.UnpackLow(x_0, x_1).AsUInt64();
+                Vector128<ulong> w_1 = Sse2.UnpackHigh(x_0, x_1).AsUInt64();
+                Vector128<ulong> w_2 = Sse2.UnpackLow(x_2, x_3).AsUInt64();
+                Vector128<ulong> w_3 = Sse2.UnpackHigh(x_2, x_3).AsUInt64();
+
+                x_0 = Sse2.UnpackLow(w_0, w_2).AsUInt32();
+                x_1 = Sse2.UnpackHigh(w_0, w_2).AsUInt32();
+                x_2 = Sse2.UnpackLow(w_1, w_3).AsUInt32();
+                x_3 = Sse2.UnpackHigh(w_1, w_3).AsUInt32();
 
                 // Diagonalize
                 x_1 = Sse2.Shuffle(x_1, 0b_00_11_10_01);
                 x_2 = Sse2.Shuffle(x_2, 0b_01_00_11_10);
                 x_3 = Sse2.Shuffle(x_3, 0b_10_01_00_11);
 
-                Transpose(ref x_0, ref x_1, ref x_2, ref x_3);
+                // Transpose
+                w_0 = Sse2.UnpackLow(x_0, x_1).AsUInt64();
+                w_1 = Sse2.UnpackHigh(x_0, x_1).AsUInt64();
+                w_2 = Sse2.UnpackLow(x_2, x_3).AsUInt64();
+                w_3 = Sse2.UnpackHigh(x_2, x_3).AsUInt64();
+
+                x_0 = Sse2.UnpackLow(w_0, w_2).AsUInt32();
+                x_1 = Sse2.UnpackHigh(w_0, w_2).AsUInt32();
+                x_2 = Sse2.UnpackLow(w_1, w_3).AsUInt32();
+                x_3 = Sse2.UnpackHigh(w_1, w_3).AsUInt32();
 
                 Vector128<uint> orig_0 = x_0;
                 Vector128<uint> orig_1 = x_1;
@@ -328,14 +346,32 @@ namespace NaCl.Core.Base
                 x_2 = Sse2.Add(x_2, orig_2);
                 x_3 = Sse2.Add(x_3, orig_3);
 
-                Transpose(ref x_0, ref x_1, ref x_2, ref x_3);
+                // Transpose
+                w_0 = Sse2.UnpackLow(x_0, x_1).AsUInt64();
+                w_1 = Sse2.UnpackHigh(x_0, x_1).AsUInt64();
+                w_2 = Sse2.UnpackLow(x_2, x_3).AsUInt64();
+                w_3 = Sse2.UnpackHigh(x_2, x_3).AsUInt64();
+
+                x_0 = Sse2.UnpackLow(w_0, w_2).AsUInt32();
+                x_1 = Sse2.UnpackHigh(w_0, w_2).AsUInt32();
+                x_2 = Sse2.UnpackLow(w_1, w_3).AsUInt32();
+                x_3 = Sse2.UnpackHigh(w_1, w_3).AsUInt32();
 
                 // Diagonalize
                 x_1 = Sse2.Shuffle(x_1, 0b_10_01_00_11);
                 x_2 = Sse2.Shuffle(x_2, 0b_01_00_11_10);
                 x_3 = Sse2.Shuffle(x_3, 0b_00_11_10_01);
 
-                Transpose(ref x_0, ref x_1, ref x_2, ref x_3);
+                // Transpose
+                w_0 = Sse2.UnpackLow(x_0, x_1).AsUInt64();
+                w_1 = Sse2.UnpackHigh(x_0, x_1).AsUInt64();
+                w_2 = Sse2.UnpackLow(x_2, x_3).AsUInt64();
+                w_3 = Sse2.UnpackHigh(x_2, x_3).AsUInt64();
+
+                x_0 = Sse2.UnpackLow(w_0, w_2).AsUInt32();
+                x_1 = Sse2.UnpackHigh(w_0, w_2).AsUInt32();
+                x_2 = Sse2.UnpackLow(w_1, w_3).AsUInt32();
+                x_3 = Sse2.UnpackHigh(w_1, w_3).AsUInt32();
 
                 x_0 = Sse2.Xor(x_0.AsByte(), Sse2.LoadVector128(m)).AsUInt32();
                 x_1 = Sse2.Xor(x_1.AsByte(), Sse2.LoadVector128(m + 16)).AsUInt32();
@@ -367,7 +403,16 @@ namespace NaCl.Core.Base
                 Vector128<uint> x_2 = Sse2.LoadVector128(x + 8);
                 Vector128<uint> x_3 = Sse2.LoadVector128(x + 12);
 
-                Transpose(ref x_0, ref x_1, ref x_2, ref x_3);
+                // Transpose
+                Vector128<ulong> w_0 = Sse2.UnpackLow(x_0, x_1).AsUInt64();
+                Vector128<ulong> w_1 = Sse2.UnpackHigh(x_0, x_1).AsUInt64();
+                Vector128<ulong> w_2 = Sse2.UnpackLow(x_2, x_3).AsUInt64();
+                Vector128<ulong> w_3 = Sse2.UnpackHigh(x_2, x_3).AsUInt64();
+
+                x_0 = Sse2.UnpackLow(w_0, w_2).AsUInt32();
+                x_1 = Sse2.UnpackHigh(w_0, w_2).AsUInt32();
+                x_2 = Sse2.UnpackLow(w_1, w_3).AsUInt32();
+                x_3 = Sse2.UnpackHigh(w_1, w_3).AsUInt32();
 
                 // Diagonalize
                 x_1 = Sse2.Shuffle(x_1, 0b_00_11_10_01);
@@ -375,7 +420,15 @@ namespace NaCl.Core.Base
                 x_3 = Sse2.Shuffle(x_3, 0b_10_01_00_11);
 
                 // Transpose
-                Transpose(ref x_0, ref x_1, ref x_2, ref x_3);
+                w_0 = Sse2.UnpackLow(x_0, x_1).AsUInt64();
+                w_1 = Sse2.UnpackHigh(x_0, x_1).AsUInt64();
+                w_2 = Sse2.UnpackLow(x_2, x_3).AsUInt64();
+                w_3 = Sse2.UnpackHigh(x_2, x_3).AsUInt64();
+
+                x_0 = Sse2.UnpackLow(w_0, w_2).AsUInt32();
+                x_1 = Sse2.UnpackHigh(w_0, w_2).AsUInt32();
+                x_2 = Sse2.UnpackLow(w_1, w_3).AsUInt32();
+                x_3 = Sse2.UnpackHigh(w_1, w_3).AsUInt32();
 
                 Vector128<uint> orig_0 = x_0;
                 Vector128<uint> orig_1 = x_1;
@@ -408,14 +461,32 @@ namespace NaCl.Core.Base
                 x_2 = Sse2.Add(x_2, orig_2);
                 x_3 = Sse2.Add(x_3, orig_3);
 
-                Transpose(ref x_0, ref x_1, ref x_2, ref x_3);
+                // Transpose
+                w_0 = Sse2.UnpackLow(x_0, x_1).AsUInt64();
+                w_1 = Sse2.UnpackHigh(x_0, x_1).AsUInt64();
+                w_2 = Sse2.UnpackLow(x_2, x_3).AsUInt64();
+                w_3 = Sse2.UnpackHigh(x_2, x_3).AsUInt64();
+
+                x_0 = Sse2.UnpackLow(w_0, w_2).AsUInt32();
+                x_1 = Sse2.UnpackHigh(w_0, w_2).AsUInt32();
+                x_2 = Sse2.UnpackLow(w_1, w_3).AsUInt32();
+                x_3 = Sse2.UnpackHigh(w_1, w_3).AsUInt32();
 
                 // Diagonalize
                 x_1 = Sse2.Shuffle(x_1, 0b_10_01_00_11);
                 x_2 = Sse2.Shuffle(x_2, 0b_01_00_11_10);
                 x_3 = Sse2.Shuffle(x_3, 0b_00_11_10_01);
 
-                Transpose(ref x_0, ref x_1, ref x_2, ref x_3);
+                // Transpose
+                w_0 = Sse2.UnpackLow(x_0, x_1).AsUInt64();
+                w_1 = Sse2.UnpackHigh(x_0, x_1).AsUInt64();
+                w_2 = Sse2.UnpackLow(x_2, x_3).AsUInt64();
+                w_3 = Sse2.UnpackHigh(x_2, x_3).AsUInt64();
+
+                x_0 = Sse2.UnpackLow(w_0, w_2).AsUInt32();
+                x_1 = Sse2.UnpackHigh(w_0, w_2).AsUInt32();
+                x_2 = Sse2.UnpackLow(w_1, w_3).AsUInt32();
+                x_3 = Sse2.UnpackHigh(w_1, w_3).AsUInt32();
 
                 byte* partialblock = stackalloc byte[64];
                 Sse2.Store(partialblock, Vector128.AsByte(x_0));
@@ -438,20 +509,6 @@ namespace NaCl.Core.Base
         // 256 byte methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static Vector128<uint> Vector128Rotate(Vector128<uint> a, byte imm) => Sse2.Or(Sse2.ShiftLeftLogical(a, imm), Sse2.ShiftRightLogical(a, (byte)(32 - imm)));
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void Transpose(ref Vector128<uint> a, ref Vector128<uint> b, ref Vector128<uint> c, ref Vector128<uint> d)
-        {
-            var w_0 = Sse2.UnpackLow(a, b).AsUInt64();
-            var w_1 = Sse2.UnpackHigh(a, b).AsUInt64();
-            var w_2 = Sse2.UnpackLow(c, d).AsUInt64();
-            var w_3 = Sse2.UnpackHigh(c, d).AsUInt64();
-
-            a = Sse2.UnpackLow(w_0, w_2).AsUInt32();
-            b = Sse2.UnpackHigh(w_0, w_2).AsUInt32();
-            c = Sse2.UnpackLow(w_1, w_3).AsUInt32();
-            d = Sse2.UnpackHigh(w_1, w_3).AsUInt32();
-        }
 
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
