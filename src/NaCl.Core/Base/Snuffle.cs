@@ -4,6 +4,11 @@
     using System.Buffers;
     using System.Security.Cryptography;
 
+#if INTRINSICS
+    using System.Runtime.Intrinsics.X86;
+#endif
+
+
     /// <summary>
     /// Abstract base class for XSalsa20, ChaCha20, XChaCha20 and their variants.
     /// </summary>
@@ -113,10 +118,6 @@
             Process(nonce, plaintext, ciphertext);
         }
 
-
-#if INTRINSICS
-        private void Process(ReadOnlySpan<byte> nonce, Span<byte> output, ReadOnlySpan<byte> input, int offset = 0) => ProcessStream(nonce, output, input, InitialCounter, offset);
-#else
         /// <summary>
         /// Processes the Encryption/Decryption function.
         /// </summary>
@@ -126,6 +127,14 @@
         /// <param name="offset">The output's starting offset.</param>
         private void Process(ReadOnlySpan<byte> nonce, Span<byte> output, ReadOnlySpan<byte> input, int offset = 0)
         {
+#if INTRINSICS
+            if (Sse3.IsSupported)
+            {
+                ProcessStream(nonce, output, input, InitialCounter, offset);
+                return;
+            }
+#endif
+
             var length = input.Length;
             var numBlocks = (length / BlockSizeInBytes) + 1;
 
@@ -159,16 +168,15 @@
                 owner.Memory.Span.Clear();
             }
         }
-#endif
 
-        /// <summary>
-        /// Formats the nonce length exception message.
-        /// </summary>
-        /// <param name="name">The crypto primitive name.</param>
-        /// <param name="actual">The actual nonce length.</param>
-        /// <param name="expected">The expected nonce length.</param>
-        /// <returns>System.String.</returns>
-        internal static string FormatNonceLengthExceptionMessage(string name, int actual, int expected) => $"{name} uses {expected * 8}-bit nonces, but got a {actual * 8}-bit nonce. The nonce length in bytes must be {expected}.";
+            /// <summary>
+            /// Formats the nonce length exception message.
+            /// </summary>
+            /// <param name="name">The crypto primitive name.</param>
+            /// <param name="actual">The actual nonce length.</param>
+            /// <param name="expected">The expected nonce length.</param>
+            /// <returns>System.String.</returns>
+            internal static string FormatNonceLengthExceptionMessage(string name, int actual, int expected) => $"{name} uses {expected * 8}-bit nonces, but got a {actual * 8}-bit nonce. The nonce length in bytes must be {expected}.";
 
         /// <summary>
         /// XOR the specified output.

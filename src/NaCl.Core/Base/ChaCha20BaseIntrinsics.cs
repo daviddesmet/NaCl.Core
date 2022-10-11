@@ -1,6 +1,7 @@
 ﻿#if INTRINSICS
 #pragma warning disable IDE0007 // Use implicit type
 
+using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
@@ -17,7 +18,10 @@ namespace NaCl.Core.Base
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static unsafe void ChaCha20(uint* x, byte* m, byte* c, ulong bytes)
         {
-            if (Avx2.IsSupported && bytes >= 512)      //Fix the AVX2 section!
+            if (!Sse3.IsSupported)
+                throw new Exception("Error this vectorisation is not supported on this CPU");
+
+            if (Avx2.IsSupported && bytes >= 512)
             {
                 Vector256<uint> x_0 = Vector256.Create(x[0]);
                 Vector256<uint> x_1 = Vector256.Create(x[1]);
@@ -73,6 +77,7 @@ namespace NaCl.Core.Base
                     x_11 = orig11;
                     x_14 = orig14;
                     x_15 = orig15;
+
                     uint in12 = x[12];
                     uint in13 = x[13];
                     ulong in1213 = in12 | ((ulong)in13 << 32);
