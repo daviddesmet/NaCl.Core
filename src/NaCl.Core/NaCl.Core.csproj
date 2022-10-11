@@ -61,7 +61,7 @@
     <DefineConstants>FCL_BITOPS</DefineConstants>
   </PropertyGroup>
 
-  <PropertyGroup Condition="$(TargetFramework) == 'netcoreapp3.1' OR $(TargetFramework) == 'net5.0'">
+  <PropertyGroup Condition="$(TargetFramework) == 'netcoreapp3.1' OR $(TargetFramework) == 'net5.0' OR $(TargetFramework) == 'net6.0'">
     <DefineConstants>INTRINSICS</DefineConstants>
   </PropertyGroup>
 
