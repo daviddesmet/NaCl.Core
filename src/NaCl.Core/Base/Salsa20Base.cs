@@ -53,6 +53,19 @@
             ArrayUtils.StoreArray16UInt32LittleEndian(block, 0, state);
         }
 
+#if INTRINSICS
+        public override unsafe void ProcessStream(ReadOnlySpan<byte> nonce, Span<byte> output, ReadOnlySpan<byte> input, int initialCounter, int offset = 0)
+        {
+            Span<uint> state = stackalloc uint[BLOCK_SIZE_IN_INTS];
+            SetInitialState(state, nonce, initialCounter);
+            fixed (uint* x = state)
+            fixed (byte* m = input, c = output.Slice(offset))
+            {
+                Salsa20BaseIntrinsics.Salsa20(x, m, c, (ulong)input.Length);
+            }
+        }
+#endif
+
         /// <summary>
         /// Process a pseudorandom key stream block, converting the key and part of the <paramref name="nonce"/> into a <paramref name="subKey"/>, and the remainder of the <paramref name="nonce"/>.
         /// </summary>
