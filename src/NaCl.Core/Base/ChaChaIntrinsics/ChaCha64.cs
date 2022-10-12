@@ -2,6 +2,7 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics.X86;
 using System.Runtime.Intrinsics;
+using System;
 
 namespace NaCl.Core.Base.ChaChaIntrinsics;
 
@@ -92,6 +93,24 @@ internal static class ChaCha64
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static unsafe void HChaCha20(Span<byte> subKey, ReadOnlySpan<uint> state)
+    {
+        fixed(uint* x = state)
+        fixed(byte* sk = subKey)
+        {
+            Vector128<uint> x_0 = Sse2.LoadVector128(x);
+            Vector128<uint> x_1 = Sse2.LoadVector128(x + 4);
+            Vector128<uint> x_2 = Sse2.LoadVector128(x + 8);
+            Vector128<uint> x_3 = Sse2.LoadVector128(x + 12);
+
+            ShuffleState(ref x_0, ref x_1, ref x_2, ref x_3);
+
+            Sse2.Store(sk, Vector128.AsByte(x_0));
+            Sse2.Store(sk + 16, Vector128.AsByte(x_3));
+        }
+    }
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static unsafe void ShuffleState(ref Vector128<uint> x_0, ref Vector128<uint> x_1, ref Vector128<uint> x_2, ref Vector128<uint> x_3)
     {
         Vector128<uint> t_1;

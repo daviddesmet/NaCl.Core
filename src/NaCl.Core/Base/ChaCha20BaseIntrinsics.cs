@@ -32,5 +32,13 @@ public static class ChaCha20BaseIntrinsics
             ChaCha64.ProcessVarLength(x, ref m, ref c, ref bytes);
         }
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static unsafe void HChaCha20(Span<byte> subKey, ReadOnlySpan<uint> state)
+    {
+        if (!Sse3.IsSupported)
+            throw new Exception("Error this vectorisation is not supported on this CPU");
+        ChaCha64.HChaCha20(subKey, state);
+    }
 }
 #endif

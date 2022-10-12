@@ -81,6 +81,14 @@
             // Setting HSalsa20 initial state
             HSalsa20InitialState(state, nonce);
 
+#if INTRINSICS
+            if (System.Runtime.Intrinsics.X86.Sse3.IsSupported)
+            {
+                Salsa20BaseIntrinsics.HSalsa20(subKey, state);
+                return;
+            }
+#endif
+
             // Block function
             ShuffleState(state);
 

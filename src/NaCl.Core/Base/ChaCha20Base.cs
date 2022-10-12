@@ -82,6 +82,14 @@
             // Setting HChaCha20 initial state
             HChaCha20InitialState(state, nonce);
 
+#if INTRINSICS
+            if (System.Runtime.Intrinsics.X86.Sse3.IsSupported)
+            {
+                ChaCha20BaseIntrinsics.HChaCha20(subKey, state);
+                return;
+            }
+#endif
+
             // Block function
             ShuffleState(state);
 

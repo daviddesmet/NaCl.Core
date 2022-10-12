@@ -2,6 +2,7 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics.X86;
 using System.Runtime.Intrinsics;
+using System;
 
 namespace NaCl.Core.Base.SalsaIntrinsics;
 
@@ -87,6 +88,33 @@ internal static class Salsa64
         for (int n = 0; n < 64 / sizeof(int); n++)
         {
             ((int*)partialblock)[n] = 0;
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static unsafe void HSalsa20(Span<byte> subKey, ReadOnlySpan<uint> state)
+    {
+        fixed (uint* x = state)
+        fixed (byte* sk = subKey)
+        {
+            Vector128<uint> x_0 = Sse2.LoadVector128(x);
+            Vector128<uint> x_1 = Sse2.LoadVector128(x + 4);
+            Vector128<uint> x_2 = Sse2.LoadVector128(x + 8);
+            Vector128<uint> x_3 = Sse2.LoadVector128(x + 12);
+
+            ShuffleState(ref x_0, ref x_1, ref x_2, ref x_3);
+
+            // <0, 5, 2, 3> + <8, 9, 10, 15> -> <0, 5, 10, 15>
+            Vector128<uint> t_0 = Avx2.Blend(x_0, x_1, 0b_00_00_00_10);
+            Vector128<uint> t_1 = Avx2.Blend(x_2, x_3, 0b_00_00_10_00);
+            Vector128<uint> t_2 = Avx2.Blend(t_0, t_1, 0b_00_00_11_00);
+
+            // Get <8, 9, 6, 7> then shuffle to <6, 7, 8, 9>
+            Vector128<uint> t_3 = Avx2.Blend(x_1, x_2, 0b_00_00_00_11);
+            t_3 = Sse2.Shuffle(t_3, 0b_01_00_11_10);
+
+            Sse2.Store(sk, Vector128.AsByte(t_2));
+            Sse2.Store(sk + 16, Vector128.AsByte(t_3));
         }
     }
 

@@ -32,5 +32,13 @@ public static class Salsa20BaseIntrinsics
             Salsa64.ProcessVarLength(x, ref m, ref c, ref bytes);
         }
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static unsafe void HSalsa20(Span<byte> subKey, ReadOnlySpan<uint> state)
+    {
+        if (!Sse3.IsSupported)
+            throw new Exception("Error this vectorisation is not supported on this CPU");
+        Salsa64.HSalsa20(subKey, state);
+    }
 }
 #endif
