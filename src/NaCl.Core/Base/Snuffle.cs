@@ -8,7 +8,6 @@
     using System.Runtime.Intrinsics.X86;
 #endif
 
-
     /// <summary>
     /// Abstract base class for XSalsa20, ChaCha20, XChaCha20 and their variants.
     /// </summary>
@@ -128,7 +127,7 @@
         private void Process(ReadOnlySpan<byte> nonce, Span<byte> output, ReadOnlySpan<byte> input, int offset = 0)
         {
 #if INTRINSICS
-            if (Sse3.IsSupported)
+            if (Sse3.IsSupported && BitConverter.IsLittleEndian)
             {
                 ProcessStream(nonce, output, input, InitialCounter, offset);
                 return;

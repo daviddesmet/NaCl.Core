@@ -100,6 +100,7 @@ internal static class ChaCha512
             // ONEOCTO enter
             OneQuadUnpack(ref x_0, ref x_1, ref x_2, ref x_3, ref t_0, ref t_1, ref t_2, ref t_3, ref orig0, ref orig1, ref orig2, ref orig3);
             OneQuadUnpack(ref x_4, ref x_5, ref x_6, ref x_7, ref t_4, ref t_5, ref t_6, ref t_7, ref orig4, ref orig5, ref orig6, ref orig7);
+
             t_0 = Avx2.Permute2x128(x_0, x_4, 0x20);
             t_4 = Avx2.Permute2x128(x_0, x_4, 0x31);
             t_1 = Avx2.Permute2x128(x_1, x_5, 0x20);

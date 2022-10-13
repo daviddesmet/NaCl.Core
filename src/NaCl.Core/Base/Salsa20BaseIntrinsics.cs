@@ -12,7 +12,7 @@ public static class Salsa20BaseIntrinsics
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static unsafe void Salsa20(uint* x, byte* m, byte* c, ulong bytes)
     {
-        if (!Sse3.IsSupported)
+        if (!Sse3.IsSupported || !BitConverter.IsLittleEndian)
             throw new Exception("Error this vectorisation is not supported on this CPU");
 
         if (Avx2.IsSupported && bytes >= 512)
@@ -36,8 +36,9 @@ public static class Salsa20BaseIntrinsics
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static unsafe void HSalsa20(Span<byte> subKey, ReadOnlySpan<uint> state)
     {
-        if (!Sse3.IsSupported)
+        if (!Sse3.IsSupported || !BitConverter.IsLittleEndian)
             throw new Exception("Error this vectorisation is not supported on this CPU");
+
         Salsa64.HSalsa20(subKey, state);
     }
 }

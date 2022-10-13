@@ -12,7 +12,7 @@ public static class ChaCha20BaseIntrinsics
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static unsafe void ChaCha20(uint* x, byte* m, byte* c, ulong bytes)
     {
-        if (!Sse3.IsSupported)
+        if (!Sse3.IsSupported || !BitConverter.IsLittleEndian)
             throw new Exception("Error this vectorisation is not supported on this CPU");
 
         if (Avx2.IsSupported && bytes >= 512)
@@ -36,8 +36,9 @@ public static class ChaCha20BaseIntrinsics
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static unsafe void HChaCha20(Span<byte> subKey, ReadOnlySpan<uint> state)
     {
-        if (!Sse3.IsSupported)
+        if (!Sse3.IsSupported || !BitConverter.IsLittleEndian)
             throw new Exception("Error this vectorisation is not supported on this CPU");
+
         ChaCha64.HChaCha20(subKey, state);
     }
 }
