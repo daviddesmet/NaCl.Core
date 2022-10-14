@@ -2,6 +2,7 @@
 {
     using System;
     using System.Runtime.CompilerServices;
+    using System.Runtime.InteropServices;
     using System.Security.Cryptography;
 
     using Internal;
@@ -39,6 +40,17 @@
 
             Span<uint> state = stackalloc uint[BLOCK_SIZE_IN_INTS];
             SetInitialState(state, nonce, counter);
+
+#if INTRINSICS
+            if (System.Runtime.Intrinsics.X86.Sse3.IsSupported || !BitConverter.IsLittleEndian)
+            {
+                Span<byte> stateBytes = MemoryMarshal.Cast<uint, byte>(state);
+                Salsa20BaseIntrinsics.Salsa20KeyStream(stateBytes);
+                stateBytes.CopyTo(block);
+
+                return;
+            }
+#endif
 
             // Create a copy of the state and then run 20 rounds on it,
             // alternating between "column rounds" and "diagonal rounds"; each round consisting of four quarter-rounds.

@@ -41,5 +41,14 @@ public static class Salsa20BaseIntrinsics
 
         Salsa64.HSalsa20(subKey, state);
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static unsafe void Salsa20KeyStream(Span<byte> state)
+    {
+        if (!Sse3.IsSupported || !BitConverter.IsLittleEndian)
+            throw new Exception("Error this vectorisation is not supported on this CPU");
+
+        Salsa64.KeyStream64(state);
+    }
 }
 #endif

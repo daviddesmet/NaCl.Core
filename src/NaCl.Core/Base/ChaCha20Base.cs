@@ -2,6 +2,7 @@
 {
     using System;
     using System.Runtime.CompilerServices;
+    using System.Runtime.InteropServices;
     using System.Security.Cryptography;
 
     using Internal;
@@ -41,6 +42,17 @@
             Span<uint> state = stackalloc uint[BLOCK_SIZE_IN_INTS];
             SetInitialState(state, nonce, counter);
 
+#if INTRINSICS
+            if (System.Runtime.Intrinsics.X86.Sse3.IsSupported || !BitConverter.IsLittleEndian)
+            {
+                Span<byte> stateBytes = MemoryMarshal.Cast<uint, byte>(state);
+                ChaCha20BaseIntrinsics.ChaCha20KeyStream(stateBytes);
+                stateBytes.CopyTo(block);
+
+                return;
+            }
+#endif
+
             // Create a copy of the state and then run 20 rounds on it,
             // alternating between "column rounds" and "diagonal rounds"; each round consisting of four quarter-rounds.
             Span<uint> workingState = stackalloc uint[BLOCK_SIZE_IN_INTS];
@@ -59,6 +71,7 @@
         {
             Span<uint> state = stackalloc uint[BLOCK_SIZE_IN_INTS];
             SetInitialState(state, nonce, initialCounter);
+            
             fixed(uint* x = state)
             fixed (byte* m = input, c = output.Slice(offset))
             {
@@ -83,7 +96,7 @@
             HChaCha20InitialState(state, nonce);
 
 #if INTRINSICS
-            if (System.Runtime.Intrinsics.X86.Sse3.IsSupported)
+            if (System.Runtime.Intrinsics.X86.Sse3.IsSupported || !BitConverter.IsLittleEndian)
             {
                 ChaCha20BaseIntrinsics.HChaCha20(subKey, state);
                 return;

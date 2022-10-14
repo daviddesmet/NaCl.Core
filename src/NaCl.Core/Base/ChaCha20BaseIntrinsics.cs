@@ -41,5 +41,14 @@ public static class ChaCha20BaseIntrinsics
 
         ChaCha64.HChaCha20(subKey, state);
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static unsafe void ChaCha20KeyStream(Span<byte> state)
+    {
+        if (!Sse3.IsSupported || !BitConverter.IsLittleEndian)
+            throw new Exception("Error this vectorisation is not supported on this CPU");
+
+        ChaCha64.KeyStream64(state);
+    }
 }
 #endif

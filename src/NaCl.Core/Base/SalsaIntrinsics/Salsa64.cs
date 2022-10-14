@@ -29,6 +29,7 @@ internal static class Salsa64
         x_2 = Sse2.Add(x_2, orig_2);
         x_3 = Sse2.Add(x_3, orig_3);
 
+        // Xor the key stream and message to obtain the cipher.
         x_0 = Sse2.Xor(x_0.AsByte(), Sse2.LoadVector128(m)).AsUInt32();
         x_1 = Sse2.Xor(x_1.AsByte(), Sse2.LoadVector128(m + 16)).AsUInt32();
         x_2 = Sse2.Xor(x_2.AsByte(), Sse2.LoadVector128(m + 32)).AsUInt32();
@@ -39,6 +40,7 @@ internal static class Salsa64
         Sse2.Store(c + 32, x_2.AsByte());
         Sse2.Store(c + 48, x_3.AsByte());
 
+        // Increment 64 bit counter for the original state.
         uint in8 = x[8];
         uint in9 = x[9];
         in8++;
@@ -115,6 +117,35 @@ internal static class Salsa64
 
             Sse2.Store(sk, Vector128.AsByte(t_2));
             Sse2.Store(sk + 16, Vector128.AsByte(t_3));
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static unsafe void KeyStream64(Span<byte> state)
+    {
+        fixed (byte* x = state)
+        {
+            Vector128<uint> x_0 = Sse2.LoadVector128(x).AsUInt32();
+            Vector128<uint> x_1 = Sse2.LoadVector128(x + 16).AsUInt32();
+            Vector128<uint> x_2 = Sse2.LoadVector128(x + 32).AsUInt32();
+            Vector128<uint> x_3 = Sse2.LoadVector128(x + 48).AsUInt32();
+
+            Vector128<uint> orig_0 = x_0;
+            Vector128<uint> orig_1 = x_1;
+            Vector128<uint> orig_2 = x_2;
+            Vector128<uint> orig_3 = x_3;
+
+            ShuffleState(ref x_0, ref x_1, ref x_2, ref x_3);
+
+            x_0 = Sse2.Add(x_0, orig_0);
+            x_1 = Sse2.Add(x_1, orig_1);
+            x_2 = Sse2.Add(x_2, orig_2);
+            x_3 = Sse2.Add(x_3, orig_3);
+
+            Sse2.Store(x, x_0.AsByte());
+            Sse2.Store(x + 16, x_1.AsByte());
+            Sse2.Store(x + 32, x_2.AsByte());
+            Sse2.Store(x + 48, x_3.AsByte());
         }
     }
 
