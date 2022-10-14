@@ -44,10 +44,7 @@
 #if INTRINSICS
             if (System.Runtime.Intrinsics.X86.Sse3.IsSupported || !BitConverter.IsLittleEndian)
             {
-                Span<byte> stateBytes = MemoryMarshal.Cast<uint, byte>(state);
-                Salsa20BaseIntrinsics.Salsa20KeyStream(stateBytes);
-                stateBytes.CopyTo(block);
-
+                Salsa20BaseIntrinsics.Salsa20KeyStream(state, block);
                 return;
             }
 #endif
@@ -96,7 +93,7 @@
 #if INTRINSICS
             if (System.Runtime.Intrinsics.X86.Sse3.IsSupported || !BitConverter.IsLittleEndian)
             {
-                Salsa20BaseIntrinsics.HSalsa20(subKey, state);
+                Salsa20BaseIntrinsics.HSalsa20(state, subKey);
                 return;
             }
 #endif

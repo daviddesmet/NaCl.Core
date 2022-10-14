@@ -45,10 +45,7 @@
 #if INTRINSICS
             if (System.Runtime.Intrinsics.X86.Sse3.IsSupported || !BitConverter.IsLittleEndian)
             {
-                Span<byte> stateBytes = MemoryMarshal.Cast<uint, byte>(state);
-                ChaCha20BaseIntrinsics.ChaCha20KeyStream(stateBytes);
-                stateBytes.CopyTo(block);
-
+                ChaCha20BaseIntrinsics.ChaCha20KeyStream(state, block);
                 return;
             }
 #endif
@@ -98,7 +95,7 @@
 #if INTRINSICS
             if (System.Runtime.Intrinsics.X86.Sse3.IsSupported || !BitConverter.IsLittleEndian)
             {
-                ChaCha20BaseIntrinsics.HChaCha20(subKey, state);
+                ChaCha20BaseIntrinsics.HChaCha20(state, subKey);
                 return;
             }
 #endif

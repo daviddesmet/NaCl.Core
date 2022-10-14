@@ -93,7 +93,7 @@ internal static class ChaCha64
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe void HChaCha20(Span<byte> subKey, ReadOnlySpan<uint> state)
+    public static unsafe void HChaCha20(ReadOnlySpan<uint> state, Span<byte> subKey)
     {
         fixed(uint* x = state)
         fixed(byte* sk = subKey)
@@ -111,14 +111,15 @@ internal static class ChaCha64
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe void KeyStream64(Span<byte> state)
+    public static unsafe void KeyStream64(ReadOnlySpan<uint> state, Span<byte> output)
     {
-        fixed (byte* x = state)
+        fixed (byte* k = output)
+        fixed (uint* x = state)
         {
-            Vector128<uint> x_0 = Sse2.LoadVector128(x).AsUInt32();
-            Vector128<uint> x_1 = Sse2.LoadVector128(x + 16).AsUInt32();
-            Vector128<uint> x_2 = Sse2.LoadVector128(x + 32).AsUInt32();
-            Vector128<uint> x_3 = Sse2.LoadVector128(x + 48).AsUInt32();
+            Vector128<uint> x_0 = Sse2.LoadVector128(x);
+            Vector128<uint> x_1 = Sse2.LoadVector128(x + 4);
+            Vector128<uint> x_2 = Sse2.LoadVector128(x + 8);
+            Vector128<uint> x_3 = Sse2.LoadVector128(x + 12);
 
             Vector128<uint> orig_0 = x_0;
             Vector128<uint> orig_1 = x_1;
@@ -132,10 +133,10 @@ internal static class ChaCha64
             x_2 = Sse2.Add(x_2, orig_2);
             x_3 = Sse2.Add(x_3, orig_3);
 
-            Sse2.Store(x, x_0.AsByte());
-            Sse2.Store(x + 16, x_1.AsByte());
-            Sse2.Store(x + 32, x_2.AsByte());
-            Sse2.Store(x + 48, x_3.AsByte());
+            Sse2.Store(k, x_0.AsByte());
+            Sse2.Store(k + 16, x_1.AsByte());
+            Sse2.Store(k + 32, x_2.AsByte());
+            Sse2.Store(k + 48, x_3.AsByte());
         }
     }
 
