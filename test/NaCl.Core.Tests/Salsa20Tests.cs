@@ -263,6 +263,30 @@
             act.Should().Throw<CryptographicException>();
         }
 
+        [Fact]
+        public void Salsa20BlockTestVector()
+        {
+            // Arrange
+            var key = CryptoBytes.FromHexString("00:01:02:03:04:05:06:07:08:09:0a:0b:0c:0d:0e:0f:10:11:12:13:14:15:16:17:18:19:1a:1b:1c:1d:1e:1f".Replace(":", string.Empty));
+            var nonce = CryptoBytes.FromHexString("00:00:00:09:00:00:00:4a".Replace(":", string.Empty));
+            var counter = 1;
+
+            // Act
+            var salsa20 = new Salsa20(key, 1);
+            var output = new byte[Salsa20.BLOCK_SIZE_IN_BYTES];
+            salsa20.ProcessKeyStreamBlock(nonce, counter, output);
+
+            // Assert
+            var expected = new uint[16]
+            {
+                3649387971u, 3432934094u, 2867581180u, 544842727u,
+                3442094382u, 3233001746u, 2484653980u, 586338650u,
+                3037335121u, 3388889956u, 1351682463u, 2284954070u,
+                3021171268u, 2617586057u, 3288245149u, 2763695160u };
+
+            output.ToUInt16Array().Should().Equal(expected);
+        }
+
         public static IEnumerable<object[]> Salsa20TestData => ParseTestVectors(GetTestVector()).Select(d => new object[] { d });
 
         [Theory]
