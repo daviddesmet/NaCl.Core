@@ -32,7 +32,7 @@
         protected static uint[] SIGMA = new uint[] { 0x61707865, 0x3320646E, 0x79622D32, 0x6B206574 }; // "expand 32-byte k" (4 words constant: "expa", "nd 3", "2-by", and "te k")
 
         protected readonly ReadOnlyMemory<byte> Key;
-        protected readonly int InitialCounter;
+        internal protected readonly int InitialCounter;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Snuffle"/> class.
@@ -124,15 +124,15 @@
         /// <param name="output">The output.</param>
         /// <param name="input">The input.</param>
         /// <param name="offset">The output's starting offset.</param>
-        private void Process(ReadOnlySpan<byte> nonce, Span<byte> output, ReadOnlySpan<byte> input, int offset = 0)
+        internal virtual void Process(ReadOnlySpan<byte> nonce, Span<byte> output, ReadOnlySpan<byte> input, int offset = 0)
         {
-#if INTRINSICS
-            if (Sse3.IsSupported && BitConverter.IsLittleEndian)
-            {
-                ProcessStream(nonce, output, input, InitialCounter, offset);
-                return;
-            }
-#endif
+//#if INTRINSICS
+//            if (Sse3.IsSupported && BitConverter.IsLittleEndian)
+//            {
+//                ProcessStream(nonce, output, input, InitialCounter, offset);
+//                return;
+//            }
+//#endif
 
             var length = input.Length;
             var numBlocks = (length / BlockSizeInBytes) + 1;

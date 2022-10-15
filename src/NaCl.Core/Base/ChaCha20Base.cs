@@ -86,7 +86,6 @@
         public void HChaCha20(Span<byte> subKey, ReadOnlySpan<byte> nonce)
         {
             // See https://tools.ietf.org/html/draft-arciszewski-xchacha-01#section-2.2.
-
             Span<uint> state = stackalloc uint[BLOCK_SIZE_IN_INTS];
 
             // Setting HChaCha20 initial state

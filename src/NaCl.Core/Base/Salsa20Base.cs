@@ -4,7 +4,9 @@
     using System.Runtime.CompilerServices;
     using System.Runtime.InteropServices;
     using System.Security.Cryptography;
-
+#if INTRINSICS
+    using System.Runtime.Intrinsics.X86;
+#endif
     using Internal;
 
     /// <summary>
@@ -13,12 +15,32 @@
     /// <seealso cref="NaCl.Core.Base.Snuffle" />
     public abstract class Salsa20Base : Snuffle
     {
+        readonly ISalsa20Core salsa20Core;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="Salsa20Base"/> class.
         /// </summary>
         /// <param name="key">The key.</param>
         /// <param name="initialCounter">The initial counter.</param>
-        protected Salsa20Base(ReadOnlyMemory<byte> key, int initialCounter) : base(key, initialCounter) { }
+        protected Salsa20Base(ReadOnlyMemory<byte> key, int initialCounter) : base(key, initialCounter)
+        {
+#if INTRINSICS
+            if (Sse3.IsSupported)
+            {
+                salsa20Core = new Salsa20CoreIntrinsics(this);
+            }
+            else
+            {
+                salsa20Core = new Salsa20Core(this);
+            }
+#else
+            salsa20Core = new Salsa20Core(this);
+#endif
+        }
+
+#if INTRINSICS
+        public override void ProcessStream(ReadOnlySpan<byte> nonce, Span<byte> output, ReadOnlySpan<byte> input, int initialCounter, int offset = 0) => throw new NotImplementedException();
+#endif
 
         /// <inheritdoc />
         public override int BlockSizeInBytes => BLOCK_SIZE_IN_BYTES;
@@ -30,50 +52,13 @@
         /// <param name="state">The state.</param>
         /// <param name="nonce">The nonce.</param>
         /// <param name="counter">The counter.</param>
-        protected abstract void SetInitialState(Span<uint> state, ReadOnlySpan<byte> nonce, int counter);
+        internal protected abstract void SetInitialState(Span<uint> state, ReadOnlySpan<byte> nonce, int counter);
 
         /// <inheritdoc />
-        public override void ProcessKeyStreamBlock(ReadOnlySpan<byte> nonce, int counter, Span<byte> block)
-        {
-            if (block.Length != BLOCK_SIZE_IN_BYTES)
-                throw new CryptographicException($"The key stream block length is not valid. The length in bytes must be {BLOCK_SIZE_IN_BYTES}.");
+        internal protected override void Process(ReadOnlySpan<byte> nonce, Span<byte> output, ReadOnlySpan<byte> input, int offset = 0) => salsa20Core.Process(nonce, output, input, offset);
 
-            Span<uint> state = stackalloc uint[BLOCK_SIZE_IN_INTS];
-            SetInitialState(state, nonce, counter);
-
-#if INTRINSICS
-            if (System.Runtime.Intrinsics.X86.Sse3.IsSupported || !BitConverter.IsLittleEndian)
-            {
-                Salsa20BaseIntrinsics.Salsa20KeyStream(state, block);
-                return;
-            }
-#endif
-
-            // Create a copy of the state and then run 20 rounds on it,
-            // alternating between "column rounds" and "diagonal rounds"; each round consisting of four quarter-rounds.
-            Span<uint> workingState = stackalloc uint[BLOCK_SIZE_IN_INTS];
-            state.CopyTo(workingState);
-            ShuffleState(workingState);
-
-            // At the end of the rounds, add the result to the original state.
-            for (var i = 0; i < BLOCK_SIZE_IN_INTS; i++)
-                state[i] += workingState[i];
-
-            ArrayUtils.StoreArray16UInt32LittleEndian(block, 0, state);
-        }
-
-#if INTRINSICS
-        public override unsafe void ProcessStream(ReadOnlySpan<byte> nonce, Span<byte> output, ReadOnlySpan<byte> input, int initialCounter, int offset = 0)
-        {
-            Span<uint> state = stackalloc uint[BLOCK_SIZE_IN_INTS];
-            SetInitialState(state, nonce, initialCounter);
-            fixed (uint* x = state)
-            fixed (byte* m = input, c = output.Slice(offset))
-            {
-                Salsa20BaseIntrinsics.Salsa20(x, m, c, (ulong)input.Length);
-            }
-        }
-#endif
+        /// <inheritdoc />
+        public override void ProcessKeyStreamBlock(ReadOnlySpan<byte> nonce, int counter, Span<byte> block) => salsa20Core.ProcessKeyStreamBlock(nonce, counter, block);
 
         /// <summary>
         /// Process a pseudorandom key stream block, converting the key and part of the <paramref name="nonce"/> into a <paramref name="subKey"/>, and the remainder of the <paramref name="nonce"/>.
@@ -81,36 +66,7 @@
         /// <param name="subKey">The subKey.</param>
         /// <param name="nonce">The nonce.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void HSalsa20(Span<byte> subKey, ReadOnlySpan<byte> nonce)
-        {
-            // See: http://cr.yp.to/snuffle/xsalsa-20081128.pdf under 2. Specification - Definition of HSalsa20
-
-            Span<uint> state = stackalloc uint[BLOCK_SIZE_IN_BYTES];
-
-            // Setting HSalsa20 initial state
-            HSalsa20InitialState(state, nonce);
-
-#if INTRINSICS
-            if (System.Runtime.Intrinsics.X86.Sse3.IsSupported || !BitConverter.IsLittleEndian)
-            {
-                Salsa20BaseIntrinsics.HSalsa20(state, subKey);
-                return;
-            }
-#endif
-
-            // Block function
-            ShuffleState(state);
-
-            state[1] = state[5];
-            state[2] = state[10];
-            state[3] = state[15];
-            state[4] = state[6];
-            state[5] = state[7];
-            state[6] = state[8];
-            state[7] = state[9];
-
-            ArrayUtils.StoreArray8UInt32LittleEndian(subKey, 0, state);
-        }
+        public void HSalsa20(Span<byte> subKey, ReadOnlySpan<byte> nonce) => salsa20Core.HSalsa20(subKey, nonce);
 
         /// <summary>
         /// Sets the initial <paramref name="state"/> of the HSalsa20 using the key and the <paramref name="nonce"/>.
@@ -142,7 +98,7 @@
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected static void ShuffleState(Span<uint> state)
+        internal protected static void ShuffleState(Span<uint> state)
         {
             // 10 loops × 2 rounds/loop = 20 rounds
             for (var i = 0; i < 10; i++)
