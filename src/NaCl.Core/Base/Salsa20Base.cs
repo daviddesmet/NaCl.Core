@@ -38,10 +38,6 @@
 #endif
         }
 
-#if INTRINSICS
-        public override void ProcessStream(ReadOnlySpan<byte> nonce, Span<byte> output, ReadOnlySpan<byte> input, int initialCounter, int offset = 0) => throw new NotImplementedException();
-#endif
-
         /// <inheritdoc />
         public override int BlockSizeInBytes => BLOCK_SIZE_IN_BYTES;
 
@@ -55,7 +51,7 @@
         internal protected abstract void SetInitialState(Span<uint> state, ReadOnlySpan<byte> nonce, int counter);
 
         /// <inheritdoc />
-        internal protected override void Process(ReadOnlySpan<byte> nonce, Span<byte> output, ReadOnlySpan<byte> input, int offset = 0) => salsa20Core.Process(nonce, output, input, offset);
+        internal override void Process(ReadOnlySpan<byte> nonce, Span<byte> output, ReadOnlySpan<byte> input, int offset = 0) => salsa20Core.Process(nonce, output, input, offset);
 
         /// <inheritdoc />
         public override void ProcessKeyStreamBlock(ReadOnlySpan<byte> nonce, int counter, Span<byte> block) => salsa20Core.ProcessKeyStreamBlock(nonce, counter, block);
