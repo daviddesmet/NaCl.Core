@@ -1,6 +1,7 @@
 ﻿namespace NaCl.Core.Base
 {
     using System;
+    using System.Buffers;
     using System.Runtime.CompilerServices;
     using System.Runtime.InteropServices;
     using System.Security.Cryptography;
@@ -41,7 +42,54 @@
             ArrayUtils.StoreArray16UInt32LittleEndian(block, 0, state);
         }
 
-        public void Process(ReadOnlySpan<byte> nonce, Span<byte> output, ReadOnlySpan<byte> input, int offset = 0) => _salsa20.Process(nonce, output, input, offset);
+        public void Process(ReadOnlySpan<byte> nonce, Span<byte> output, ReadOnlySpan<byte> input, int offset = 0)
+        {
+            var blockSizeInBytes = _salsa20.BlockSizeInBytes;
+            var length = input.Length;
+            var numBlocks = (length / blockSizeInBytes) + 1;
+
+            /*
+             * Allocates 64 bytes more than below impl as per the benchmarks...
+             *
+            var block = new byte[BLOCK_SIZE_IN_BYTES];
+            for (var i = 0; i < numBlocks; i++)
+            {
+                ProcessKeyStreamBlock(nonce, i + InitialCounter, block);
+
+                if (i == numBlocks - 1)
+                    Xor(output, input, block, length % BLOCK_SIZE_IN_BYTES, offset, i); // last block
+                else
+                    Xor(output, input, block, BLOCK_SIZE_IN_BYTES, offset, i);
+
+                CryptoBytes.Wipe(block); // Array.Clear(block, 0, block.Length);
+            }
+            */
+
+            using var owner = MemoryPool<byte>.Shared.Rent(blockSizeInBytes);
+            for (var i = 0; i < numBlocks; i++)
+            {
+                ProcessKeyStreamBlock(nonce, i + _salsa20.InitialCounter, owner.Memory.Span);
+
+                if (i == numBlocks - 1)
+                    Xor(output, input, owner.Memory.Span, length % blockSizeInBytes, offset, i); // last block
+                else
+                    Xor(output, input, owner.Memory.Span, blockSizeInBytes, offset, i);
+
+                owner.Memory.Span.Clear();
+            }
+        }
+
+        private void Xor(Span<byte> output, ReadOnlySpan<byte> input, ReadOnlySpan<byte> block, int len, int offset, int curBlock)
+        {
+            var blockOffset = curBlock * _salsa20.BlockSizeInBytes;
+
+            // Since is not called directly from outside, there's no need to check
+            //if (len < 0 || offset < 0 || curBlock < 0 || output.Length < len || (input.Length - blockOffset) < len || block.Length < len)
+            //    throw new CryptographicException("The combination of blocks, offsets and length to be XORed is out-of-bonds.");
+
+            for (var i = 0; i < len; i++)
+                output[i + offset + blockOffset] = (byte)(input[i + blockOffset] ^ block[i]);
+        }
 
         /// <summary>
         /// Process a pseudorandom key stream block, converting the key and part of the <paramref name="nonce"/> into a <paramref name="subKey"/>, and the remainder of the <paramref name="nonce"/>.
