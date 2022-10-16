@@ -2,8 +2,6 @@
 {
     using System;
     using System.Runtime.CompilerServices;
-    using System.Runtime.InteropServices;
-    using System.Security.Cryptography;
 #if INTRINSICS
     using System.Runtime.Intrinsics.X86;
 #endif
@@ -15,7 +13,7 @@
     /// <seealso cref="NaCl.Core.Base.Snuffle" />
     public abstract class Salsa20Base : Snuffle
     {
-        readonly ISalsa20Core salsa20Core;
+        readonly ISalsa20Core _salsa20Core;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Salsa20Base"/> class.
@@ -27,20 +25,16 @@
 #if INTRINSICS
             if (Sse3.IsSupported)
             {
-                salsa20Core = new Salsa20CoreIntrinsics(this);
+                _salsa20Core = new Salsa20CoreIntrinsics(this);
             }
             else
             {
-                salsa20Core = new Salsa20Core(this);
+                _salsa20Core = new Salsa20Core(this);
             }
 #else
-            salsa20Core = new Salsa20Core(this);
+            _salsa20Core = new Salsa20Core(this);
 #endif
         }
-
-#if INTRINSICS
-        public override void ProcessStream(ReadOnlySpan<byte> nonce, Span<byte> output, ReadOnlySpan<byte> input, int initialCounter, int offset = 0) => throw new NotImplementedException();
-#endif
 
         /// <inheritdoc />
         public override int BlockSizeInBytes => BLOCK_SIZE_IN_BYTES;
@@ -55,10 +49,10 @@
         internal protected abstract void SetInitialState(Span<uint> state, ReadOnlySpan<byte> nonce, int counter);
 
         /// <inheritdoc />
-        internal protected override void Process(ReadOnlySpan<byte> nonce, Span<byte> output, ReadOnlySpan<byte> input, int offset = 0) => salsa20Core.Process(nonce, output, input, offset);
+        internal override void Process(ReadOnlySpan<byte> nonce, Span<byte> output, ReadOnlySpan<byte> input, int offset = 0) => _salsa20Core.Process(nonce, output, input, offset);
 
         /// <inheritdoc />
-        public override void ProcessKeyStreamBlock(ReadOnlySpan<byte> nonce, int counter, Span<byte> block) => salsa20Core.ProcessKeyStreamBlock(nonce, counter, block);
+        public override void ProcessKeyStreamBlock(ReadOnlySpan<byte> nonce, int counter, Span<byte> block) => _salsa20Core.ProcessKeyStreamBlock(nonce, counter, block);
 
         /// <summary>
         /// Process a pseudorandom key stream block, converting the key and part of the <paramref name="nonce"/> into a <paramref name="subKey"/>, and the remainder of the <paramref name="nonce"/>.
@@ -66,7 +60,7 @@
         /// <param name="subKey">The subKey.</param>
         /// <param name="nonce">The nonce.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void HSalsa20(Span<byte> subKey, ReadOnlySpan<byte> nonce) => salsa20Core.HSalsa20(subKey, nonce);
+        public void HSalsa20(Span<byte> subKey, ReadOnlySpan<byte> nonce) => _salsa20Core.HSalsa20(subKey, nonce);
 
         /// <summary>
         /// Sets the initial <paramref name="state"/> of the HSalsa20 using the key and the <paramref name="nonce"/>.

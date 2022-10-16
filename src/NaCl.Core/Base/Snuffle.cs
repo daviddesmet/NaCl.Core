@@ -26,7 +26,7 @@
     {
         protected const int KEY_SIZE_IN_INTS = 8;
         public const int KEY_SIZE_IN_BYTES = KEY_SIZE_IN_INTS * 4; // 32
-        protected const int BLOCK_SIZE_IN_INTS = 16;
+        protected internal const int BLOCK_SIZE_IN_INTS = 16;
         public const int BLOCK_SIZE_IN_BYTES = BLOCK_SIZE_IN_INTS * 4; // 64
 
         protected static uint[] SIGMA = new uint[] { 0x61707865, 0x3320646E, 0x79622D32, 0x6B206574 }; // "expand 32-byte k" (4 words constant: "expa", "nd 3", "2-by", and "te k")
@@ -61,10 +61,6 @@
         /// <param name="block">The stream block.</param>
         /// <returns>ByteBuffer.</returns>
         public abstract void ProcessKeyStreamBlock(ReadOnlySpan<byte> nonce, int counter, Span<byte> block);
-
-#if INTRINSICS
-        public abstract void ProcessStream(ReadOnlySpan<byte> nonce, Span<byte> output, ReadOnlySpan<byte> input, int initialCounter, int offset = 0);
-#endif
 
         /// <summary>
         /// The size of the nonce in bytes.
@@ -126,14 +122,6 @@
         /// <param name="offset">The output's starting offset.</param>
         internal virtual void Process(ReadOnlySpan<byte> nonce, Span<byte> output, ReadOnlySpan<byte> input, int offset = 0)
         {
-//#if INTRINSICS
-//            if (Sse3.IsSupported && BitConverter.IsLittleEndian)
-//            {
-//                ProcessStream(nonce, output, input, InitialCounter, offset);
-//                return;
-//            }
-//#endif
-
             var length = input.Length;
             var numBlocks = (length / BlockSizeInBytes) + 1;
 
@@ -168,14 +156,14 @@
             }
         }
 
-            /// <summary>
-            /// Formats the nonce length exception message.
-            /// </summary>
-            /// <param name="name">The crypto primitive name.</param>
-            /// <param name="actual">The actual nonce length.</param>
-            /// <param name="expected">The expected nonce length.</param>
-            /// <returns>System.String.</returns>
-            internal static string FormatNonceLengthExceptionMessage(string name, int actual, int expected) => $"{name} uses {expected * 8}-bit nonces, but got a {actual * 8}-bit nonce. The nonce length in bytes must be {expected}.";
+        /// <summary>
+        /// Formats the nonce length exception message.
+        /// </summary>
+        /// <param name="name">The crypto primitive name.</param>
+        /// <param name="actual">The actual nonce length.</param>
+        /// <param name="expected">The expected nonce length.</param>
+        /// <returns>System.String.</returns>
+        internal static string FormatNonceLengthExceptionMessage(string name, int actual, int expected) => $"{name} uses {expected * 8}-bit nonces, but got a {actual * 8}-bit nonce. The nonce length in bytes must be {expected}.";
 
         /// <summary>
         /// XOR the specified output.
