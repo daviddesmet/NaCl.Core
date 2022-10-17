@@ -11,12 +11,9 @@ using NaCl.Core.Base.SalsaCore;
 
 internal class Salsa20CoreIntrinsics : ISalsa20Core
 {
-    protected const int KEY_SIZE_IN_INTS = 8;
-    public const int KEY_SIZE_IN_BYTES = KEY_SIZE_IN_INTS * 4; // 32
-    protected const int BLOCK_SIZE_IN_INTS = 16;
-    public const int BLOCK_SIZE_IN_BYTES = BLOCK_SIZE_IN_INTS * 4; // 64
+    const int BLOCK_SIZE_IN_BYTES = Snuffle.BLOCK_SIZE_IN_BYTES;
+    const int BLOCK_SIZE_IN_INTS = Snuffle.BLOCK_SIZE_IN_INTS;
 
-    protected static uint[] SIGMA = new uint[] { 0x61707865, 0x3320646E, 0x79622D32, 0x6B206574 }; // "expand 32-byte k" (4 words constant: "expa", "nd 3", "2-by", and "te k")
     private readonly Salsa20Base _salsa20;
 
     public Salsa20CoreIntrinsics(Salsa20Base salsa20) => _salsa20 = salsa20;
@@ -36,11 +33,8 @@ internal class Salsa20CoreIntrinsics : ISalsa20Core
     {
         Span<uint> state = stackalloc uint[BLOCK_SIZE_IN_INTS];
         _salsa20.SetInitialState(state, nonce, _salsa20.InitialCounter);
-        fixed (uint* x = state)
-        fixed (byte* m = input, c = output.Slice(offset))
-        {
-            Salsa20BaseIntrinsics.Salsa20(x, m, c, (ulong)input.Length);
-        }
+
+        Salsa20BaseIntrinsics.Salsa20(state, input, output.Slice(offset), (ulong)input.Length);
     }
 
     /// <summary>

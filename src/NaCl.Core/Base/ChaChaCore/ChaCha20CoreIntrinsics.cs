@@ -30,14 +30,15 @@ internal class ChaCha20CoreIntrinsics : IChaCha20Core
     {
         Span<uint> state = stackalloc uint[BLOCK_SIZE_IN_INTS];
         _chaCha20.SetInitialState(state, nonce, _chaCha20.InitialCounter);
-        
-        fixed(uint* x = state)
-        fixed (byte* m = input, c = output.Slice(offset))
-        {
-            ChaCha20BaseIntrinsics.ChaCha20(x, m, c, (ulong)input.Length);
-        }
+
+        ChaCha20BaseIntrinsics.ChaCha20(state, input, output.Slice(offset), (ulong)input.Length);
     }
 
+    /// <summary>
+    /// Process a pseudorandom key stream block, converting the key and part of the <paramref name="nonce"/> into a <paramref name="subKey"/>, and the remainder of the <paramref name="nonce"/>.
+    /// </summary>
+    /// <param name="subKey">The subKey.</param>
+    /// <param name="nonce">The nonce.</param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void HChaCha20(Span<byte> subKey, ReadOnlySpan<byte> nonce)
     {
