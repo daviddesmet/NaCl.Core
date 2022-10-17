@@ -94,51 +94,43 @@ internal static class ChaCha64
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe void HChaCha20(ReadOnlySpan<uint> state, Span<byte> subKey)
+    public static unsafe void HChaCha20(uint* x, byte* sk)
     {
-        fixed(uint* x = state)
-        fixed(byte* sk = subKey)
-        {
-            Vector128<uint> x_0 = Sse2.LoadVector128(x);
-            Vector128<uint> x_1 = Sse2.LoadVector128(x + 4);
-            Vector128<uint> x_2 = Sse2.LoadVector128(x + 8);
-            Vector128<uint> x_3 = Sse2.LoadVector128(x + 12);
+        Vector128<uint> x_0 = Sse2.LoadVector128(x);
+        Vector128<uint> x_1 = Sse2.LoadVector128(x + 4);
+        Vector128<uint> x_2 = Sse2.LoadVector128(x + 8);
+        Vector128<uint> x_3 = Sse2.LoadVector128(x + 12);
 
-            ShuffleState(ref x_0, ref x_1, ref x_2, ref x_3);
+        ShuffleState(ref x_0, ref x_1, ref x_2, ref x_3);
 
-            Sse2.Store(sk, Vector128.AsByte(x_0));
-            Sse2.Store(sk + 16, Vector128.AsByte(x_3));
-        }
+        Sse2.Store(sk, Vector128.AsByte(x_0));
+        Sse2.Store(sk + 16, Vector128.AsByte(x_3));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe void KeyStream64(ReadOnlySpan<uint> state, Span<byte> output)
+    public static unsafe void KeyStream64(uint* x, byte* c)
     {
-        fixed (byte* k = output)
-        fixed (uint* x = state)
-        {
-            Vector128<uint> x_0 = Sse2.LoadVector128(x);
-            Vector128<uint> x_1 = Sse2.LoadVector128(x + 4);
-            Vector128<uint> x_2 = Sse2.LoadVector128(x + 8);
-            Vector128<uint> x_3 = Sse2.LoadVector128(x + 12);
+        Vector128<uint> x_0 = Sse2.LoadVector128(x);
+        Vector128<uint> x_1 = Sse2.LoadVector128(x + 4);
+        Vector128<uint> x_2 = Sse2.LoadVector128(x + 8);
+        Vector128<uint> x_3 = Sse2.LoadVector128(x + 12);
 
-            Vector128<uint> orig_0 = x_0;
-            Vector128<uint> orig_1 = x_1;
-            Vector128<uint> orig_2 = x_2;
-            Vector128<uint> orig_3 = x_3;
+        Vector128<uint> orig_0 = x_0;
+        Vector128<uint> orig_1 = x_1;
+        Vector128<uint> orig_2 = x_2;
+        Vector128<uint> orig_3 = x_3;
 
-            ShuffleState(ref x_0, ref x_1, ref x_2, ref x_3);
+        ShuffleState(ref x_0, ref x_1, ref x_2, ref x_3);
 
-            x_0 = Sse2.Add(x_0, orig_0);
-            x_1 = Sse2.Add(x_1, orig_1);
-            x_2 = Sse2.Add(x_2, orig_2);
-            x_3 = Sse2.Add(x_3, orig_3);
+        x_0 = Sse2.Add(x_0, orig_0);
+        x_1 = Sse2.Add(x_1, orig_1);
+        x_2 = Sse2.Add(x_2, orig_2);
+        x_3 = Sse2.Add(x_3, orig_3);
 
-            Sse2.Store(k, x_0.AsByte());
-            Sse2.Store(k + 16, x_1.AsByte());
-            Sse2.Store(k + 32, x_2.AsByte());
-            Sse2.Store(k + 48, x_3.AsByte());
-        }
+        Sse2.Store(c, x_0.AsByte());
+        Sse2.Store(c + 16, x_1.AsByte());
+        Sse2.Store(c + 32, x_2.AsByte());
+        Sse2.Store(c + 48, x_3.AsByte());
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

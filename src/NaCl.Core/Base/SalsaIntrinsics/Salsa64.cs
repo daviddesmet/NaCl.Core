@@ -94,59 +94,51 @@ internal static class Salsa64
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe void HSalsa20(ReadOnlySpan<uint> state, Span<byte> subKey)
+    public static unsafe void HSalsa20(uint* x, byte* sk)
     {
-        fixed (uint* x = state)
-        fixed (byte* sk = subKey)
-        {
-            Vector128<uint> x_0 = Sse2.LoadVector128(x);
-            Vector128<uint> x_1 = Sse2.LoadVector128(x + 4);
-            Vector128<uint> x_2 = Sse2.LoadVector128(x + 8);
-            Vector128<uint> x_3 = Sse2.LoadVector128(x + 12);
+        Vector128<uint> x_0 = Sse2.LoadVector128(x);
+        Vector128<uint> x_1 = Sse2.LoadVector128(x + 4);
+        Vector128<uint> x_2 = Sse2.LoadVector128(x + 8);
+        Vector128<uint> x_3 = Sse2.LoadVector128(x + 12);
 
-            ShuffleState(ref x_0, ref x_1, ref x_2, ref x_3);
+        ShuffleState(ref x_0, ref x_1, ref x_2, ref x_3);
 
-            // HSalsa returns a 32 byte array of 0,5,10,15,6,7,8,9
+        // HSalsa returns a 32 byte array of 0,5,10,15,6,7,8,9
 
-            // <0, 5, 2, 3> + <8, 9, 10, 15> -> <0, 5, 10, 15>
-            var t_0 = GetDiagonal(x_0, x_1, x_2, x_3);
+        // <0, 5, 2, 3> + <8, 9, 10, 15> -> <0, 5, 10, 15>
+        var t_0 = GetDiagonal(x_0, x_1, x_2, x_3);
 
-            // Get <4, 5, 6, 7> & <8, 9, 10, 11> then unpack halves for <6, 7, 8, 9>
-            var t_1 = UnpackHighLow(x_1, x_2);
+        // Get <4, 5, 6, 7> & <8, 9, 10, 11> then unpack halves for <6, 7, 8, 9>
+        var t_1 = UnpackHighLow(x_1, x_2);
 
-            Sse2.Store(sk, Vector128.AsByte(t_0));
-            Sse2.Store(sk + 16, Vector128.AsByte(t_1));
-        }
+        Sse2.Store(sk, Vector128.AsByte(t_0));
+        Sse2.Store(sk + 16, Vector128.AsByte(t_1));
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe void KeyStream64(ReadOnlySpan<uint> state, Span<byte> output)
+    public static unsafe void KeyStream64(uint* x, byte* c)
     {
-        fixed (byte* k = output)
-        fixed (uint* x = state)
-        {
-            Vector128<uint> x_0 = Sse2.LoadVector128(x);
-            Vector128<uint> x_1 = Sse2.LoadVector128(x + 4);
-            Vector128<uint> x_2 = Sse2.LoadVector128(x + 8);
-            Vector128<uint> x_3 = Sse2.LoadVector128(x + 12);
+        Vector128<uint> x_0 = Sse2.LoadVector128(x);
+        Vector128<uint> x_1 = Sse2.LoadVector128(x + 4);
+        Vector128<uint> x_2 = Sse2.LoadVector128(x + 8);
+        Vector128<uint> x_3 = Sse2.LoadVector128(x + 12);
 
-            Vector128<uint> orig_0 = x_0;
-            Vector128<uint> orig_1 = x_1;
-            Vector128<uint> orig_2 = x_2;
-            Vector128<uint> orig_3 = x_3;
+        Vector128<uint> orig_0 = x_0;
+        Vector128<uint> orig_1 = x_1;
+        Vector128<uint> orig_2 = x_2;
+        Vector128<uint> orig_3 = x_3;
 
-            ShuffleState(ref x_0, ref x_1, ref x_2, ref x_3);
+        ShuffleState(ref x_0, ref x_1, ref x_2, ref x_3);
 
-            x_0 = Sse2.Add(x_0, orig_0);
-            x_1 = Sse2.Add(x_1, orig_1);
-            x_2 = Sse2.Add(x_2, orig_2);
-            x_3 = Sse2.Add(x_3, orig_3);
+        x_0 = Sse2.Add(x_0, orig_0);
+        x_1 = Sse2.Add(x_1, orig_1);
+        x_2 = Sse2.Add(x_2, orig_2);
+        x_3 = Sse2.Add(x_3, orig_3);
 
-            Sse2.Store(k, x_0.AsByte());
-            Sse2.Store(k + 16, x_1.AsByte());
-            Sse2.Store(k + 32, x_2.AsByte());
-            Sse2.Store(k + 48, x_3.AsByte());
-        }
+        Sse2.Store(c, x_0.AsByte());
+        Sse2.Store(c + 16, x_1.AsByte());
+        Sse2.Store(c + 32, x_2.AsByte());
+        Sse2.Store(c + 48, x_3.AsByte());
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -10,26 +10,33 @@ namespace NaCl.Core.Base;
 public static class ChaCha20BaseIntrinsics
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static unsafe void ChaCha20(uint* x, byte* m, byte* c, ulong bytes)
+    public static unsafe void ChaCha20(Span<uint> state, ReadOnlySpan<byte> input, Span<byte> output, ulong bytes)
     {
         if (!Sse3.IsSupported || !BitConverter.IsLittleEndian)
             throw new Exception("Error this vectorisation is not supported on this CPU");
 
-        if (Avx2.IsSupported && bytes >= 512)
+        fixed (uint* x = state)
+        fixed (byte* m_p = input, c_p = output)
         {
-            ChaCha512.Process(x, ref m, ref c, ref bytes);
-        }
-        if (bytes >= 256)
-        {
-            ChaCha256.Process(x, ref m, ref c, ref bytes);
-        }
-        while (bytes >= 64)
-        {
-            ChaCha64.Process64(x, ref m, ref c, ref bytes);
-        }
-        if (bytes > 0)
-        {
-            ChaCha64.ProcessVarLength(x, ref m, ref c, ref bytes);
+            var m = m_p;
+            var c = c_p;
+
+            if (Avx2.IsSupported && bytes >= 512)
+            {
+                ChaCha512.Process(x, ref m, ref c, ref bytes);
+            }
+            if (bytes >= 256)
+            {
+                ChaCha256.Process(x, ref m, ref c, ref bytes);
+            }
+            while (bytes >= 64)
+            {
+                ChaCha64.Process64(x, ref m, ref c, ref bytes);
+            }
+            if (bytes > 0)
+            {
+                ChaCha64.ProcessVarLength(x, ref m, ref c, ref bytes);
+            }
         }
     }
 
@@ -39,7 +46,11 @@ public static class ChaCha20BaseIntrinsics
         if (!Sse3.IsSupported || !BitConverter.IsLittleEndian)
             throw new Exception("Error this vectorisation is not supported on this CPU");
 
-        ChaCha64.HChaCha20(state, subKey);
+        fixed (uint* x = state)
+        fixed (byte* sk = subKey)
+        {
+            ChaCha64.HChaCha20(x, sk);
+        }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -48,7 +59,11 @@ public static class ChaCha20BaseIntrinsics
         if (!Sse3.IsSupported || !BitConverter.IsLittleEndian)
             throw new Exception("Error this vectorisation is not supported on this CPU");
 
-        ChaCha64.KeyStream64(state, output);
+        fixed (byte* c = output)
+        fixed (uint* x = state)
+        {
+            ChaCha64.KeyStream64(x, c);
+        }
     }
 }
 #endif

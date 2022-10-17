@@ -67,11 +67,9 @@
         {
             Span<uint> state = stackalloc uint[BLOCK_SIZE_IN_INTS];
             SetInitialState(state, nonce, initialCounter);
-            fixed (uint* x = state)
-            fixed (byte* m = input, c = output.Slice(offset))
-            {
-                Salsa20BaseIntrinsics.Salsa20(x, m, c, (ulong)input.Length);
-            }
+            var c = output.Slice(offset);
+
+            Salsa20BaseIntrinsics.Salsa20(state, input, c, (ulong)input.Length);
         }
 #endif
 
