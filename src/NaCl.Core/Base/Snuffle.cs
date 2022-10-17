@@ -168,14 +168,14 @@
             }
         }
 
-            /// <summary>
-            /// Formats the nonce length exception message.
-            /// </summary>
-            /// <param name="name">The crypto primitive name.</param>
-            /// <param name="actual">The actual nonce length.</param>
-            /// <param name="expected">The expected nonce length.</param>
-            /// <returns>System.String.</returns>
-            internal static string FormatNonceLengthExceptionMessage(string name, int actual, int expected) => $"{name} uses {expected * 8}-bit nonces, but got a {actual * 8}-bit nonce. The nonce length in bytes must be {expected}.";
+        /// <summary>
+        /// Formats the nonce length exception message.
+        /// </summary>
+        /// <param name="name">The crypto primitive name.</param>
+        /// <param name="actual">The actual nonce length.</param>
+        /// <param name="expected">The expected nonce length.</param>
+        /// <returns>System.String.</returns>
+        internal static string FormatNonceLengthExceptionMessage(string name, int actual, int expected) => $"{name} uses {expected * 8}-bit nonces, but got a {actual * 8}-bit nonce. The nonce length in bytes must be {expected}.";
 
         /// <summary>
         /// XOR the specified output.

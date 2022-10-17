@@ -23,10 +23,8 @@
         [Params(
             (int)1E+2,  // 100 bytes
             (int)1E+3,  // 1 000 bytes = 1 KB
-            (int)1E+4,  // 10 000 bytes = 10 KB
-            (int)1E+5,  // 100 000 bytes = 100 KB
-            (int)1E+6,  // 1 000 000 bytes = 1 MB
-            (int)1E+7)] // 10 000 000 bytes = 10 MB
+            (int)1E+5  // 100 000 bytes = 100 KB
+            )] // 10 000 000 bytes = 10 MB
         public int Size { get; set; }
 
         [GlobalSetup]

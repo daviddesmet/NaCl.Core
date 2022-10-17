@@ -48,11 +48,12 @@ internal static class ChaCha512
         Vector256<uint> orig14 = x_14;
         Vector256<uint> orig15 = x_15;
 
+        Vector256<uint> addv12 = Vector256.Create(0, 1, 2, 3).AsUInt32();
+        Vector256<uint> addv13 = Vector256.Create(4, 5, 6, 7).AsUInt32();
+        Vector256<uint> permute = Vector256.Create(0, 1, 4, 5, 2, 3, 6, 7).AsUInt32();
+
         while (bytes >= 512)
         {
-            Vector256<uint> addv12 = Vector256.Create(0, 1, 2, 3).AsUInt32();
-            Vector256<uint> addv13 = Vector256.Create(4, 5, 6, 7).AsUInt32();
-            Vector256<uint> permute = Vector256.Create(0, 1, 4, 5, 2, 3, 6, 7).AsUInt32();
             Vector256<uint> t12, t13;
             x_0 = orig0;
             x_1 = orig1;
@@ -69,6 +70,7 @@ internal static class ChaCha512
             x_14 = orig14;
             x_15 = orig15;
 
+            // Calculate the next 8 counter values.
             uint in12 = x[12];
             uint in13 = x[13];
             ulong in1213 = in12 | ((ulong)in13 << 32);
