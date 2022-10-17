@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace NaCl.Core.Base;
+namespace NaCl.Core.Base.SalsaCore;
 internal interface ISalsa20Core
 {
     void HSalsa20(Span<byte> subKey, ReadOnlySpan<byte> nonce);

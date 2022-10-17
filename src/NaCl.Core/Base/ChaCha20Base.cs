@@ -2,13 +2,8 @@
 {
     using System;
     using System.Runtime.CompilerServices;
-    using System.Runtime.InteropServices;
-#if INTRINSICS
-    using System.Runtime.Intrinsics.X86;
-#endif
-    using System.Security.Cryptography;
-
     using Internal;
+    using NaCl.Core.Base.ChaChaCore;
 
     /// <summary>
     /// Base class for <seealso cref="NaCl.Core.ChaCha20" /> and <seealso cref="NaCl.Core.XChaCha20" />.
@@ -26,7 +21,7 @@
         protected ChaCha20Base(ReadOnlyMemory<byte> key, int initialCounter) : base(key, initialCounter)
         {
 #if INTRINSICS
-            if (Sse3.IsSupported)
+            if (System.Runtime.Intrinsics.X86.Sse3.IsSupported && BitConverter.IsLittleEndian)
             {
                 _chaCha20Core = new ChaCha20CoreIntrinsics(this);
             }

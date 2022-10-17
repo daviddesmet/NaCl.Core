@@ -1,4 +1,4 @@
-﻿namespace NaCl.Core.Base
+﻿namespace NaCl.Core.Base.ChaChaCore
 {
     using System;
     using System.Buffers;
@@ -12,7 +12,7 @@
     {
         public const int BLOCK_SIZE_IN_BYTES = Snuffle.BLOCK_SIZE_IN_BYTES;
         public const int BLOCK_SIZE_IN_INTS = Snuffle.BLOCK_SIZE_IN_INTS;
-        
+
         private readonly ChaCha20Base _chaCha20;
         public ChaCha20Core(ChaCha20Base chaCha20) => _chaCha20 = chaCha20;
 
@@ -38,18 +38,18 @@
             ArrayUtils.StoreArray16UInt32LittleEndian(block, 0, state);
         }
 
-       /// <summary>
-       /// Processes the Encryption/Decryption function.
-       /// </summary>
-       /// <param name="nonce">The nonce.</param>
-       /// <param name="output">The output.</param>
-       /// <param name="input">The input.</param>
-       /// <param name="offset">The output's starting offset.</param>
+        /// <summary>
+        /// Processes the Encryption/Decryption function.
+        /// </summary>
+        /// <param name="nonce">The nonce.</param>
+        /// <param name="output">The output.</param>
+        /// <param name="input">The input.</param>
+        /// <param name="offset">The output's starting offset.</param>
         public void Process(ReadOnlySpan<byte> nonce, Span<byte> output, ReadOnlySpan<byte> input, int offset = 0)
         {
             var blockSizeInBytes = _chaCha20.BlockSizeInBytes;
             var length = input.Length;
-            var numBlocks = (length / blockSizeInBytes) + 1;
+            var numBlocks = length / blockSizeInBytes + 1;
 
             /*
              * Allocates 64 bytes more than below impl as per the benchmarks...

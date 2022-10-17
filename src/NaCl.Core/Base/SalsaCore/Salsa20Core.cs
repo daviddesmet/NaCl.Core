@@ -1,4 +1,4 @@
-﻿namespace NaCl.Core.Base
+﻿namespace NaCl.Core.Base.SalsaCore
 {
     using System;
     using System.Buffers;
@@ -46,7 +46,7 @@
         {
             var blockSizeInBytes = _salsa20.BlockSizeInBytes;
             var length = input.Length;
-            var numBlocks = (length / blockSizeInBytes) + 1;
+            var numBlocks = length / blockSizeInBytes + 1;
 
             /*
              * Allocates 64 bytes more than below impl as per the benchmarks...

@@ -2,10 +2,8 @@
 {
     using System;
     using System.Runtime.CompilerServices;
-#if INTRINSICS
-    using System.Runtime.Intrinsics.X86;
-#endif
     using Internal;
+    using NaCl.Core.Base.SalsaCore;
 
     /// <summary>
     /// Base class for <seealso cref="NaCl.Core.Salsa20" /> and <seealso cref="NaCl.Core.XSalsa20" />.
@@ -23,7 +21,7 @@
         protected Salsa20Base(ReadOnlyMemory<byte> key, int initialCounter) : base(key, initialCounter)
         {
 #if INTRINSICS
-            if (Sse3.IsSupported)
+            if (System.Runtime.Intrinsics.X86.Sse3.IsSupported && BitConverter.IsLittleEndian)
             {
                 _salsa20Core = new Salsa20CoreIntrinsics(this);
             }

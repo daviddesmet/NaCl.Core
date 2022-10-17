@@ -4,10 +4,6 @@
     using System.Buffers;
     using System.Security.Cryptography;
 
-#if INTRINSICS
-    using System.Runtime.Intrinsics.X86;
-#endif
-
     /// <summary>
     /// Abstract base class for XSalsa20, ChaCha20, XChaCha20 and their variants.
     /// </summary>

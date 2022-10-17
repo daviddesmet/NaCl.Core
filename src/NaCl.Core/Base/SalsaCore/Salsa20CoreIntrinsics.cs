@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 
 using Internal;
+using NaCl.Core.Base.SalsaCore;
 
 internal class Salsa20CoreIntrinsics : ISalsa20Core
 {
