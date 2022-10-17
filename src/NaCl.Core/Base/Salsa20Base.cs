@@ -91,7 +91,7 @@
             HSalsa20InitialState(state, nonce);
             
 #if INTRINSICS
-            if (System.Runtime.Intrinsics.X86.Avx2.IsSupported && BitConverter.IsLittleEndian)
+            if (System.Runtime.Intrinsics.X86.Sse2.IsSupported && BitConverter.IsLittleEndian)
             {
                 Salsa20BaseIntrinsics.HSalsa20(state, subKey);
                 return;
