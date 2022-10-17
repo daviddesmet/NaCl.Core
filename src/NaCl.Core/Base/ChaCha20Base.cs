@@ -43,7 +43,7 @@
             SetInitialState(state, nonce, counter);
 
 #if INTRINSICS
-            if (System.Runtime.Intrinsics.X86.Sse3.IsSupported || !BitConverter.IsLittleEndian)
+            if (System.Runtime.Intrinsics.X86.Sse3.IsSupported && BitConverter.IsLittleEndian)
             {
                 ChaCha20BaseIntrinsics.ChaCha20KeyStream(state, block);
                 return;
@@ -93,7 +93,7 @@
             HChaCha20InitialState(state, nonce);
 
 #if INTRINSICS
-            if (System.Runtime.Intrinsics.X86.Sse3.IsSupported || !BitConverter.IsLittleEndian)
+            if (System.Runtime.Intrinsics.X86.Sse3.IsSupported && BitConverter.IsLittleEndian)
             {
                 ChaCha20BaseIntrinsics.HChaCha20(state, subKey);
                 return;
