@@ -109,7 +109,7 @@ internal static class Salsa64
             // HSalsa returns a 32 byte array of 0,5,10,15,6,7,8,9
 
             // <0, 5, 2, 3> + <8, 9, 10, 15> -> <0, 5, 10, 15>
-            var t_0 = Diagonal(x_0, x_1, x_2, x_3);
+            var t_0 = GetDiagonal(x_0, x_1, x_2, x_3);
 
             // Get <4, 5, 6, 7> & <8, 9, 10, 11> then unpack halves for <6, 7, 8, 9>
             var t_1 = UnpackHighLow(x_1, x_2);
@@ -196,14 +196,14 @@ internal static class Salsa64
     private static Vector128<uint> Vector128Rotate(Vector128<uint> a, byte imm) => Sse2.Or(Sse2.ShiftLeftLogical(a, imm), Sse2.ShiftRightLogical(a, (byte)(32 - imm)));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    static Vector128<uint> UnpackHighLow(Vector128<uint> a, Vector128<uint> b)
+    private static Vector128<uint> UnpackHighLow(Vector128<uint> a, Vector128<uint> b)
     {
         var w_0 = Sse2.UnpackHigh(a.AsUInt64(), b.AsUInt64());
         return Sse2.UnpackLow(w_0, b.AsUInt64()).AsUInt32();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    static Vector128<uint> Diagonal(Vector128<uint> a, Vector128<uint> b, Vector128<uint> c, Vector128<uint> d)
+    private static Vector128<uint> GetDiagonal(Vector128<uint> a, Vector128<uint> b, Vector128<uint> c, Vector128<uint> d)
     {
         var w_0 = Sse2.UnpackLow(a, b);
         var w_1 = Sse2.UnpackHigh(c, d);

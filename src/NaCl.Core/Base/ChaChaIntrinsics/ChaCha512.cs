@@ -178,14 +178,17 @@ internal static class ChaCha512
         Vector256Line1(ref A2, ref B2, ref C2, ref D2);
         Vector256Line1(ref A3, ref B3, ref C3, ref D3);
         Vector256Line1(ref A4, ref B4, ref C4, ref D4);
+
         Vector256Line2(ref A1, ref B1, ref C1, ref D1);
         Vector256Line2(ref A2, ref B2, ref C2, ref D2);
         Vector256Line2(ref A3, ref B3, ref C3, ref D3);
         Vector256Line2(ref A4, ref B4, ref C4, ref D4);
+
         Vector256Line3(ref A1, ref B1, ref C1, ref D1);
         Vector256Line3(ref A2, ref B2, ref C2, ref D2);
         Vector256Line3(ref A3, ref B3, ref C3, ref D3);
         Vector256Line3(ref A4, ref B4, ref C4, ref D4);
+
         Vector256Line4(ref A1, ref B1, ref C1, ref D1);
         Vector256Line4(ref A2, ref B2, ref C2, ref D2);
         Vector256Line4(ref A3, ref B3, ref C3, ref D3);

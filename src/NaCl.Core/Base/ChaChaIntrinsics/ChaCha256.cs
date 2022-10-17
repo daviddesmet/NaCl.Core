@@ -97,6 +97,7 @@ internal static class ChaCha256
                 Vec128QuarterRound(ref x_1, ref x_5, ref x_9, ref x_13);
                 Vec128QuarterRound(ref x_2, ref x_6, ref x_10, ref x_14);
                 Vec128QuarterRound(ref x_3, ref x_7, ref x_11, ref x_15);
+
                 Vec128QuarterRound(ref x_0, ref x_5, ref x_10, ref x_15);
                 Vec128QuarterRound(ref x_1, ref x_6, ref x_11, ref x_12);
                 Vec128QuarterRound(ref x_2, ref x_7, ref x_8, ref x_13);
@@ -130,14 +131,17 @@ internal static class ChaCha256
         x_B = Sse2.Add(x_B, origB);
         x_C = Sse2.Add(x_C, origC);
         x_D = Sse2.Add(x_D, origD);
+
         t_A = Sse2.UnpackLow(x_A, x_B);
         t_B = Sse2.UnpackLow(x_C, x_D);
         t_C = Sse2.UnpackHigh(x_A, x_B);
         t_D = Sse2.UnpackHigh(x_C, x_D);
+
         x_A = Sse2.UnpackLow(t_A.AsUInt64(), t_B.AsUInt64()).AsUInt32();
         x_B = Sse2.UnpackHigh(t_A.AsUInt64(), t_B.AsUInt64()).AsUInt32();
         x_C = Sse2.UnpackLow(t_C.AsUInt64(), t_D.AsUInt64()).AsUInt32();
         x_D = Sse2.UnpackHigh(t_C.AsUInt64(), t_D.AsUInt64()).AsUInt32();
+
         t0 = Sse2.Xor(x_A.AsByte(), Sse2.LoadVector128(m)).AsUInt32();
         Sse2.Store(c, t0.AsByte());
         t1 = Sse2.Xor(x_B.AsByte(), Sse2.LoadVector128(m + 64)).AsUInt32();

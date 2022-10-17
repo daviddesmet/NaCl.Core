@@ -6,6 +6,7 @@ using System.Runtime.Intrinsics;
 namespace NaCl.Core.Base.SalsaIntrinsics;
 
 #pragma warning disable IDE0007 // Use implicit type
+#pragma warning disable IDE0022 // Use expression body for methods
 internal static class Salsa512
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -66,6 +67,7 @@ internal static class Salsa512
             x_14 = orig14;
             x_15 = orig15;
 
+            // Calculate the next 8 counter values.
             uint in8 = x[8];
             uint in9 = x[9];
             ulong in89 = in8 | ((ulong)in9 << 32);
@@ -105,6 +107,7 @@ internal static class Salsa512
             t_6 = Avx2.Permute2x128(x_2, x_6, 0x31);
             t_3 = Avx2.Permute2x128(x_3, x_7, 0x20);
             t_7 = Avx2.Permute2x128(x_3, x_7, 0x31);
+
             t_0 = Avx2.Xor(t_0, Avx.LoadVector256(m).AsUInt32());
             t_1 = Avx2.Xor(t_1, Avx.LoadVector256(m + 64).AsUInt32());
             t_2 = Avx2.Xor(t_2, Avx.LoadVector256(m + 128).AsUInt32());
@@ -113,6 +116,7 @@ internal static class Salsa512
             t_5 = Avx2.Xor(t_5, Avx.LoadVector256(m + 320).AsUInt32());
             t_6 = Avx2.Xor(t_6, Avx.LoadVector256(m + 384).AsUInt32());
             t_7 = Avx2.Xor(t_7, Avx.LoadVector256(m + 448).AsUInt32());
+
             Avx.Store(c, t_0.AsByte());
             Avx.Store(c + 64, t_1.AsByte());
             Avx.Store(c + 128, t_2.AsByte());
@@ -137,6 +141,7 @@ internal static class Salsa512
             t_14 = Avx2.Permute2x128(x_10, x_14, 0x31);
             t_11 = Avx2.Permute2x128(x_11, x_15, 0x20);
             t_15 = Avx2.Permute2x128(x_11, x_15, 0x31);
+
             t_8 = Avx2.Xor(t_8, Avx.LoadVector256(m).AsUInt32());
             t_9 = Avx2.Xor(t_9, Avx.LoadVector256(m + 64).AsUInt32());
             t_10 = Avx2.Xor(t_10, Avx.LoadVector256(m + 128).AsUInt32());
@@ -145,6 +150,7 @@ internal static class Salsa512
             t_13 = Avx2.Xor(t_13, Avx.LoadVector256(m + 320).AsUInt32());
             t_14 = Avx2.Xor(t_14, Avx.LoadVector256(m + 384).AsUInt32());
             t_15 = Avx2.Xor(t_15, Avx.LoadVector256(m + 448).AsUInt32());
+
             Avx.Store(c, t_8.AsByte());
             Avx.Store(c + 64, t_9.AsByte());
             Avx.Store(c + 128, t_10.AsByte());
@@ -172,14 +178,17 @@ internal static class Salsa512
         Vector256Line1(ref A2, ref B2, ref C2, ref D2);
         Vector256Line1(ref A3, ref B3, ref C3, ref D3);
         Vector256Line1(ref A4, ref B4, ref C4, ref D4);
+
         Vector256Line2(ref A1, ref B1, ref C1, ref D1);
         Vector256Line2(ref A2, ref B2, ref C2, ref D2);
         Vector256Line2(ref A3, ref B3, ref C3, ref D3);
         Vector256Line2(ref A4, ref B4, ref C4, ref D4);
+
         Vector256Line3(ref A1, ref B1, ref C1, ref D1);
         Vector256Line3(ref A2, ref B2, ref C2, ref D2);
         Vector256Line3(ref A3, ref B3, ref C3, ref D3);
         Vector256Line3(ref A4, ref B4, ref C4, ref D4);
+
         Vector256Line4(ref A1, ref B1, ref C1, ref D1);
         Vector256Line4(ref A2, ref B2, ref C2, ref D2);
         Vector256Line4(ref A3, ref B3, ref C3, ref D3);
@@ -217,10 +226,12 @@ internal static class Salsa512
         x_B = Avx2.Add(x_B, orig_B);
         x_C = Avx2.Add(x_C, orig_C);
         x_D = Avx2.Add(x_D, orig_D);
+
         t_A = Avx2.UnpackLow(x_A, x_B);
         t_B = Avx2.UnpackLow(x_C, x_D);
         t_C = Avx2.UnpackHigh(x_A, x_B);
         t_D = Avx2.UnpackHigh(x_C, x_D);
+
         x_A = Avx2.UnpackLow(t_A.AsUInt64(), t_B.AsUInt64()).AsUInt32();
         x_B = Avx2.UnpackHigh(t_A.AsUInt64(), t_B.AsUInt64()).AsUInt32();
         x_C = Avx2.UnpackLow(t_C.AsUInt64(), t_D.AsUInt64()).AsUInt32();
@@ -228,4 +239,5 @@ internal static class Salsa512
     }
 }
 #pragma warning restore IDE0007 // Use implicit type
+#pragma warning restore IDE0022 // Use expression body for methods
 #endif

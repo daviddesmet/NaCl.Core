@@ -41,6 +41,7 @@ internal static class ChaCha64
         Sse2.Store(c + 32, x_2.AsByte());
         Sse2.Store(c + 48, x_3.AsByte());
 
+        // Increment 64 bit counter for the original state.
         uint in12 = x[12];
         uint in13 = x[13];
         in12++;
