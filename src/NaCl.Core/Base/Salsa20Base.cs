@@ -42,7 +42,7 @@
             SetInitialState(state, nonce, counter);
 
 #if INTRINSICS
-            if (System.Runtime.Intrinsics.X86.Sse3.IsSupported || !BitConverter.IsLittleEndian)
+            if (System.Runtime.Intrinsics.X86.Sse3.IsSupported && BitConverter.IsLittleEndian)
             {
                 Salsa20BaseIntrinsics.Salsa20KeyStream(state, block);
                 return;
@@ -91,7 +91,7 @@
             HSalsa20InitialState(state, nonce);
 
 #if INTRINSICS
-            if (System.Runtime.Intrinsics.X86.Sse3.IsSupported || !BitConverter.IsLittleEndian)
+            if (System.Runtime.Intrinsics.X86.Sse3.IsSupported && BitConverter.IsLittleEndian)
             {
                 Salsa20BaseIntrinsics.HSalsa20(state, subKey);
                 return;
