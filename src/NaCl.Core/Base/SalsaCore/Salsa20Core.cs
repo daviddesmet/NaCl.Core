@@ -9,12 +9,8 @@ using Internal;
 
 internal class Salsa20Core : ISalsa20Core
 {
-    protected const int KEY_SIZE_IN_INTS = 8;
-    public const int KEY_SIZE_IN_BYTES = KEY_SIZE_IN_INTS * 4; // 32
-    protected const int BLOCK_SIZE_IN_INTS = 16;
-    public const int BLOCK_SIZE_IN_BYTES = BLOCK_SIZE_IN_INTS * 4; // 64
-
-    protected static uint[] SIGMA = new uint[] { 0x61707865, 0x3320646E, 0x79622D32, 0x6B206574 }; // "expand 32-byte k" (4 words constant: "expa", "nd 3", "2-by", and "te k")
+    public const int BLOCK_SIZE_IN_BYTES = Snuffle.BLOCK_SIZE_IN_BYTES;
+    public const int BLOCK_SIZE_IN_INTS = Snuffle.BLOCK_SIZE_IN_INTS;
 
     private readonly Salsa20Base _salsa20;
 

@@ -1,9 +1,9 @@
 ﻿#if INTRINSICS
+namespace NaCl.Core.Base.SalsaIntrinsics;
+
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics.X86;
 using System.Runtime.Intrinsics;
-
-namespace NaCl.Core.Base.SalsaIntrinsics;
 
 #pragma warning disable IDE0007 // Use implicit type
 #pragma warning disable IDE0022 // Use expression body for methods

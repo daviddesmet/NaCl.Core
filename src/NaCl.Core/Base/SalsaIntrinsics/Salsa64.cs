@@ -1,10 +1,10 @@
 ﻿#if INTRINSICS
+namespace NaCl.Core.Base.SalsaIntrinsics;
+
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
-
-namespace NaCl.Core.Base.SalsaIntrinsics;
 
 #pragma warning disable IDE0007 // Use implicit type
 internal static class Salsa64

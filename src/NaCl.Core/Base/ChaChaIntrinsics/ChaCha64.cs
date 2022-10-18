@@ -1,10 +1,10 @@
 ﻿#if INTRINSICS
+namespace NaCl.Core.Base.ChaChaIntrinsics;
+
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics.X86;
 using System.Runtime.Intrinsics;
 using System;
-
-namespace NaCl.Core.Base.ChaChaIntrinsics;
 
 #pragma warning disable IDE0007 // Use implicit type
 internal static class ChaCha64
