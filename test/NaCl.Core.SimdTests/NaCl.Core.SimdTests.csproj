@@ -1,6 +1,6 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup Label="Build">
+  <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <LangVersion>latest</LangVersion>
     <IsTestProject>true</IsTestProject>
@@ -54,4 +54,5 @@
   <Target Name="LogDebugInfo">
     <Message Text="Building for $(TargetFramework) on $(OS)" Importance="High" />
   </Target>
+
 </Project>

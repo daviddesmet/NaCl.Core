@@ -12,9 +12,6 @@
     using Xunit.Categories;
 
     using Base;
-    using Internal;
-    using Vectors;
-    using System.Runtime.Intrinsics.X86;
 
     [Category("CI")]
     public class XSalsa20Tests
@@ -261,12 +258,6 @@
             var act = () => xsalsa20.ProcessKeyStreamBlock(nonce, 0, block);
             act.Should().Throw<CryptographicException>();
         }
-
-        //[Fact]
-        //public void AssertSupport()
-        //{
-        //    Assert.True(Avx2.IsSupported);
-        //}
 
         [Fact]
         public void HSalsa20TestVector1()
