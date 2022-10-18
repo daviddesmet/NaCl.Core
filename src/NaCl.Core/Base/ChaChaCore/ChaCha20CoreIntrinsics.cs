@@ -1,5 +1,5 @@
 ﻿#if INTRINSICS
-namespace NaCl.Core.Base;
+namespace NaCl.Core.Base.ChaChaCore;
 
 using System;
 using System.Runtime.CompilerServices;

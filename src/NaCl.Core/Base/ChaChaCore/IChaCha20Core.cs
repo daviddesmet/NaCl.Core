@@ -1,6 +1,7 @@
-﻿using System;
+﻿namespace NaCl.Core.Base.ChaChaCore;
 
-namespace NaCl.Core.Base.ChaChaCore;
+using System;
+
 internal interface IChaCha20Core
 {
     void HChaCha20(Span<byte> subKey, ReadOnlySpan<byte> nonce);
