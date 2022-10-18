@@ -12,6 +12,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{28EF1FB3-A057-4C17-A3B2-B9370B234F81}"
 	ProjectSection(SolutionItems) = preProject
 		CodeCoverage.runsettings = CodeCoverage.runsettings
+		TestIntrinsics.ps1= TestIntrinsics.ps1
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NaCl.Core.SimdTests", "test\NaCl.Core.SimdTests\NaCl.Core.SimdTests.csproj", "{BF42937A-028C-4870-AAB4-220667A57457}"
