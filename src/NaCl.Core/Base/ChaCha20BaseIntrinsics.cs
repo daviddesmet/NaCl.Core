@@ -1,19 +1,17 @@
 ﻿#if INTRINSICS
+namespace NaCl.Core.Base;
 
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics.X86;
 using NaCl.Core.Base.ChaChaIntrinsics;
 
-namespace NaCl.Core.Base;
-
-public static class ChaCha20BaseIntrinsics
+internal static class ChaCha20BaseIntrinsics
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static unsafe void ChaCha20(Span<uint> state, ReadOnlySpan<byte> input, Span<byte> output, ulong bytes)
     {
-        if (!Sse3.IsSupported || !BitConverter.IsLittleEndian)
-            throw new Exception("Error this vectorisation is not supported on this CPU");
+        ValidateDeviceSupport();
 
         fixed (uint* x = state)
         fixed (byte* m_p = input, c_p = output)
@@ -43,8 +41,7 @@ public static class ChaCha20BaseIntrinsics
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static unsafe void HChaCha20(ReadOnlySpan<uint> state, Span<byte> subKey)
     {
-        if (!Sse3.IsSupported || !BitConverter.IsLittleEndian)
-            throw new Exception("Error this vectorisation is not supported on this CPU");
+        ValidateDeviceSupport();
 
         fixed (uint* x = state)
         fixed (byte* sk = subKey)
@@ -56,14 +53,20 @@ public static class ChaCha20BaseIntrinsics
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static unsafe void ChaCha20KeyStream(ReadOnlySpan<uint> state, Span<byte> output)
     {
-        if (!Sse3.IsSupported || !BitConverter.IsLittleEndian)
-            throw new Exception("Error this vectorisation is not supported on this CPU");
+        ValidateDeviceSupport();
 
         fixed (byte* c = output)
         fixed (uint* x = state)
         {
             ChaCha64.KeyStream64(x, c);
         }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void ValidateDeviceSupport()
+    {
+        if (!Sse3.IsSupported || !BitConverter.IsLittleEndian)
+            throw new NotSupportedException($"{nameof(Sse3)} vectorisation is not supported on this device.");
     }
 }
 #endif
