@@ -11,7 +11,6 @@
     using Internal;
     using Vectors;
     using NaCl.Core.Base.ChaChaCore;
-    using NaCl.Core.SimdTests.Vectors;
 
     public class ChaCha20ScalarTests
     {

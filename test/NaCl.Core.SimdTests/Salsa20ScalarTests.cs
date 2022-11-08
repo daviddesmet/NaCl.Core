@@ -16,7 +16,6 @@
     using Vectors;
     using System.Linq;
     using NaCl.Core.Base.SalsaCore;
-    using NaCl.Core.SimdTests.Vectors;
 
     public class Salsa20ScalarTests
     {
