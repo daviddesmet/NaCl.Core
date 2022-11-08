@@ -1,10 +1,7 @@
 ﻿namespace NaCl.Core.Benchmarks;
 
 using System;
-using System.Collections.Generic;
-
 using Base;
-
 using BenchmarkDotNet.Attributes;
 
 [BenchmarkCategory("Stream Cipher")]

@@ -3,10 +3,7 @@ namespace NaCl.Core.Base.SalsaCore;
 
 using System;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Security.Cryptography;
-
-using Internal;
 
 internal class Salsa20CoreIntrinsics : ISalsa20Core
 {

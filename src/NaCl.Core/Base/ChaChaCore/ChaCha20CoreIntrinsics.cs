@@ -4,7 +4,6 @@ namespace NaCl.Core.Base.ChaChaCore;
 using System;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
-using NaCl.Core.Base.ChaChaCore;
 
 internal class ChaCha20CoreIntrinsics : IChaCha20Core
 {

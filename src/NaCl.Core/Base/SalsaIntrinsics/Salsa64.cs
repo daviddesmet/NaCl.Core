@@ -1,7 +1,6 @@
 ﻿#if INTRINSICS
 namespace NaCl.Core.Base.SalsaIntrinsics;
 
-using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
