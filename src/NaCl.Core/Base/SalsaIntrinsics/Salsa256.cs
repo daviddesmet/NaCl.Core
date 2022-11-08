@@ -122,20 +122,6 @@ internal static class Salsa256
     private static Vector128<uint> Vector128Rotate(Vector128<uint> a, byte imm) => Sse2.Or(Sse2.ShiftLeftLogical(a, imm), Sse2.ShiftRightLogical(a, (byte)(32 - imm)));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void Transpose(ref Vector128<uint> a, ref Vector128<uint> b, ref Vector128<uint> c, ref Vector128<uint> d)
-    {
-        var w_0 = Sse2.UnpackLow(a, b).AsUInt64();
-        var w_1 = Sse2.UnpackHigh(a, b).AsUInt64();
-        var w_2 = Sse2.UnpackLow(c, d).AsUInt64();
-        var w_3 = Sse2.UnpackHigh(c, d).AsUInt64();
-
-        a = Sse2.UnpackLow(w_0, w_2).AsUInt32();
-        b = Sse2.UnpackHigh(w_0, w_2).AsUInt32();
-        c = Sse2.UnpackLow(w_1, w_3).AsUInt32();
-        d = Sse2.UnpackHigh(w_1, w_3).AsUInt32();
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static unsafe void OneQuad(ref Vector128<uint> x_A, ref Vector128<uint> x_B, ref Vector128<uint> x_C, ref Vector128<uint> x_D, ref Vector128<uint> origA, ref Vector128<uint> origB, ref Vector128<uint> origC, ref Vector128<uint> origD, byte* m, byte* c)
     {
         Vector128<uint> t_A, t_B, t_C, t_D, t0, t1, t2, t3;
