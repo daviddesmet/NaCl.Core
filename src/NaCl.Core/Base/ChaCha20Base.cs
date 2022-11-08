@@ -11,7 +11,7 @@
     /// <seealso cref="NaCl.Core.Base.Snuffle" />
     public abstract class ChaCha20Base : Snuffle
     {
-        readonly IChaCha20Core _chaCha20Core;
+        private readonly IChaCha20Core _chaCha20Core;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ChaCha20Base"/> class.

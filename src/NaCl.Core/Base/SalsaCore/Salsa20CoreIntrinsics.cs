@@ -7,8 +7,8 @@ using System.Security.Cryptography;
 
 internal class Salsa20CoreIntrinsics : ISalsa20Core
 {
-    const int BLOCK_SIZE_IN_BYTES = Snuffle.BLOCK_SIZE_IN_BYTES;
-    const int BLOCK_SIZE_IN_INTS = Snuffle.BLOCK_SIZE_IN_INTS;
+    private const int BLOCK_SIZE_IN_BYTES = Snuffle.BLOCK_SIZE_IN_BYTES;
+    private const int BLOCK_SIZE_IN_INTS = Snuffle.BLOCK_SIZE_IN_INTS;
 
     private readonly Salsa20Base _salsa20;
 

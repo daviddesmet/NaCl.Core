@@ -11,7 +11,7 @@
     /// <seealso cref="NaCl.Core.Base.Snuffle" />
     public abstract class Salsa20Base : Snuffle
     {
-        readonly ISalsa20Core _salsa20Core;
+        private readonly ISalsa20Core _salsa20Core;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Salsa20Base"/> class.

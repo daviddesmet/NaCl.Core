@@ -7,8 +7,8 @@ using System.Security.Cryptography;
 
 internal class ChaCha20CoreIntrinsics : IChaCha20Core
 {
-    const int BLOCK_SIZE_IN_BYTES = Snuffle.BLOCK_SIZE_IN_BYTES;
-    const int BLOCK_SIZE_IN_INTS = Snuffle.BLOCK_SIZE_IN_INTS;
+    private const int BLOCK_SIZE_IN_BYTES = Snuffle.BLOCK_SIZE_IN_BYTES;
+    private const int BLOCK_SIZE_IN_INTS = Snuffle.BLOCK_SIZE_IN_INTS;
 
     private readonly ChaCha20Base _chaCha20;
     public ChaCha20CoreIntrinsics(ChaCha20Base chaCha20Base) => _chaCha20=chaCha20Base;
