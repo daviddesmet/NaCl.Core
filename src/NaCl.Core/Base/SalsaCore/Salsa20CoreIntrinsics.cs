@@ -33,7 +33,7 @@ internal class Salsa20CoreIntrinsics : ISalsa20Core
         Span<uint> state = stackalloc uint[BLOCK_SIZE_IN_INTS];
         _salsa20.SetInitialState(state, nonce, _salsa20.InitialCounter);
 
-        Salsa20BaseIntrinsics.Salsa20(state, input, output.Slice(offset), (ulong)input.Length);
+        Salsa20BaseIntrinsics.Salsa20(state, input, output[offset..], (ulong)input.Length);
     }
 
     /// <summary>

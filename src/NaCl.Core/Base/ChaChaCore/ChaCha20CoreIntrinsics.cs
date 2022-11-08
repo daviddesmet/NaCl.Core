@@ -31,7 +31,7 @@ internal class ChaCha20CoreIntrinsics : IChaCha20Core
         Span<uint> state = stackalloc uint[BLOCK_SIZE_IN_INTS];
         _chaCha20.SetInitialState(state, nonce, _chaCha20.InitialCounter);
 
-        ChaCha20BaseIntrinsics.ChaCha20(state, input, output.Slice(offset), (ulong)input.Length);
+        ChaCha20BaseIntrinsics.ChaCha20(state, input, output[offset..], (ulong)input.Length);
     }
 
     /// <summary>
