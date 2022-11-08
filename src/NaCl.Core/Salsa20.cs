@@ -23,7 +23,7 @@
         public Salsa20(ReadOnlyMemory<byte> key, int initialCounter = 0) : base(key, initialCounter) { }
 
         /// <inheritdoc />
-        internal protected override void SetInitialState(Span<uint> state, ReadOnlySpan<byte> nonce, int counter)
+        protected internal override void SetInitialState(Span<uint> state, ReadOnlySpan<byte> nonce, int counter)
         {
             if (nonce.IsEmpty || nonce.Length != NonceSizeInBytes)
                 throw new CryptographicException(FormatNonceLengthExceptionMessage(GetType().Name, nonce.Length, NonceSizeInBytes));

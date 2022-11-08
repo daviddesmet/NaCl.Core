@@ -44,7 +44,7 @@
         /// <param name="state">The state.</param>
         /// <param name="nonce">The nonce.</param>
         /// <param name="counter">The counter.</param>
-        internal protected abstract void SetInitialState(Span<uint> state, ReadOnlySpan<byte> nonce, int counter);
+        protected internal abstract void SetInitialState(Span<uint> state, ReadOnlySpan<byte> nonce, int counter);
 
         /// <inheritdoc />
         internal override void Process(ReadOnlySpan<byte> nonce, Span<byte> output, ReadOnlySpan<byte> input, int offset = 0) => _salsa20Core.Process(nonce, output, input, offset);
@@ -90,7 +90,7 @@
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal protected static void ShuffleState(Span<uint> state)
+        protected internal static void ShuffleState(Span<uint> state)
         {
             // 10 loops × 2 rounds/loop = 20 rounds
             for (var i = 0; i < 10; i++)

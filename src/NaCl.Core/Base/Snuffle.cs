@@ -28,7 +28,7 @@
         protected static uint[] SIGMA = new uint[] { 0x61707865, 0x3320646E, 0x79622D32, 0x6B206574 }; // "expand 32-byte k" (4 words constant: "expa", "nd 3", "2-by", and "te k")
 
         protected readonly ReadOnlyMemory<byte> Key;
-        internal protected readonly int InitialCounter;
+        protected internal readonly int InitialCounter;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Snuffle"/> class.
