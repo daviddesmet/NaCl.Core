@@ -2,7 +2,6 @@
 {
     using System;
     using System.Runtime.CompilerServices;
-    using System.Runtime.InteropServices;
     using System.Security.Cryptography;
     using Internal;
 
@@ -141,7 +140,7 @@
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected internal static void ShuffleState(Span<uint> state)
+        protected static void ShuffleState(Span<uint> state)
         {
             // 10 loops × 2 rounds/loop = 20 rounds
             for (var i = 0; i < 10; i++)

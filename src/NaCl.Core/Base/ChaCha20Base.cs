@@ -52,7 +52,7 @@
             // alternating between "column rounds" and "diagonal rounds"; each round consisting of four quarter-rounds.
             Span<uint> workingState = stackalloc uint[BLOCK_SIZE_IN_INTS];
             state.CopyTo(workingState);
-            ShuffleState(state);
+            ShuffleState(workingState);
 
             // At the end of the rounds, add the result to the original state.
             for (var i = 0; i < BLOCK_SIZE_IN_INTS; i++)
@@ -247,7 +247,7 @@
         */
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected internal static void ShuffleState(Span<uint> state)
+        protected static void ShuffleState(Span<uint> state)
         {
             // 10 loops × 2 rounds/loop = 20 rounds
             for (var i = 0; i < 10; i++)
