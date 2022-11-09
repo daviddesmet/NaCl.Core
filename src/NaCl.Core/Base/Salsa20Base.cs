@@ -3,7 +3,6 @@
     using System;
     using System.Runtime.CompilerServices;
     using System.Security.Cryptography;
-
     using Internal;
 
     /// <summary>
@@ -40,6 +39,14 @@
             Span<uint> state = stackalloc uint[BLOCK_SIZE_IN_INTS];
             SetInitialState(state, nonce, counter);
 
+#if INTRINSICS
+            if (System.Runtime.Intrinsics.X86.Sse3.IsSupported && BitConverter.IsLittleEndian)
+            {
+                Salsa20BaseIntrinsics.Salsa20KeyStream(state, block);
+                return;
+            }
+#endif
+
             // Create a copy of the state and then run 20 rounds on it,
             // alternating between "column rounds" and "diagonal rounds"; each round consisting of four quarter-rounds.
             Span<uint> workingState = stackalloc uint[BLOCK_SIZE_IN_INTS];
@@ -53,6 +60,17 @@
             ArrayUtils.StoreArray16UInt32LittleEndian(block, 0, state);
         }
 
+#if INTRINSICS
+        public override unsafe void ProcessStream(ReadOnlySpan<byte> nonce, Span<byte> output, ReadOnlySpan<byte> input, int initialCounter, int offset = 0)
+        {
+            Span<uint> state = stackalloc uint[BLOCK_SIZE_IN_INTS];
+            SetInitialState(state, nonce, initialCounter);
+            var c = output.Slice(offset);
+
+            Salsa20BaseIntrinsics.Salsa20(state, input, c, (ulong)input.Length);
+        }
+#endif
+
         /// <summary>
         /// Process a pseudorandom key stream block, converting the key and part of the <paramref name="nonce"/> into a <paramref name="subKey"/>, and the remainder of the <paramref name="nonce"/>.
         /// </summary>
@@ -62,15 +80,23 @@
         public void HSalsa20(Span<byte> subKey, ReadOnlySpan<byte> nonce)
         {
             // See: http://cr.yp.to/snuffle/xsalsa-20081128.pdf under 2. Specification - Definition of HSalsa20
-
             Span<uint> state = stackalloc uint[BLOCK_SIZE_IN_BYTES];
 
             // Setting HSalsa20 initial state
             HSalsa20InitialState(state, nonce);
 
+#if INTRINSICS
+            if (System.Runtime.Intrinsics.X86.Sse41.IsSupported && BitConverter.IsLittleEndian)
+            {
+                Salsa20BaseIntrinsics.HSalsa20(state, subKey);
+                return;
+            }
+#endif
+
             // Block function
             ShuffleState(state);
 
+            // Final subkey = state[0], state[5], state[10], state[15] || state[6..10]
             state[1] = state[5];
             state[2] = state[10];
             state[3] = state[15];

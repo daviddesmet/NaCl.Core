@@ -58,6 +58,10 @@
         /// <returns>ByteBuffer.</returns>
         public abstract void ProcessKeyStreamBlock(ReadOnlySpan<byte> nonce, int counter, Span<byte> block);
 
+#if INTRINSICS
+        public abstract void ProcessStream(ReadOnlySpan<byte> nonce, Span<byte> output, ReadOnlySpan<byte> input, int initialCounter, int offset = 0);
+#endif
+
         /// <summary>
         /// The size of the nonce in bytes.
         /// Salsa20 uses a 8-byte (64-bit) nonce, ChaCha20 uses a 12-byte (96-bit) nonce, but XSalsa20 and XChaCha20 use a 24-byte (192-bit) nonce.
@@ -118,6 +122,14 @@
         /// <param name="offset">The output's starting offset.</param>
         private void Process(ReadOnlySpan<byte> nonce, Span<byte> output, ReadOnlySpan<byte> input, int offset = 0)
         {
+#if INTRINSICS
+            if (System.Runtime.Intrinsics.X86.Sse3.IsSupported && BitConverter.IsLittleEndian)
+            {
+                ProcessStream(nonce, output, input, InitialCounter, offset);
+                return;
+            }
+#endif
+
             var length = input.Length;
             var numBlocks = (length / BlockSizeInBytes) + 1;
 

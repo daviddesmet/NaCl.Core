@@ -1,6 +1,5 @@
 namespace NaCl.Core.Tests.Vectors
 {
-    using System;
     using System.Collections.Generic;
 
     public class WycheproofVector

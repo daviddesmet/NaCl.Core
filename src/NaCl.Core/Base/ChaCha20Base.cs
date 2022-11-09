@@ -3,7 +3,6 @@
     using System;
     using System.Runtime.CompilerServices;
     using System.Security.Cryptography;
-
     using Internal;
 
     /// <summary>
@@ -41,6 +40,14 @@
             Span<uint> state = stackalloc uint[BLOCK_SIZE_IN_INTS];
             SetInitialState(state, nonce, counter);
 
+#if INTRINSICS
+            if (System.Runtime.Intrinsics.X86.Sse3.IsSupported && BitConverter.IsLittleEndian)
+            {
+                ChaCha20BaseIntrinsics.ChaCha20KeyStream(state, block);
+                return;
+            }
+#endif
+
             // Create a copy of the state and then run 20 rounds on it,
             // alternating between "column rounds" and "diagonal rounds"; each round consisting of four quarter-rounds.
             Span<uint> workingState = stackalloc uint[BLOCK_SIZE_IN_INTS];
@@ -54,6 +61,17 @@
             ArrayUtils.StoreArray16UInt32LittleEndian(block, 0, state);
         }
 
+#if INTRINSICS
+        public override unsafe void ProcessStream(ReadOnlySpan<byte> nonce, Span<byte> output, ReadOnlySpan<byte> input, int initialCounter, int offset = 0)
+        {
+            Span<uint> state = stackalloc uint[BLOCK_SIZE_IN_INTS];
+            SetInitialState(state, nonce, initialCounter);
+            var c = output.Slice(offset);
+
+            ChaCha20BaseIntrinsics.ChaCha20(state, input, c, (ulong)input.Length);
+        }
+#endif
+
         /// <summary>
         /// Process a pseudorandom key stream block, converting the key and part of the <paramref name="nonce"/> into a <paramref name="subKey"/>, and the remainder of the <paramref name="nonce"/>.
         /// </summary>
@@ -63,19 +81,24 @@
         public void HChaCha20(Span<byte> subKey, ReadOnlySpan<byte> nonce)
         {
             // See https://tools.ietf.org/html/draft-arciszewski-xchacha-01#section-2.2.
-
             Span<uint> state = stackalloc uint[BLOCK_SIZE_IN_INTS];
 
             // Setting HChaCha20 initial state
             HChaCha20InitialState(state, nonce);
 
+#if INTRINSICS
+            if (System.Runtime.Intrinsics.X86.Sse3.IsSupported && BitConverter.IsLittleEndian)
+            {
+                ChaCha20BaseIntrinsics.HChaCha20(state, subKey);
+                return;
+            }
+#endif
+
             // Block function
             ShuffleState(state);
 
-            state[4] = state[12];
-            state[5] = state[13];
-            state[6] = state[14];
-            state[7] = state[15];
+            // Final subkey = state[0..4] || state[12..16]
+            state.Slice(12, 4).CopyTo(state.Slice(4, 4));
 
             ArrayUtils.StoreArray8UInt32LittleEndian(subKey, 0, state);
         }
@@ -260,13 +283,7 @@
         /// Sets the ChaCha20 constant.
         /// </summary>
         /// <param name="state">The state.</param>
-        protected static void SetSigma(Span<uint> state)
-        {
-            state[0] = SIGMA[0];
-            state[1] = SIGMA[1];
-            state[2] = SIGMA[2];
-            state[3] = SIGMA[3];
-        }
+        protected static void SetSigma(Span<uint> state) => SIGMA.AsSpan()[..4].CopyTo(state);
 
         /// <summary>
         /// Sets the 256-bit Key.

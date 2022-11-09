@@ -15,6 +15,7 @@
     using Base;
     using Internal;
     using Vectors;
+    using System.Linq;
 
     [Category("CI")]
     public class Salsa20Tests
@@ -263,28 +264,78 @@
         }
 
         [Fact]
-        public void Salsa20TestVectors()
+        public void Salsa20BlockTestVector()
         {
-            var tests = ParseTestVectors(GetTestVector());
+            // Arrange
+            var key = CryptoBytes.FromHexString("00:01:02:03:04:05:06:07:08:09:0a:0b:0c:0d:0e:0f:10:11:12:13:14:15:16:17:18:19:1a:1b:1c:1d:1e:1f".Replace(":", string.Empty));
+            var nonce = CryptoBytes.FromHexString("00:00:00:09:00:00:00:4a".Replace(":", string.Empty));
+            var counter = 1;
 
-            foreach (var test in tests)
+            // Act
+            var salsa20 = new Salsa20(key, 1);
+            var output = new byte[Salsa20.BLOCK_SIZE_IN_BYTES];
+            salsa20.ProcessKeyStreamBlock(nonce, counter, output);
+
+            // Assert
+            var expected = new uint[16]
             {
-                _output.WriteLine($"Salsa20 - {test.Name}");
+                3649387971u, 3432934094u, 2867581180u, 544842727u,
+                3442094382u, 3233001746u, 2484653980u, 586338650u,
+                3037335121u, 3388889956u, 1351682463u, 2284954070u,
+                3021171268u, 2617586057u, 3288245149u, 2763695160u };
 
-                var input = new byte[512];
-                var output = new byte[512];
-
-                var cipher = new Salsa20(test.Key, 0);
-                cipher.Encrypt(input, test.IV, output);
-
-                ToBlock1(output).Should().Be(test.ExpectedBlock1);
-                ToBlock4(output).Should().Be(test.ExpectedBlock4);
-                ToBlock5(output).Should().Be(test.ExpectedBlock5);
-                ToBlock8(output).Should().Be(test.ExpectedBlock8);
-            }
+            output.ToUInt16Array().Should().Equal(expected);
         }
 
-        private string GetTestVector()
+        public static IEnumerable<object[]> Salsa20TestData => ParseTestVectors(GetTestVector()).Select(d => new object[] { d });
+
+        [Theory]
+        [MemberData(nameof(Salsa20TestData))]
+        public void Salsa20TestVectors(Salsa20TestVector test)
+        {
+            _output.WriteLine($"Salsa20 - {test.Name}");
+
+            var input = new byte[512];
+            var output = new byte[512];
+
+            var cipher = new Salsa20(test.Key, 0);
+            cipher.Encrypt(input, test.IV, output);
+
+            ToBlock1(output).Should().Be(test.ExpectedBlock1);
+            ToBlock4(output).Should().Be(test.ExpectedBlock4);
+            ToBlock5(output).Should().Be(test.ExpectedBlock5);
+            ToBlock8(output).Should().Be(test.ExpectedBlock8);
+        }
+
+        [Theory]
+        [InlineData(33)]
+        [InlineData(64)]
+        [InlineData(65)]
+        [InlineData(255)]
+        [InlineData(256)]
+        [InlineData(511)]
+        [InlineData(512)]
+        [InlineData(1023)]
+        [InlineData(1024)]
+        public void CreateVariableLengthCiphers(int size)
+        {
+            var input = new byte[size];
+            var output = new byte[size];
+
+            var nonce = new byte[8];
+            Array.Fill(nonce, (byte)2);
+
+            var key = new byte[32];
+            Array.Fill(key, (byte)1);
+
+            var cipher = new Salsa20(key, 0);
+            cipher.Encrypt(input, nonce, output);
+            var value = Convert.ToHexString(output);
+
+            value.Should().Be(LongKeyStream[..(size*2)]);
+        }
+
+        private static string GetTestVector()
         {
             try
             {
@@ -297,7 +348,7 @@
             }
         }
 
-        private IList<Salsa20TestVector> ParseTestVectors(string raw)
+        private static IList<Salsa20TestVector> ParseTestVectors(string raw)
         {
             var lines = raw.Split(new[] {'\r', '\n'});
 
@@ -359,5 +410,7 @@
         private static string ToBlock5(byte[] output) => CryptoBytes.ToHexStringUpper(output[256..320]);
 
         private static string ToBlock8(byte[] output) => CryptoBytes.ToHexStringUpper(output[448..512]);
+
+        private const string LongKeyStream = "A3D1F8292CAB0B2096AB2AA26FC59AAF3EE159B39FC6029EF160D82EC80FA110FF958AB802861180EC006F8C8450030024A2D7744BF564C1782F15DB6681144C65A730622A14AE9A4E95F753289A6D2DBBEE47B457B57DB75C009B287BF240EBE02890581E3628BDBCC9B79E93500CA15F6E10D4EBCAAFC2FB936AF2EC05BBCB1610036E840621D7CE53E4A06822D6073EA0FA8943EDFB70E45B4D2525AE4B616BD08B33F23A7E0B6CD501E80B8E80B7423E7C9D5D900AE2194AF0CF4A74D721534063D3F17BC7993B5B3EC20A373F933B43CEB6987934C1456521F098BA0CB1205109F534F80D4EA1767EA9DFC08BED97BE40C539DD37EC24EAE0C68AC1B56DD0189747A4B8278B1E0E5206EAE893C0E45C76751002F38924B8C9A036CFAB9E3D44C1E323BCE43F2C69EB8212994803C1D2AC00C3B8F97DA6D09F29B974E0DF4D6D36C9D2E88C2D7B73AB399C0920A2996A4727272339D991C6BF45CE63C2DEF3FC9C2625F87EA6268C196829BB1F7E659736AF4B0CC2A771FB0962B19005E53DD880879C052556312BA353B51C26D5F5949464EAECE15ACA240E339BF3C581E7D93D220B1C3C0DE87F65B4F340DAB924EB72072211C41B18770230A3A123619006BE5FD4ABAAFD2BFAD0F34D5FB491DEBEBF5CA9EC92D997B5A171482CC6E949C70759A0B8EC64D590B6FFF6500E8425C3AE4178C2EDE996C0003F6FA76A6D90F49D6D3D128C0DE82EA8C7C16415DDD07081940701677C32D5B5E3BB57A93315474C5B648D31AA7AE52FCD63BF22550900077FF5CF6A5F5148B285E34A57A3DA1BEB0662A20C23857CA8D5D1748F654F54F42F30CD413F408A0C7B31F57AD59E9F152DBDEEA3EA9C3DBB3517615735CFF0226E179C4A9149C6477A2903B338AE308300A86D91043E2AA437C5F2A77A49B547B05BD98CEBE49500FF367CE204157BB3EFD182A8A96FCC31025D4C948105F6762F22357446367B87A01FA3F954D52810CBE5C4EEB04C3AE827973E481F3C38EF14A6F0FE3FB2D89969D2CCB0DFB63D7366D91F29DDBF1EB90B136191745B8AC8B8F0AAEF4D3A1C763D63AED1E76CC7B920979CB8163C413273CA1A563C37B925A0251C9AD31363F978437D92437A0D250C7F221C00F2E13CF371554DF191ECDDB46C95659739A1CDC257A067D9251FE89EA328D313C4D7EF8E33614FFC4C615D3195CD6282D82633067C81E1F563DA307B14253CBF0492256A409E3007EB6A4A7BDA694E1FFA9B5106AB9868CC359B976441C7B362C03E501D8B3FBEF98771A41C4DA542DB8DA4761EA3792695288437DEAC50E7B6A62E6D00B7511A5DB0E567090ADDDFCF0521F6DD62F969D5BE89378DB127219C38931A0AEDBCE784C35D4215B09B1F96732615813753B67846E9505DF974F4B1ECDFBD0C850A9644D720884B80B4FE4CC08508A8A65D1C5F";
     }
 }

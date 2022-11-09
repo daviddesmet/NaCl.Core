@@ -5,7 +5,6 @@
     <TargetFrameworks Condition="'$(OS)' != 'Unix'">netstandard2.0;netstandard2.1;netcoreapp3.1;net45;net48;net5.0;net6.0</TargetFrameworks>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 
   <PropertyGroup Label="Package">
@@ -59,7 +58,7 @@
   </ItemGroup>
 
   <PropertyGroup Label="Constants Definition" Condition="$(TargetFramework) == 'netcoreapp3.1' OR $(TargetFramework) == 'net5.0' OR $(TargetFramework) == 'net6.0'">
-    <DefineConstants>FCL_BITOPS</DefineConstants>
+    <DefineConstants>FCL_BITOPS, INTRINSICS</DefineConstants>
   </PropertyGroup>
 
   <Target Name="Versioning" BeforeTargets="MinVer">
