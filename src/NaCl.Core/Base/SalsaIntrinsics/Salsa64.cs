@@ -23,6 +23,7 @@ internal static class Salsa64
 
         ShuffleState(ref x_0, ref x_1, ref x_2, ref x_3);
 
+        // Add the orginal and shuffled state.
         x_0 = Sse2.Add(x_0, orig_0);
         x_1 = Sse2.Add(x_1, orig_1);
         x_2 = Sse2.Add(x_2, orig_2);
@@ -70,25 +71,28 @@ internal static class Salsa64
 
         ShuffleState(ref x_0, ref x_1, ref x_2, ref x_3);
 
+        // Add the orginal and shuffled state.
         x_0 = Sse2.Add(x_0, orig_0);
         x_1 = Sse2.Add(x_1, orig_1);
         x_2 = Sse2.Add(x_2, orig_2);
         x_3 = Sse2.Add(x_3, orig_3);
 
-        byte* partialblock = stackalloc byte[64];
-        Sse2.Store(partialblock, Vector128.AsByte(x_0));
-        Sse2.Store(partialblock + 16, Vector128.AsByte(x_1));
-        Sse2.Store(partialblock + 32, Vector128.AsByte(x_2));
-        Sse2.Store(partialblock + 48, Vector128.AsByte(x_3));
+        // Load the shuffled state into a temporary span.
+        byte* partialBlock = stackalloc byte[64];
+        Sse2.Store(partialBlock, Vector128.AsByte(x_0));
+        Sse2.Store(partialBlock + 16, Vector128.AsByte(x_1));
+        Sse2.Store(partialBlock + 32, Vector128.AsByte(x_2));
+        Sse2.Store(partialBlock + 48, Vector128.AsByte(x_3));
 
         // TODO use vector<T>
+        // Xor the key stream and message to obtain the cipher.
         for (ulong i = 0; i < bytes; i++)
         {
-            c[i] = (byte)(m[i] ^ partialblock[i]);
+            c[i] = (byte)(m[i] ^ partialBlock[i]);
         }
         for (int n = 0; n < 64 / sizeof(int); n++)
         {
-            ((int*)partialblock)[n] = 0;
+            ((int*)partialBlock)[n] = 0;
         }
     }
 
@@ -102,7 +106,7 @@ internal static class Salsa64
 
         ShuffleState(ref x_0, ref x_1, ref x_2, ref x_3);
 
-        // HSalsa returns a 32 byte array of 0,5,10,15,6,7,8,9
+        // HSalsa returns a 32 byte array of index 0,5,10,15,6,7,8,9
 
         // <0, 5, 2, 3> + <8, 9, 10, 15> -> <0, 5, 10, 15>
         var t_0 = GetDiagonal(x_0, x_1, x_2, x_3);
@@ -129,6 +133,7 @@ internal static class Salsa64
 
         ShuffleState(ref x_0, ref x_1, ref x_2, ref x_3);
 
+        // Add the orginal and shuffled state.
         x_0 = Sse2.Add(x_0, orig_0);
         x_1 = Sse2.Add(x_1, orig_1);
         x_2 = Sse2.Add(x_2, orig_2);
@@ -143,14 +148,15 @@ internal static class Salsa64
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static unsafe void ShuffleState(ref Vector128<uint> x_0, ref Vector128<uint> x_1, ref Vector128<uint> x_2, ref Vector128<uint> x_3)
     {
-        Transpose(ref x_0, ref x_1, ref x_2, ref x_3);
+        var u0 = Sse41.Blend(x_0.AsUInt16(), x_2.AsUInt16(), 0xF0); //  0, 1,10,11
+        var u1 = Sse41.Blend(x_1.AsUInt16(), x_3.AsUInt16(), 0xC3); // 12, 5, 6,15
+        var u2 = Sse41.Blend(x_0.AsUInt16(), x_2.AsUInt16(), 0x0F); //  8, 9, 2, 3
+        var u3 = Sse41.Blend(x_1.AsUInt16(), x_3.AsUInt16(), 0x3C); //  4,13,14, 7
 
-        // Diagonalize
-        x_1 = Sse2.Shuffle(x_1, 0b_00_11_10_01);
-        x_2 = Sse2.Shuffle(x_2, 0b_01_00_11_10);
-        x_3 = Sse2.Shuffle(x_3, 0b_10_01_00_11);
-
-        Transpose(ref x_0, ref x_1, ref x_2, ref x_3);
+        x_0 = Sse41.Blend(u0, u1, 0xCC).AsUInt32();
+        x_3 = Sse41.Blend(u0, u1, 0b110011).AsUInt32();
+        x_2 = Sse41.Blend(u2, u3, 0xCC).AsUInt32();
+        x_1 = Sse41.Blend(u2, u3, 0b00110011).AsUInt32();
 
         for (int i = 0; i < 20; i += 2)
         {
@@ -173,14 +179,20 @@ internal static class Salsa64
             x_3 = Sse2.Shuffle(x_3, 0b_10_01_00_11);
         }
 
-        Transpose(ref x_0, ref x_1, ref x_2, ref x_3);
+        var t0 = x_0.AsUInt16();
+        var t1 = x_3.AsUInt16();
+        var t2 = x_2.AsUInt16();
+        var t3 = x_1.AsUInt16();
 
-        // Diagonalize
-        x_1 = Sse2.Shuffle(x_1, 0b_10_01_00_11);
-        x_2 = Sse2.Shuffle(x_2, 0b_01_00_11_10);
-        x_3 = Sse2.Shuffle(x_3, 0b_00_11_10_01);
+        u0 = Sse41.Blend(t0, t1, 0xCC);
+        u1 = Sse41.Blend(t0, t1, 0x33);
+        u2 = Sse41.Blend(t2, t3, 0xCC);
+        u3 = Sse41.Blend(t2, t3, 0x33);
 
-        Transpose(ref x_0, ref x_1, ref x_2, ref x_3);
+        x_0 = Sse41.Blend(u0, u2, 0xF0).AsUInt32();
+        x_1 = Sse41.Blend(u1, u3, 0xC3).AsUInt32();
+        x_2 = Sse41.Blend(u0, u2, 0x0F).AsUInt32();
+        x_3 = Sse41.Blend(u1, u3, 0x3C).AsUInt32();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

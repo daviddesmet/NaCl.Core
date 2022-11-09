@@ -26,15 +26,18 @@ internal static class ChaCha64
 
         ShuffleState(ref x_0, ref x_1, ref x_2, ref x_3);
 
+        // Add the orginal and shuffled state.
         x_0 = Sse2.Add(x_0, orig_0);
         x_1 = Sse2.Add(x_1, orig_1);
         x_2 = Sse2.Add(x_2, orig_2);
         x_3 = Sse2.Add(x_3, orig_3);
 
+        // Xor the key stream and message to obtain the cipher.
         x_0 = Sse2.Xor(x_0.AsByte(), Sse2.LoadVector128(m)).AsUInt32();
         x_1 = Sse2.Xor(x_1.AsByte(), Sse2.LoadVector128(m + 16)).AsUInt32();
         x_2 = Sse2.Xor(x_2.AsByte(), Sse2.LoadVector128(m + 32)).AsUInt32();
         x_3 = Sse2.Xor(x_3.AsByte(), Sse2.LoadVector128(m + 48)).AsUInt32();
+
         Sse2.Store(c, x_0.AsByte());
         Sse2.Store(c + 16, x_1.AsByte());
         Sse2.Store(c + 32, x_2.AsByte());
@@ -71,24 +74,28 @@ internal static class ChaCha64
 
         ShuffleState(ref x_0, ref x_1, ref x_2, ref x_3);
 
+        // Add the orginal and shuffled state.
         x_0 = Sse2.Add(x_0, orig_0);
         x_1 = Sse2.Add(x_1, orig_1);
         x_2 = Sse2.Add(x_2, orig_2);
         x_3 = Sse2.Add(x_3, orig_3);
 
-        byte* partialblock = stackalloc byte[64];
-        Sse2.Store(partialblock, Vector128.AsByte(x_0));
-        Sse2.Store(partialblock + 16, Vector128.AsByte(x_1));
-        Sse2.Store(partialblock + 32, Vector128.AsByte(x_2));
-        Sse2.Store(partialblock + 48, Vector128.AsByte(x_3));
+        // Load the shuffled state into a temporary span.
+        byte* partialBlock = stackalloc byte[64];
+        Sse2.Store(partialBlock, Vector128.AsByte(x_0));
+        Sse2.Store(partialBlock + 16, Vector128.AsByte(x_1));
+        Sse2.Store(partialBlock + 32, Vector128.AsByte(x_2));
+        Sse2.Store(partialBlock + 48, Vector128.AsByte(x_3));
 
+        // TODO use vector<T>
+        // Xor the key stream and message to obtain the cipher.
         for (ulong i = 0; i<bytes; i++)
         {
-            c[i] = (byte)(m[i] ^ partialblock[i]);
+            c[i] = (byte)(m[i] ^ partialBlock[i]);
         }
         for (int n = 0; n < 64 / sizeof(int); n++)
         {
-            ((int*)partialblock)[n] = 0;
+            ((int*)partialBlock)[n] = 0;
         }
     }
 
@@ -102,6 +109,7 @@ internal static class ChaCha64
 
         ShuffleState(ref x_0, ref x_1, ref x_2, ref x_3);
 
+        // Get the values at index 0,1,2,3,12,13,14,15.
         Sse2.Store(sk, Vector128.AsByte(x_0));
         Sse2.Store(sk + 16, Vector128.AsByte(x_3));
     }
@@ -121,6 +129,7 @@ internal static class ChaCha64
 
         ShuffleState(ref x_0, ref x_1, ref x_2, ref x_3);
 
+        // Add the orginal and shuffled state.
         x_0 = Sse2.Add(x_0, orig_0);
         x_1 = Sse2.Add(x_1, orig_1);
         x_2 = Sse2.Add(x_2, orig_2);
