@@ -22,13 +22,13 @@
     {
         protected const int KEY_SIZE_IN_INTS = 8;
         public const int KEY_SIZE_IN_BYTES = KEY_SIZE_IN_INTS * 4; // 32
-        protected internal const int BLOCK_SIZE_IN_INTS = 16;
+        protected const int BLOCK_SIZE_IN_INTS = 16;
         public const int BLOCK_SIZE_IN_BYTES = BLOCK_SIZE_IN_INTS * 4; // 64
 
         protected static uint[] SIGMA = new uint[] { 0x61707865, 0x3320646E, 0x79622D32, 0x6B206574 }; // "expand 32-byte k" (4 words constant: "expa", "nd 3", "2-by", and "te k")
 
         protected readonly ReadOnlyMemory<byte> Key;
-        protected internal readonly int InitialCounter;
+        protected readonly int InitialCounter;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Snuffle"/> class.
@@ -57,6 +57,10 @@
         /// <param name="block">The stream block.</param>
         /// <returns>ByteBuffer.</returns>
         public abstract void ProcessKeyStreamBlock(ReadOnlySpan<byte> nonce, int counter, Span<byte> block);
+
+#if INTRINSICS
+        public abstract void ProcessStream(ReadOnlySpan<byte> nonce, Span<byte> output, ReadOnlySpan<byte> input, int initialCounter, int offset = 0);
+#endif
 
         /// <summary>
         /// The size of the nonce in bytes.
@@ -116,8 +120,16 @@
         /// <param name="output">The output.</param>
         /// <param name="input">The input.</param>
         /// <param name="offset">The output's starting offset.</param>
-        internal virtual void Process(ReadOnlySpan<byte> nonce, Span<byte> output, ReadOnlySpan<byte> input, int offset = 0)
+        private void Process(ReadOnlySpan<byte> nonce, Span<byte> output, ReadOnlySpan<byte> input, int offset = 0)
         {
+#if INTRINSICS
+            if (System.Runtime.Intrinsics.X86.Sse3.IsSupported && BitConverter.IsLittleEndian)
+            {
+                ProcessStream(nonce, output, input, InitialCounter, offset);
+                return;
+            }
+#endif
+
             var length = input.Length;
             var numBlocks = (length / BlockSizeInBytes) + 1;
 

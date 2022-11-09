@@ -2,8 +2,8 @@
 {
     using System;
     using System.Runtime.CompilerServices;
+    using System.Security.Cryptography;
     using Internal;
-    using NaCl.Core.Base.ChaChaCore;
 
     /// <summary>
     /// Base class for <seealso cref="NaCl.Core.ChaCha20" /> and <seealso cref="NaCl.Core.XChaCha20" />.
@@ -11,28 +11,12 @@
     /// <seealso cref="NaCl.Core.Base.Snuffle" />
     public abstract class ChaCha20Base : Snuffle
     {
-        private readonly IChaCha20Core _chaCha20Core;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="ChaCha20Base"/> class.
         /// </summary>
         /// <param name="key">The key.</param>
         /// <param name="initialCounter">The initial counter.</param>
-        protected ChaCha20Base(ReadOnlyMemory<byte> key, int initialCounter) : base(key, initialCounter)
-        {
-#if INTRINSICS
-            if (System.Runtime.Intrinsics.X86.Sse3.IsSupported && BitConverter.IsLittleEndian)
-            {
-                _chaCha20Core = new ChaCha20CoreIntrinsics(this);
-            }
-            else
-            {
-                _chaCha20Core = new ChaCha20Core(this);
-            }
-#else
-            _chaCha20Core = new ChaCha20Core(this);
-#endif
-        }
+        protected ChaCha20Base(ReadOnlyMemory<byte> key, int initialCounter) : base(key, initialCounter) { }
 
         /// <inheritdoc />
         public override int BlockSizeInBytes => BLOCK_SIZE_IN_BYTES;
@@ -44,13 +28,49 @@
         /// <param name="state">The state.</param>
         /// <param name="nonce">The nonce.</param>
         /// <param name="counter">The counter.</param>
-        protected internal abstract void SetInitialState(Span<uint> state, ReadOnlySpan<byte> nonce, int counter);
+        protected abstract void SetInitialState(Span<uint> state, ReadOnlySpan<byte> nonce, int counter);
 
         /// <inheritdoc />
-        internal override void Process(ReadOnlySpan<byte> nonce, Span<byte> output, ReadOnlySpan<byte> input, int offset = 0) => _chaCha20Core.Process(nonce, output, input, offset);
+        public override void ProcessKeyStreamBlock(ReadOnlySpan<byte> nonce, int counter, Span<byte> block)
+        {
+            if (block.Length != BLOCK_SIZE_IN_BYTES)
+                throw new CryptographicException($"The key stream block length is not valid. The length in bytes must be {BLOCK_SIZE_IN_BYTES}.");
 
-        /// <inheritdoc />
-        public override void ProcessKeyStreamBlock(ReadOnlySpan<byte> nonce, int counter, Span<byte> block) => _chaCha20Core.ProcessKeyStreamBlock(nonce, counter, block);
+            // Set the initial state based on https://tools.ietf.org/html/rfc8439#section-2.3
+            Span<uint> state = stackalloc uint[BLOCK_SIZE_IN_INTS];
+            SetInitialState(state, nonce, counter);
+
+#if INTRINSICS
+            if (System.Runtime.Intrinsics.X86.Sse3.IsSupported && BitConverter.IsLittleEndian)
+            {
+                ChaCha20BaseIntrinsics.ChaCha20KeyStream(state, block);
+                return;
+            }
+#endif
+
+            // Create a copy of the state and then run 20 rounds on it,
+            // alternating between "column rounds" and "diagonal rounds"; each round consisting of four quarter-rounds.
+            Span<uint> workingState = stackalloc uint[BLOCK_SIZE_IN_INTS];
+            state.CopyTo(workingState);
+            ShuffleState(state);
+
+            // At the end of the rounds, add the result to the original state.
+            for (var i = 0; i < BLOCK_SIZE_IN_INTS; i++)
+                state[i] += workingState[i];
+
+            ArrayUtils.StoreArray16UInt32LittleEndian(block, 0, state);
+        }
+
+#if INTRINSICS
+        public override unsafe void ProcessStream(ReadOnlySpan<byte> nonce, Span<byte> output, ReadOnlySpan<byte> input, int initialCounter, int offset = 0)
+        {
+            Span<uint> state = stackalloc uint[BLOCK_SIZE_IN_INTS];
+            SetInitialState(state, nonce, initialCounter);
+            var c = output.Slice(offset);
+
+            ChaCha20BaseIntrinsics.ChaCha20(state, input, c, (ulong)input.Length);
+        }
+#endif
 
         /// <summary>
         /// Process a pseudorandom key stream block, converting the key and part of the <paramref name="nonce"/> into a <paramref name="subKey"/>, and the remainder of the <paramref name="nonce"/>.
@@ -58,7 +78,30 @@
         /// <param name="subKey">The subKey.</param>
         /// <param name="nonce">The nonce.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void HChaCha20(Span<byte> subKey, ReadOnlySpan<byte> nonce) => _chaCha20Core.HChaCha20(subKey, nonce);
+        public void HChaCha20(Span<byte> subKey, ReadOnlySpan<byte> nonce)
+        {
+            // See https://tools.ietf.org/html/draft-arciszewski-xchacha-01#section-2.2.
+            Span<uint> state = stackalloc uint[BLOCK_SIZE_IN_INTS];
+
+            // Setting HChaCha20 initial state
+            HChaCha20InitialState(state, nonce);
+
+#if INTRINSICS
+            if (System.Runtime.Intrinsics.X86.Sse3.IsSupported && BitConverter.IsLittleEndian)
+            {
+                ChaCha20BaseIntrinsics.HChaCha20(state, subKey);
+                return;
+            }
+#endif
+
+            // Block function
+            ShuffleState(state);
+
+            // Final subkey = state[0..4] || state[12..16]
+            state.Slice(12, 4).CopyTo(state.Slice(4,4));
+
+            ArrayUtils.StoreArray8UInt32LittleEndian(subKey, 0, state);
+        }
 
         /// <summary>
         /// Sets the initial <paramref name="state"/> of the HChaCha20 using the key and the <paramref name="nonce"/>.
@@ -240,13 +283,7 @@
         /// Sets the ChaCha20 constant.
         /// </summary>
         /// <param name="state">The state.</param>
-        protected static void SetSigma(Span<uint> state)
-        {
-            state[0] = SIGMA[0];
-            state[1] = SIGMA[1];
-            state[2] = SIGMA[2];
-            state[3] = SIGMA[3];
-        }
+        protected static void SetSigma(Span<uint> state) => SIGMA.AsSpan()[..4].CopyTo(state);
 
         /// <summary>
         /// Sets the 256-bit Key.

@@ -26,7 +26,7 @@
         public ChaCha20(ReadOnlyMemory<byte> key, int initialCounter) : base(key, initialCounter) { }
 
         /// <inheritdoc />
-        protected internal override void SetInitialState(Span<uint> state, ReadOnlySpan<byte> nonce, int counter)
+        protected override void SetInitialState(Span<uint> state, ReadOnlySpan<byte> nonce, int counter)
         {
             if (nonce.IsEmpty || nonce.Length != NonceSizeInBytes)
                 throw new CryptographicException(FormatNonceLengthExceptionMessage(GetType().Name, nonce.Length, NonceSizeInBytes));
