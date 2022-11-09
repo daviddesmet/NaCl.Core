@@ -2,8 +2,8 @@
 namespace NaCl.Core.Base.ChaChaIntrinsics;
 
 using System.Runtime.CompilerServices;
-using System.Runtime.Intrinsics.X86;
 using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
 
 #pragma warning disable IDE0007 // Use implicit type
 internal static class ChaCha64
@@ -14,10 +14,10 @@ internal static class ChaCha64
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static unsafe void Process64(uint* x, ref byte* m, ref byte* c, ref ulong bytes)
     {
-        Vector128<uint> x_0 =Sse2.LoadVector128(x);
-        Vector128<uint> x_1 =Sse2.LoadVector128(x + 4);
-        Vector128<uint> x_2 =Sse2.LoadVector128(x + 8);
-        Vector128<uint> x_3 =Sse2.LoadVector128(x + 12);
+        Vector128<uint> x_0 = Sse2.LoadVector128(x);
+        Vector128<uint> x_1 = Sse2.LoadVector128(x + 4);
+        Vector128<uint> x_2 = Sse2.LoadVector128(x + 8);
+        Vector128<uint> x_3 = Sse2.LoadVector128(x + 12);
 
         Vector128<uint> orig_0 = x_0;
         Vector128<uint> orig_1 = x_1;

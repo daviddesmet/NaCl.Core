@@ -98,7 +98,7 @@
             ShuffleState(state);
 
             // Final subkey = state[0..4] || state[12..16]
-            state.Slice(12, 4).CopyTo(state.Slice(4,4));
+            state.Slice(12, 4).CopyTo(state.Slice(4, 4));
 
             ArrayUtils.StoreArray8UInt32LittleEndian(subKey, 0, state);
         }
