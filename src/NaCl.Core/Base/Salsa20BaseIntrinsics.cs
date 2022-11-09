@@ -41,7 +41,8 @@ internal static class Salsa20BaseIntrinsics
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static unsafe void HSalsa20(ReadOnlySpan<uint> state, Span<byte> subKey)
     {
-        ValidateDeviceSupport();
+        if (!Sse41.IsSupported || !BitConverter.IsLittleEndian)
+            throw new NotSupportedException($"{nameof(Sse41)} vectorisation is not supported on this device.");
 
         fixed (uint* x = state)
         fixed (byte* sk = subKey)

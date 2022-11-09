@@ -57,22 +57,19 @@ Task("Test")
             Settings = "CodeCoverage.runsettings"
         };
 
-        Information($"Running default {project.GetFilename()} test");
-        DotNetTest(project.ToString(), settings);
-        
         settings.EnvironmentVariables["COMPlus_EnableAVX2"] = "1";
         settings.EnvironmentVariables["COMPlus_EnableSSE3"] = "1";
-        Information($"Running AVX2 and SSE3 enabled {project.GetFilename()} test");
+        Information($"Running default {project.GetFilename()} test with SSE3 and AVX2 enabled");
         DotNetTest(project.ToString(), settings);
 
         settings.EnvironmentVariables["COMPlus_EnableAVX2"] = "0";
         settings.EnvironmentVariables["COMPlus_EnableSSE3"] = "1";
-        Information($"Running SSE3 enabled and AVX2 disabled {project.GetFilename()} test");
+        Information($"Running {project.GetFilename()} test with SSE3 enabled and AVX2 disabled");
         DotNetTest(project.ToString(), settings);
 
         settings.EnvironmentVariables["COMPlus_EnableAVX2"] = "0";
         settings.EnvironmentVariables["COMPlus_EnableSSE3"] = "0";
-        Information($"Running SSE3 and AVX2 disabled {project.GetFilename()} test");
+        Information($"Running {project.GetFilename()} test with SSE3 and AVX2 disabled");
         DotNetTest(project.ToString(), settings);
     });
 

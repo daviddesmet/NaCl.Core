@@ -80,15 +80,13 @@
         public void HSalsa20(Span<byte> subKey, ReadOnlySpan<byte> nonce)
         {
             // See: http://cr.yp.to/snuffle/xsalsa-20081128.pdf under 2. Specification - Definition of HSalsa20
-
             Span<uint> state = stackalloc uint[BLOCK_SIZE_IN_BYTES];
 
             // Setting HSalsa20 initial state
             HSalsa20InitialState(state, nonce);
 
-
 #if INTRINSICS
-            if (System.Runtime.Intrinsics.X86.Sse2.IsSupported && BitConverter.IsLittleEndian)
+            if (System.Runtime.Intrinsics.X86.Sse41.IsSupported && BitConverter.IsLittleEndian)
             {
                 Salsa20BaseIntrinsics.HSalsa20(state, subKey);
                 return;
