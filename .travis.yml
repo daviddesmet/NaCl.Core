@@ -1,6 +1,0 @@
-language: csharp
-mono: none
-dotnet: 5.0
-script:
- - dotnet restore
- - dotnet test -f net5.0 test/NaCl.Core.Tests
