@@ -1,88 +1,87 @@
-﻿namespace NaCl.Core.Benchmarks
+﻿namespace NaCl.Core.Benchmarks;
+
+using System;
+using System.Collections.Generic;
+using System.Security.Cryptography;
+
+using Base;
+
+using BenchmarkDotNet.Attributes;
+
+[BenchmarkCategory("AEAD")]
+[MemoryDiagnoser]
+[RPlotExporter, RankColumn]
+public class ChaCha20Poly1305Benchmark
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Security.Cryptography;
+    private static readonly Random rnd = new Random(42);
 
-    using Base;
+    private Memory<byte> key;
+    private Memory<byte> nonce;
+    private Memory<byte> message;
+    private Memory<byte> tag;
+    private Memory<byte> aad;
+    private Memory<byte> ciphertext;
 
-    using BenchmarkDotNet.Attributes;
+    private ChaCha20Poly1305 aead;
 
-    [BenchmarkCategory("AEAD")]
-    [MemoryDiagnoser]
-    [RPlotExporter, RankColumn]
-    public class ChaCha20Poly1305Benchmark
+    [Params(
+        (int)1E+2,  // 100 bytes
+        (int)1E+3,  // 1 000 bytes = 1 KB
+        (int)1E+4,  // 10 000 bytes = 10 KB
+        (int)1E+5,  // 100 000 bytes = 100 KB
+        (int)1E+6,  // 1 000 000 bytes = 1 MB
+        (int)1E+7)] // 10 000 000 bytes = 10 MB
+    public int Size { get; set; }
+
+    [GlobalSetup]
+    public void Setup()
     {
-        private static readonly Random rnd = new Random(42);
+        key = new byte[Snuffle.KEY_SIZE_IN_BYTES];
+        RandomNumberGenerator.Fill(key.Span);
 
-        private Memory<byte> key;
-        private Memory<byte> nonce;
-        private Memory<byte> message;
-        private Memory<byte> tag;
-        private Memory<byte> aad;
-        private Memory<byte> ciphertext;
+        nonce = new byte[ChaCha20.NONCE_SIZE_IN_BYTES];
+        RandomNumberGenerator.Fill(nonce.Span);
 
-        private ChaCha20Poly1305 aead;
+        tag = new byte[Poly1305.MAC_TAG_SIZE_IN_BYTES];
 
-        [Params(
-            (int)1E+2,  // 100 bytes
-            (int)1E+3,  // 1 000 bytes = 1 KB
-            (int)1E+4,  // 10 000 bytes = 10 KB
-            (int)1E+5,  // 100 000 bytes = 100 KB
-            (int)1E+6,  // 1 000 000 bytes = 1 MB
-            (int)1E+7)] // 10 000 000 bytes = 10 MB
-        public int Size { get; set; }
+        message = new byte[Size];
+        rnd.NextBytes(message.Span);
 
-        [GlobalSetup]
-        public void Setup()
-        {
-            key = new byte[Snuffle.KEY_SIZE_IN_BYTES];
-            RandomNumberGenerator.Fill(key.Span);
+        aad = new byte[16];
+        rnd.NextBytes(aad.Span);
 
-            nonce = new byte[ChaCha20.NONCE_SIZE_IN_BYTES];
-            RandomNumberGenerator.Fill(nonce.Span);
+        ciphertext = new byte[message.Length];
 
-            tag = new byte[Poly1305.MAC_TAG_SIZE_IN_BYTES];
-
-            message = new byte[Size];
-            rnd.NextBytes(message.Span);
-
-            aad = new byte[16];
-            rnd.NextBytes(aad.Span);
-
-            ciphertext = new byte[message.Length];
-
-            aead = new ChaCha20Poly1305(key.Span);
-        }
-
-        [Benchmark]
-        [BenchmarkCategory("Encryption")]
-        public void Encrypt() => aead.Encrypt(nonce.Span, message.Span, ciphertext.Span, tag.Span, aad.Span);
-
-        [Benchmark]
-        [BenchmarkCategory("Decryption")]
-        [ArgumentsSource(nameof(TestVectors))]
-        public void Decrypt(Tests.Vectors.Rfc8439TestVector test)
-        {
-            var aead = new ChaCha20Poly1305(test.Key);
-            var plaintext = new byte[test.CipherText.Length];
-            aead.Decrypt(test.Nonce, test.CipherText, test.Tag, plaintext, test.Aad);
-        }
-
-        public IEnumerable<object> TestVectors()
-        {
-            //foreach (var test in Tests.Rfc8439TestVector.Rfc7634AeadTestVectors)
-            //    yield return test;
-
-            yield return Tests.Vectors.Rfc8439TestVector.Rfc8439AeadTestVectors[0];
-            yield return Tests.Vectors.Rfc8439TestVector.Rfc8439AeadTestVectors[1];
-            yield return Tests.Vectors.Rfc8439TestVector.Rfc7634AeadTestVectors[0];
-            yield return Tests.Vectors.Rfc8439TestVector.Rfc7634AeadTestVectors[1];
-        }
-
-        // TODO: Use the encrypt value (from Encrypt method) to benchmark decryption
-        //[Benchmark]
-        //[BenchmarkCategory("Decryption")]
-        //public byte[] Decrypt(byte[] ciphertext) => aead.Decrypt(ciphertext, aad);
+        aead = new ChaCha20Poly1305(key.Span);
     }
+
+    [Benchmark]
+    [BenchmarkCategory("Encryption")]
+    public void Encrypt() => aead.Encrypt(nonce.Span, message.Span, ciphertext.Span, tag.Span, aad.Span);
+
+    [Benchmark]
+    [BenchmarkCategory("Decryption")]
+    [ArgumentsSource(nameof(TestVectors))]
+    public void Decrypt(Tests.Vectors.Rfc8439TestVector test)
+    {
+        var aead = new ChaCha20Poly1305(test.Key);
+        var plaintext = new byte[test.CipherText.Length];
+        aead.Decrypt(test.Nonce, test.CipherText, test.Tag, plaintext, test.Aad);
+    }
+
+    public IEnumerable<object> TestVectors()
+    {
+        //foreach (var test in Tests.Rfc8439TestVector.Rfc7634AeadTestVectors)
+        //    yield return test;
+
+        yield return Tests.Vectors.Rfc8439TestVector.Rfc8439AeadTestVectors[0];
+        yield return Tests.Vectors.Rfc8439TestVector.Rfc8439AeadTestVectors[1];
+        yield return Tests.Vectors.Rfc8439TestVector.Rfc7634AeadTestVectors[0];
+        yield return Tests.Vectors.Rfc8439TestVector.Rfc7634AeadTestVectors[1];
+    }
+
+    // TODO: Use the encrypt value (from Encrypt method) to benchmark decryption
+    //[Benchmark]
+    //[BenchmarkCategory("Decryption")]
+    //public byte[] Decrypt(byte[] ciphertext) => aead.Decrypt(ciphertext, aad);
 }
