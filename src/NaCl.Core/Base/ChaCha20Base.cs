@@ -236,13 +236,13 @@ public abstract class ChaCha20Base : Snuffle
     protected static void ShuffleState(Span<uint> state)
     {
 #if INTRINSICS
-        if (Avx2.IsSupported)
+        if (Avx2.IsSupported && BitConverter.IsLittleEndian)
         {
             ShuffleStateAvx2(state);
             return;
         }
 
-        if (Sse3.IsSupported)
+        if (Sse3.IsSupported && BitConverter.IsLittleEndian)
         {
             ShuffleStateSse3(state);
             return;
