@@ -10,10 +10,10 @@ using BenchmarkDotNet.Attributes;
 public class Poly1305Benchmark
 {
     //private const int KB = 1024;
-    private static readonly Random rnd = new Random(42);
+    private static readonly Random Rnd = new(42);
 
-    private Memory<byte> key;
-    private Memory<byte> data;
+    private Memory<byte> _key;
+    private Memory<byte> _data;
 
     [Params(
         (int)1E+2,  // 100 bytes
@@ -28,18 +28,18 @@ public class Poly1305Benchmark
     [GlobalSetup]
     public void Setup()
     {
-        key = new byte[Poly1305.MAC_KEY_SIZE_IN_BYTES];
-        rnd.NextBytes(key.Span);
+        _key = new byte[Poly1305.MAC_KEY_SIZE_IN_BYTES];
+        Rnd.NextBytes(_key.Span);
 
-        data = new byte[Size];
-        rnd.NextBytes(data.Span);
+        _data = new byte[Size];
+        Rnd.NextBytes(_data.Span);
     }
 
     [Benchmark(Description = "ComputeMac")]
     public void Compute()
     {
         var mac = new byte[Poly1305.MAC_TAG_SIZE_IN_BYTES];
-        Poly1305.ComputeMac(key.Span, data.Span, mac);
+        Poly1305.ComputeMac(_key.Span, _data.Span, mac);
     }
 
     // TODO: Use the mac value (from Compute method) to benchmark verification
