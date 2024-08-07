@@ -48,7 +48,7 @@ public class ChaCha20Benchmark
     [BenchmarkCategory("Encryption")]
     public void Encrypt()
     {
-        var ciphertext = new byte[message.Length];
+        _cipherText = new byte[_message.Length];
         _cipher.Encrypt(_message.Span, _nonce.Span, _cipherText.Span);
     }
 

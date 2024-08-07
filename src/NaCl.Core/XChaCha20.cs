@@ -7,11 +7,13 @@ using Base;
 using Internal;
 
 /// <summary>
-/// A stream cipher based on https://download.libsodium.org/doc/advanced/xchacha20.html and https://tools.ietf.org/html/draft-arciszewski-xchacha-02.
+/// A stream cipher based on <a href="https://download.libsodium.org/doc/advanced/xchacha20.html">XChaCha20 libsodium</a> and <a href="https://tools.ietf.org/html/draft-arciszewski-xchacha-02">XChaCha20 draft</a>.
 ///
 /// This cipher is meant to be used to construct an AEAD with Poly1305.
 /// </summary>
 /// <seealso cref="NaCl.Core.Base.ChaCha20Base" />
+/// <seealso href="https://download.libsodium.org/doc/advanced/xchacha20.html">XChaCha20 libsodium</seealso>
+/// <seealso href="https://tools.ietf.org/html/draft-arciszewski-xchacha-02">XChaCha20 draft</seealso>
 public class XChaCha20 : ChaCha20Base
 {
     public const int NONCE_SIZE_IN_BYTES = 24;

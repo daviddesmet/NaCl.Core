@@ -10,14 +10,20 @@ using System.Security.Cryptography;
 /// <remarks>
 /// Variants of Snuffle have two differences: the size of the nonce and the block function that
 /// produces a key stream block from a key, a nonce, and a counter. Subclasses of this class
-/// specifying these two information by overriding <seealso cref="NaCl.Core.Base.Snuffle.NonceSizeInBytes" /> and <seealso cref="NaCl.Core.Base.Snuffle.BlockSizeInBytes" /> and <seealso cref="NaCl.Core.Base.Snuffle.ProcessKeyStreamBlock(ReadOnlySpan{byte},int,Span{byte})" />.
+/// specifying these two information by overriding <see cref="NaCl.Core.Base.Snuffle.NonceSizeInBytes" /> and <see cref="NaCl.Core.Base.Snuffle.BlockSizeInBytes" /> and <see cref="NaCl.Core.Base.Snuffle.ProcessKeyStreamBlock(ReadOnlySpan{byte},int,Span{byte})" />.
 ///
-/// Concrete implementations of this class are meant to be used to construct an AEAD with <seealso cref="NaCl.Core.Poly1305" />. The
-/// base class of these AEAD constructions is <seealso cref="NaCl.Core.Base.SnufflePoly1305" />.
-/// For example, <seealso cref="NaCl.Core.XChaCha20" /> is a subclass of this class and a
-/// concrete Snuffle implementation, and <seealso cref="NaCl.Core.XChaCha20Poly1305" /> is
-/// a subclass of <seealso cref="NaCl.Core.Base.SnufflePoly1305" /> and a concrete AEAD construction.
+/// Concrete implementations of this class are meant to be used to construct an AEAD with <see cref="NaCl.Core.Poly1305" />. The
+/// base class of these AEAD constructions is <see cref="NaCl.Core.Base.SnufflePoly1305" />.
+/// For example, <see cref="NaCl.Core.XChaCha20" /> is a subclass of this class and a
+/// concrete Snuffle implementation, and <see cref="NaCl.Core.XChaCha20Poly1305" /> is
+/// a subclass of <see cref="NaCl.Core.Base.SnufflePoly1305" /> and a concrete AEAD construction.
 /// </remarks>
+/// <seealso cref="NaCl.Core.Poly1305" />
+/// <seealso cref="NaCl.Core.Base.SnufflePoly1305" />
+/// <seealso cref="NaCl.Core.ChaCha20" />
+/// <seealso cref="NaCl.Core.ChaCha20Poly1305" />
+/// <seealso cref="NaCl.Core.XChaCha20" />
+/// <seealso cref="NaCl.Core.XChaCha20Poly1305" />
 public abstract class Snuffle
 {
     protected const int KEY_SIZE_IN_INTS = 8;
@@ -46,7 +52,7 @@ public abstract class Snuffle
     }
 
     /// <summary>
-    /// Process the key stream block <paramref name="block"/> from <paramref name="nonce"/> and <paramref name="counter"/>.
+    /// Process the key stream <paramref name="block"/> from <paramref name="nonce"/> and <paramref name="counter"/>.
     ///
     /// From this function, the Snuffle encryption function can be constructed using the counter
     /// mode of operation. For example, the ChaCha20 block function and how it can be used to
@@ -60,7 +66,7 @@ public abstract class Snuffle
 
     /// <summary>
     /// The size of the nonce in bytes.
-    /// Salsa20 uses a 8-byte (64-bit) nonce, ChaCha20 uses a 12-byte (96-bit) nonce, but XSalsa20 and XChaCha20 use a 24-byte (192-bit) nonce.
+    /// Salsa20 uses an 8-byte (64-bit) nonce, ChaCha20 uses a 12-byte (96-bit) nonce, but XSalsa20 and XChaCha20 use a 24-byte (192-bit) nonce.
     /// </summary>
     /// <returns>System.Int32.</returns>
     public abstract int NonceSizeInBytes { get; }

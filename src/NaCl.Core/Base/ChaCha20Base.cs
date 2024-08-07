@@ -12,9 +12,11 @@ using System.Security.Cryptography;
 using Internal;
 
 /// <summary>
-/// Base class for <seealso cref="NaCl.Core.ChaCha20" /> and <seealso cref="NaCl.Core.XChaCha20" />.
+/// Base class for <see cref="NaCl.Core.ChaCha20" /> and <see cref="NaCl.Core.XChaCha20" />.
 /// </summary>
 /// <seealso cref="NaCl.Core.Base.Snuffle" />
+/// <seealso cref="NaCl.Core.ChaCha20" />
+/// <seealso cref="NaCl.Core.XChaCha20" />
 public abstract class ChaCha20Base : Snuffle
 {
     /// <summary>
