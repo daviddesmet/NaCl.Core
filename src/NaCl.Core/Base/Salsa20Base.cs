@@ -7,9 +7,11 @@ using System.Security.Cryptography;
 using Internal;
 
 /// <summary>
-/// Base class for <seealso cref="NaCl.Core.Salsa20" /> and <seealso cref="NaCl.Core.XSalsa20" />.
+/// Base class for <see cref="NaCl.Core.Salsa20" /> and <see cref="NaCl.Core.XSalsa20" />.
 /// </summary>
 /// <seealso cref="NaCl.Core.Base.Snuffle" />
+/// <seealso cref="NaCl.Core.Salsa20" />
+/// <seealso cref="NaCl.Core.XSalsa20" />
 public abstract class Salsa20Base : Snuffle
 {
     /// <summary>

@@ -13,16 +13,16 @@ using BenchmarkDotNet.Attributes;
 [RPlotExporter, RankColumn]
 public class XChaCha20Poly1305Benchmark
 {
-    private static readonly Random rnd = new Random(42);
+    private static readonly Random Rnd = new(42);
 
-    private Memory<byte> key;
-    private Memory<byte> nonce;
-    private Memory<byte> message;
-    private Memory<byte> tag;
-    private Memory<byte> aad;
-    private Memory<byte> ciphertext;
+    private Memory<byte> _key;
+    private Memory<byte> _nonce;
+    private Memory<byte> _message;
+    private Memory<byte> _tag;
+    private Memory<byte> _aad;
+    private Memory<byte> _ciphertext;
 
-    private XChaCha20Poly1305 aead;
+    private XChaCha20Poly1305 _aead;
 
     [Params(
         (int)1E+2,  // 100 bytes
@@ -36,28 +36,28 @@ public class XChaCha20Poly1305Benchmark
     [GlobalSetup]
     public void Setup()
     {
-        key = new byte[Snuffle.KEY_SIZE_IN_BYTES];
-        RandomNumberGenerator.Fill(key.Span);
+        _key = new byte[Snuffle.KEY_SIZE_IN_BYTES];
+        RandomNumberGenerator.Fill(_key.Span);
 
-        nonce = new byte[XChaCha20.NONCE_SIZE_IN_BYTES];
-        RandomNumberGenerator.Fill(nonce.Span);
+        _nonce = new byte[XChaCha20.NONCE_SIZE_IN_BYTES];
+        RandomNumberGenerator.Fill(_nonce.Span);
 
-        tag = new byte[Poly1305.MAC_TAG_SIZE_IN_BYTES];
+        _tag = new byte[Poly1305.MAC_TAG_SIZE_IN_BYTES];
 
-        message = new byte[Size];
-        rnd.NextBytes(message.Span);
+        _message = new byte[Size];
+        Rnd.NextBytes(_message.Span);
 
-        aad = new byte[24];
-        rnd.NextBytes(aad.Span);
+        _aad = new byte[24];
+        Rnd.NextBytes(_aad.Span);
 
-        ciphertext = new byte[message.Length];
+        _ciphertext = new byte[_message.Length];
 
-        aead = new XChaCha20Poly1305(key);
+        _aead = new XChaCha20Poly1305(_key);
     }
 
     [Benchmark]
     [BenchmarkCategory("Encryption")]
-    public void Encrypt() => aead.Encrypt(nonce.Span, message.Span, ciphertext.Span, tag.Span, aad.Span);
+    public void Encrypt() => _aead.Encrypt(_nonce.Span, _message.Span, _ciphertext.Span, _tag.Span, _aad.Span);
 
     [Benchmark]
     [BenchmarkCategory("Decryption")]

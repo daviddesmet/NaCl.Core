@@ -262,10 +262,10 @@ public static class Poly1305
         f3 = ((h3 >> 18) | (h4 << 8)) + (ulong)internalKey[7];
 
         // mac = (h + pad) % (2^128)
-        ArrayUtils.StoreUI32LittleEndian(tag, 0, (uint)f0); f1 += (f0 >> 32);
-        ArrayUtils.StoreUI32LittleEndian(tag, 4, (uint)f1); f2 += (f1 >> 32);
-        ArrayUtils.StoreUI32LittleEndian(tag, 8, (uint)f2); f3 += (f2 >> 32);
-        ArrayUtils.StoreUI32LittleEndian(tag, 12, (uint)f3);
+        ArrayUtils.StoreUInt32LittleEndian(tag, 0, (uint)f0); f1 += (f0 >> 32);
+        ArrayUtils.StoreUInt32LittleEndian(tag, 4, (uint)f1); f2 += (f1 >> 32);
+        ArrayUtils.StoreUInt32LittleEndian(tag, 8, (uint)f2); f3 += (f2 >> 32);
+        ArrayUtils.StoreUInt32LittleEndian(tag, 12, (uint)f3);
     }
 
     /// <summary>

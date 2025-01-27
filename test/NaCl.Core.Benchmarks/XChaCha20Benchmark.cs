@@ -2,10 +2,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 using Base;
-using Internal;
 
 using BenchmarkDotNet.Attributes;
 
@@ -14,12 +12,13 @@ using BenchmarkDotNet.Attributes;
 [RPlotExporter, RankColumn]
 public class XChaCha20Benchmark
 {
-    private static readonly Random rnd = new Random(42);
+    private static readonly Random Rnd = new(42);
 
-    private Memory<byte> key;
-    private Memory<byte> nonce;
-    private Memory<byte> message;
-    private XChaCha20 cipher;
+    private Memory<byte> _key;
+    private Memory<byte> _nonce;
+    private Memory<byte> _message;
+    private Memory<byte> _cipherText;
+    private XChaCha20 _cipher;
 
     [Params(
         (int)1E+2,  // 100 bytes
@@ -33,24 +32,26 @@ public class XChaCha20Benchmark
     [GlobalSetup]
     public void Setup()
     {
-        key = new byte[Snuffle.KEY_SIZE_IN_BYTES];
-        rnd.NextBytes(key.Span);
+        _key = new byte[Snuffle.KEY_SIZE_IN_BYTES];
+        Rnd.NextBytes(_key.Span);
 
-        nonce = new byte[24];
-        rnd.NextBytes(nonce.Span);
+        _nonce = new byte[24];
+        Rnd.NextBytes(_nonce.Span);
 
-        message = new byte[Size];
-        rnd.NextBytes(message.Span);
+        _message = new byte[Size];
+        Rnd.NextBytes(_message.Span);
 
-        cipher = new XChaCha20(key, 0);
+        _cipherText = new byte[Size];
+
+        _cipher = new XChaCha20(_key, 0);
     }
 
     [Benchmark]
     [BenchmarkCategory("Encryption")]
     public void Encrypt()
     {
-        var ciphertext = new byte[message.Length];
-        cipher.Encrypt(message.Span, nonce.Span, ciphertext);
+        _cipherText = new byte[_message.Length];
+        _cipher.Encrypt(_message.Span, _nonce.Span, _cipherText.Span);
     }
 
     [Benchmark]

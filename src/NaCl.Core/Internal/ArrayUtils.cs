@@ -23,7 +23,7 @@ internal static class ArrayUtils
     /// <param name="buf">The output buffer.</param>
     /// <param name="offset">The output offset.</param>
     /// <param name="value">The input value.</param>
-    public static void StoreUI32LittleEndian(Span<byte> buf, int offset, uint value)
+    public static void StoreUInt32LittleEndian(Span<byte> buf, int offset, uint value)
         => BinaryPrimitives.WriteUInt32LittleEndian(buf.Slice(offset + 0, sizeof(int)), value);
 
     /// <summary>

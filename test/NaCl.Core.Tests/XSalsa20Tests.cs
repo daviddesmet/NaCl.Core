@@ -1,8 +1,6 @@
 ﻿namespace NaCl.Core.Tests;
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -12,8 +10,6 @@ using Xunit.Abstractions;
 using Xunit.Categories;
 
 using Base;
-using Internal;
-using Vectors;
 
 [Category("CI")]
 public class XSalsa20Tests

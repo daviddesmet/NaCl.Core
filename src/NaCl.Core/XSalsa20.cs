@@ -7,7 +7,7 @@ using Base;
 using Internal;
 
 /// <summary>
-/// A stream cipher based upon the <seealso cref="NaCl.Core.Salsa20" /> stream cipher but has a much longer nonce, 192-bit instead of 64-bit.
+/// A stream cipher based upon the <see cref="NaCl.Core.Salsa20" /> stream cipher but has a much longer nonce, 192-bit instead of 64-bit.
 /// Stream cipher developed by Daniel J. Bernstein.
 /// </summary>
 /// <seealso cref="NaCl.Core.Base.Salsa20Base" />

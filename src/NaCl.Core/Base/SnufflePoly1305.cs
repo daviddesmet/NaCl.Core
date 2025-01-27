@@ -10,6 +10,8 @@ using Internal;
 /// An AEAD construction with a <see cref="Snuffle"/> and <see cref="Poly1305"/>, following RFC 8439, section 2.8.
 ///
 /// This implementation produces ciphertext with the following format: {nonce || actual_ciphertext || tag} and only decrypts the same format.
+/// <seealso cref="NaCl.Core.ChaCha20Poly1305" />
+/// <seealso cref="NaCl.Core.XChaCha20Poly1305" />
 /// </summary>
 public abstract class SnufflePoly1305
 {
