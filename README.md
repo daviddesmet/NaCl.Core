@@ -1,7 +1,7 @@
 # NaCl.Core, a cryptography library for .NET
 
 [![Build Status](https://dev.azure.com/idaviddesmet/NaCl.Core/_apis/build/status/NaCl.Core-CI?branchName=master)](https://dev.azure.com/idaviddesmet/NaCl.Core/_build/latest?definitionId=3&branchName=master)
-[![CI](https://github.com/daviddesmet/NaCl.Core/workflows/CI/badge.svg?branch=master)](https://github.com/daviddesmet/NaCl.Core/actions)
+[![CI](https://github.com/daviddesmet/NaCl.Core/actions/workflows/dotnet-core.yml/badge.svg)](https://github.com/daviddesmet/NaCl.Core/actions/workflows/dotnet-core.yml)
 [![Build status](https://ci.appveyor.com/api/projects/status/2k3cxt2e1r2jyinx?svg=true)](https://ci.appveyor.com/project/idaviddesmet/nacl-core)
 [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/daviddesmet/NaCl.Core/issues)
 
@@ -22,7 +22,7 @@
 
 ## Installation
 
-[![NuGet](https://buildstats.info/nuget/NaCl.Core)](https://www.nuget.org/packages/NaCl.Core/)
+[![NuGet Version](https://img.shields.io/nuget/v/NaCl.Core)](https://www.nuget.org/packages/NaCl.Core/)
 [![CI NuGet](https://img.shields.io/badge/nuget-CI%20builds-4da2db?logo=azure-devops)](https://dev.azure.com/idaviddesmet/NaCl.Core/_packaging?_a=feed&feed=NaCl.Core-CI)
 
 Install the NaCl.Core NuGet package from the .NET CLI using:
