@@ -1,29 +1,31 @@
-﻿namespace NaCl.Core.Tests;
+﻿using System.Threading;
+
+namespace NaCl.Core.Tests;
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-using FluentAssertions;
+using Shouldly;
 
 public static class TestHelpers
 {
-    private static readonly Random _random = new Random();
-    private static readonly object _sync = new object();
+    private static readonly Random Random = new();
+    private static readonly Lock Sync = new();
 
-    private static int Random(int min, int max)
+    private static int CreateRandom(int min, int max)
     {
-        lock (_sync)
+        lock (Sync)
         {
-            return _random.Next(min, max);
+            return Random.Next(min, max);
         }
     }
 
     public static void AssertEqualBytes(byte[] expected, byte[] actual)
-        => BitConverter.ToString(actual).Should().Be(BitConverter.ToString(expected));
+        => BitConverter.ToString(actual).ShouldBe(BitConverter.ToString(expected));
 
     public static ArraySegment<byte> Pad(this byte[] array)
-        => array.Pad(Random(1, 100), Random(0, 50));
+        => array.Pad(CreateRandom(1, 100), CreateRandom(0, 50));
 
     private static ArraySegment<byte> Pad(this byte[] array, int paddingLeft, int paddingRight)
     {
@@ -58,7 +60,7 @@ public static class TestHelpers
         return paddedData.ToArray();
     }
 
-    public static int ReturnRandomPositiveNegative() => Random(0, 2) * 2 - 1;
+    public static int ReturnRandomPositiveNegative() => CreateRandom(0, 2) * 2 - 1;
 
     public static IEnumerable<byte[]> WithChangedBit(this byte[] array)
     {

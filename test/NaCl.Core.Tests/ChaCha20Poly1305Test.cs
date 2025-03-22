@@ -7,7 +7,7 @@ using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
 
-using FluentAssertions;
+using Shouldly;
 using Newtonsoft.Json;
 using Xunit;
 using Xunit.Abstractions;
@@ -18,20 +18,17 @@ using Internal;
 using Vectors;
 
 [Category("CI")]
-public class ChaCha20Poly1305Test
+public class ChaCha20Poly1305Test(ITestOutputHelper output)
 {
-    private const string EXCEPTION_MESSAGE_NONCE_LENGTH = "*The nonce length in bytes must be 12.";
-    private const string EXCEPTION_MESSAGE_TAG_LENGTH = "The tag length in bytes must be 16.";
-    private readonly ITestOutputHelper _output;
-
-    public ChaCha20Poly1305Test(ITestOutputHelper output) => _output = output;
+    private const string ExceptionMessageNonceLength = "*The nonce length in bytes must be 12.";
+    private const string ExceptionMessageTagLength = "The tag length in bytes must be 16.";
 
     [Fact]
     public void CreateInstanceWhenKeyLengthIsInvalidFails()
     {
         // Arrange, Act & Assert
         Action act = () => new NaCl.Core.ChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES + TestHelpers.ReturnRandomPositiveNegative()]);
-        act.Should().Throw<CryptographicException>();
+        act.ShouldThrow<CryptographicException>();
     }
 
     [Fact]
@@ -39,33 +36,33 @@ public class ChaCha20Poly1305Test
     {
         // Arrange
         var nonce = new byte[ChaCha20.NONCE_SIZE_IN_BYTES + TestHelpers.ReturnRandomPositiveNegative()];
-        var plaintext = new byte[0];
-        var ciphertext = new byte[0];
+        var plaintext = Array.Empty<byte>();
+        var ciphertext = Array.Empty<byte>();
         var tag = new byte[Poly1305.MAC_TAG_SIZE_IN_BYTES];
-        var aad = new byte[0];
+        var aad = Array.Empty<byte>();
 
         var aead = new NaCl.Core.ChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES]);
 
         // Act & Assert
-        Action act = () => aead.Encrypt(nonce, plaintext, ciphertext, tag, aad);
-        act.Should().Throw<ArgumentException>().WithMessage(EXCEPTION_MESSAGE_NONCE_LENGTH);
+        var act = () => aead.Encrypt(nonce, plaintext, ciphertext, tag, aad);
+        act.ShouldThrow<ArgumentException>(ExceptionMessageNonceLength);
     }
 
     [Fact]
     public void EncryptWhenNonceIsEmptyFails()
     {
         // Arrange
-        var nonce = new byte[0];
-        var plaintext = new byte[0];
-        var ciphertext = new byte[0];
+        var nonce = Array.Empty<byte>();
+        var plaintext = Array.Empty<byte>();
+        var ciphertext = Array.Empty<byte>();
         var tag = new byte[Poly1305.MAC_TAG_SIZE_IN_BYTES];
-        var aad = new byte[0];
+        var aad = Array.Empty<byte>();
 
         var aead = new NaCl.Core.ChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES]);
 
         // Act & Assert
-        Action act = () => aead.Encrypt(nonce, plaintext, ciphertext, tag, aad);
-        act.Should().Throw<ArgumentException>().WithMessage(EXCEPTION_MESSAGE_NONCE_LENGTH);
+        var act = () => aead.Encrypt(nonce, plaintext, ciphertext, tag, aad);
+        act.ShouldThrow<ArgumentException>(ExceptionMessageNonceLength);
     }
 
     [Fact]
@@ -76,13 +73,13 @@ public class ChaCha20Poly1305Test
         var plaintext = new byte[50];
         var ciphertext = new byte[40];
         var tag = new byte[Poly1305.MAC_TAG_SIZE_IN_BYTES];
-        var aad = new byte[0];
+        var aad = Array.Empty<byte>();
 
         var aead = new NaCl.Core.ChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES]);
 
         // Act & Assert
-        Action act = () => aead.Encrypt(nonce, plaintext, ciphertext, tag, aad);
-        act.Should().Throw<ArgumentException>().WithMessage("The plaintext parameter and the ciphertext do not have the same length.");
+        var act = () => aead.Encrypt(nonce, plaintext, ciphertext, tag, aad);
+        act.ShouldThrow<ArgumentException>("The plaintext parameter and the ciphertext do not have the same length.");
     }
 
     [Fact]
@@ -90,16 +87,16 @@ public class ChaCha20Poly1305Test
     {
         // Arrange
         var nonce = new byte[ChaCha20.NONCE_SIZE_IN_BYTES];
-        var plaintext = new byte[0];
-        var ciphertext = new byte[0];
+        var plaintext = Array.Empty<byte>();
+        var ciphertext = Array.Empty<byte>();
         var tag = new byte[Poly1305.MAC_TAG_SIZE_IN_BYTES + TestHelpers.ReturnRandomPositiveNegative()];
-        var aad = new byte[0];
+        var aad = Array.Empty<byte>();
 
         var aead = new NaCl.Core.ChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES]);
 
         // Act & Assert
-        Action act = () => aead.Encrypt(nonce, plaintext, ciphertext, tag, aad);
-        act.Should().Throw<CryptographicException>().WithMessage(EXCEPTION_MESSAGE_TAG_LENGTH);
+        var act = () => aead.Encrypt(nonce, plaintext, ciphertext, tag, aad);
+        act.ShouldThrow<CryptographicException>(ExceptionMessageTagLength);
     }
 
     [Fact]
@@ -109,14 +106,14 @@ public class ChaCha20Poly1305Test
         var nonce = new byte[ChaCha20.NONCE_SIZE_IN_BYTES];
         var plaintext = new byte[50];
         var ciphertext = new byte[50];
-        var tag = new byte[0];
-        var aad = new byte[0];
+        var tag = Array.Empty<byte>();
+        var aad = Array.Empty<byte>();
 
         var aead = new NaCl.Core.ChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES]);
 
         // Act & Assert
-        Action act = () => aead.Encrypt(nonce, plaintext, ciphertext, tag, aad);
-        act.Should().Throw<CryptographicException>().WithMessage(EXCEPTION_MESSAGE_TAG_LENGTH);
+        var act = () => aead.Encrypt(nonce, plaintext, ciphertext, tag, aad);
+        act.ShouldThrow<CryptographicException>(ExceptionMessageTagLength);
     }
 
     [Fact]
@@ -127,30 +124,30 @@ public class ChaCha20Poly1305Test
         var plaintext = new byte[50];
         var ciphertext = new byte[50];
         var tag = new byte[Poly1305.MAC_TAG_SIZE_IN_BYTES];
-        var aad = new byte[0];
+        var aad = Array.Empty<byte>();
 
         var aead = new NaCl.Core.ChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES]);
 
         // Act & Assert
-        Action act = () => aead.Decrypt(nonce, plaintext, tag, ciphertext, aad);
-        act.Should().Throw<ArgumentException>().WithMessage(EXCEPTION_MESSAGE_NONCE_LENGTH);
+        var act = () => aead.Decrypt(nonce, plaintext, tag, ciphertext, aad);
+        act.ShouldThrow<ArgumentException>(ExceptionMessageNonceLength);
     }
 
     [Fact]
     public void DecryptWhenNonceIsEmptyFails()
     {
         // Arrange
-        var nonce = new byte[0];
+        var nonce = Array.Empty<byte>();
         var plaintext = new byte[50];
         var ciphertext = new byte[50];
         var tag = new byte[Poly1305.MAC_TAG_SIZE_IN_BYTES];
-        var aad = new byte[0];
+        var aad = Array.Empty<byte>();
 
         var aead = new NaCl.Core.ChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES]);
 
         // Act & Assert
-        Action act = () => aead.Decrypt(nonce, plaintext, tag, ciphertext, aad);
-        act.Should().Throw<ArgumentException>().WithMessage(EXCEPTION_MESSAGE_NONCE_LENGTH);
+        var act = () => aead.Decrypt(nonce, plaintext, tag, ciphertext, aad);
+        act.ShouldThrow<ArgumentException>(ExceptionMessageNonceLength);
     }
 
     [Fact]
@@ -161,13 +158,13 @@ public class ChaCha20Poly1305Test
         var plaintext = new byte[50];
         var ciphertext = new byte[40];
         var tag = new byte[Poly1305.MAC_TAG_SIZE_IN_BYTES];
-        var aad = new byte[0];
+        var aad = Array.Empty<byte>();
 
         var aead = new NaCl.Core.ChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES]);
 
         // Act & Assert
-        Action act = () => aead.Decrypt(nonce, plaintext, tag, ciphertext, aad);
-        act.Should().Throw<CryptographicException>().WithMessage(SnufflePoly1305.AEAD_EXCEPTION_INVALID_TAG);
+        var act = () => aead.Decrypt(nonce, plaintext, tag, ciphertext, aad);
+        act.ShouldThrow<CryptographicException>(SnufflePoly1305.AEAD_EXCEPTION_INVALID_TAG);
     }
 
     [Fact]
@@ -178,13 +175,13 @@ public class ChaCha20Poly1305Test
         var plaintext = new byte[50];
         var ciphertext = new byte[50];
         var tag = new byte[Poly1305.MAC_TAG_SIZE_IN_BYTES + TestHelpers.ReturnRandomPositiveNegative()];
-        var aad = new byte[0];
+        var aad = Array.Empty<byte>();
 
         var aead = new NaCl.Core.ChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES]);
 
         // Act & Assert
-        Action act = () => aead.Decrypt(nonce, plaintext, tag, ciphertext, aad);
-        act.Should().Throw<CryptographicException>().WithMessage(EXCEPTION_MESSAGE_TAG_LENGTH);
+        var act = () => aead.Decrypt(nonce, plaintext, tag, ciphertext, aad);
+        act.ShouldThrow<CryptographicException>(ExceptionMessageTagLength);
     }
 
     [Fact]
@@ -194,14 +191,14 @@ public class ChaCha20Poly1305Test
         var nonce = new byte[ChaCha20.NONCE_SIZE_IN_BYTES];
         var plaintext = new byte[50];
         var ciphertext = new byte[50];
-        var tag = new byte[0];
-        var aad = new byte[0];
+        var tag = Array.Empty<byte>();
+        var aad = Array.Empty<byte>();
 
         var aead = new NaCl.Core.ChaCha20Poly1305(new byte[Snuffle.KEY_SIZE_IN_BYTES]);
 
         // Act & Assert
-        Action act = () => aead.Decrypt(nonce, plaintext, tag, ciphertext, aad);
-        act.Should().Throw<CryptographicException>().WithMessage(EXCEPTION_MESSAGE_TAG_LENGTH);
+        var act = () => aead.Decrypt(nonce, plaintext, tag, ciphertext, aad);
+        act.ShouldThrow<CryptographicException>(ExceptionMessageTagLength);
     }
 
     [Fact]
@@ -231,7 +228,7 @@ public class ChaCha20Poly1305Test
             var decrypted = new byte[message.Length];
             aead.Decrypt(nonce, ciphertext, tag, decrypted, aad);
 
-            decrypted.Should().Equal(message);
+            decrypted.ShouldBe(message);
         }
     }
 
@@ -265,7 +262,7 @@ public class ChaCha20Poly1305Test
             var decrypted = new byte[plaintext.Length];
             aead.Decrypt(nonce, ciphertext, tag, decrypted, aad);
 
-            decrypted.Should().Equal(plaintext);
+            decrypted.ShouldBe(plaintext);
             dataSize += 5 * dataSize / 11;
         }
     }
@@ -305,7 +302,7 @@ public class ChaCha20Poly1305Test
 
                 var decrypted = new byte[ciphertext.Length];
                 Action act = () => aead.Decrypt(nonce, modified, tag, decrypted, aad);
-                act.Should().Throw<CryptographicException>().WithMessage(SnufflePoly1305.AEAD_EXCEPTION_INVALID_TAG);
+                act.ShouldThrow<CryptographicException>(SnufflePoly1305.AEAD_EXCEPTION_INVALID_TAG);
             }
         }
 
@@ -317,7 +314,7 @@ public class ChaCha20Poly1305Test
 
             var decrypted = new byte[modified.Length];
             Action act = () => aead.Decrypt(nonce, modified, tag, decrypted, aad);
-            act.Should().Throw<Exception>();
+            act.ShouldThrow<Exception>();
         }
 
         // Modify AAD
@@ -332,7 +329,7 @@ public class ChaCha20Poly1305Test
 
                 var decrypted = new byte[ciphertext.Length];
                 Action act = () => aead.Decrypt(nonce, ciphertext, tag, decrypted, modified);
-                act.Should().Throw<Exception>();
+                act.ShouldThrow<Exception>();
             }
         }
     }
@@ -368,7 +365,7 @@ public class ChaCha20Poly1305Test
         var tag = new byte[Poly1305.MAC_TAG_SIZE_IN_BYTES];
 
         var aead = new NaCl.Core.ChaCha20Poly1305(key);
-        var aad = new byte[0];
+        var aad = Array.Empty<byte>();
 
         for (var msgSize = 0; msgSize < 75; msgSize++)
         {
@@ -382,25 +379,25 @@ public class ChaCha20Poly1305Test
             aead.Encrypt(nonce, message, ciphertext, tag, aad);
 
             aead.Decrypt(nonce, ciphertext, tag, plaintext, aad);
-            message.Should().Equal(plaintext);
+            message.ShouldBe(plaintext);
 
             aead.Decrypt(nonce, ciphertext, tag, plaintext, null);
-            message.Should().Equal(plaintext);
+            message.ShouldBe(plaintext);
 
             var badAad = new byte[] { 1, 2, 3 };
             Action badAadAct = () => aead.Decrypt(nonce, ciphertext, tag, plaintext, badAad);
-            badAadAct.Should().Throw<CryptographicException>().WithMessage(SnufflePoly1305.AEAD_EXCEPTION_INVALID_TAG);
+            badAadAct.ShouldThrow<CryptographicException>(SnufflePoly1305.AEAD_EXCEPTION_INVALID_TAG);
 
             // encrypting with aad equal to null
             aead.Encrypt(nonce, message, ciphertext, tag, null);
             aead.Decrypt(nonce, ciphertext, tag, plaintext, aad);
-            message.Should().Equal(plaintext);
+            message.ShouldBe(plaintext);
 
             aead.Decrypt(nonce, ciphertext, tag, plaintext, null);
-            message.Should().Equal(plaintext);
+            message.ShouldBe(plaintext);
 
-            Action act = () => aead.Decrypt(nonce, ciphertext, tag, plaintext, badAad);
-            act.Should().Throw<CryptographicException>().WithMessage(SnufflePoly1305.AEAD_EXCEPTION_INVALID_TAG);
+            var act = () => aead.Decrypt(nonce, ciphertext, tag, plaintext, badAad);
+            act.ShouldThrow<CryptographicException>(SnufflePoly1305.AEAD_EXCEPTION_INVALID_TAG);
         }
     }
 
@@ -416,7 +413,7 @@ public class ChaCha20Poly1305Test
         var aead = new NaCl.Core.ChaCha20Poly1305(key);
 
         var message = Encoding.UTF8.GetBytes("This is a secret content!!");
-        var aad = new byte[0];
+        var aad = Array.Empty<byte>();
         var ciphertexts = new HashSet<string>();
         var samples = 1 << 17;
 
@@ -428,11 +425,11 @@ public class ChaCha20Poly1305Test
             aead.Encrypt(nonce, message, ct, tag, aad);
             var ctHex = CryptoBytes.ToHexStringLower(ct);
 
-            ciphertexts.Contains(ctHex).Should().BeFalse();
+            ciphertexts.Contains(ctHex).ShouldBeFalse();
             ciphertexts.Add(ctHex);
         }
 
-        samples.Should().Be(ciphertexts.Count);
+        samples.ShouldBe(ciphertexts.Count);
     }
 
     [Fact]
@@ -447,13 +444,13 @@ public class ChaCha20Poly1305Test
             var aead = new NaCl.Core.ChaCha20Poly1305(test.Key);
             var ct = new byte[test.PlainText.Length];
             aead.Encrypt(test.Nonce, test.PlainText, ct, test.Tag, test.Aad);
-            ct.Should().BeEquivalentTo(test.CipherText);
+            ct.ShouldBeEquivalentTo(test.CipherText);
 
-            var output = new byte[ct.Length];
-            aead.Decrypt(test.Nonce, ct, test.Tag, output, test.Aad);
+            var result = new byte[ct.Length];
+            aead.Decrypt(test.Nonce, ct, test.Tag, result, test.Aad);
 
             // Assert
-            output.Should().Equal(test.PlainText);
+            result.ShouldBe(test.PlainText);
         }
     }
 
@@ -470,13 +467,13 @@ public class ChaCha20Poly1305Test
 
             var ct = new byte[test.PlainText.Length];
             aead.Encrypt(test.Nonce, test.PlainText, ct, test.Tag, test.Aad);
-            ct.Should().BeEquivalentTo(test.CipherText);
+            ct.ShouldBeEquivalentTo(test.CipherText);
 
-            var output = new byte[ct.Length];
-            aead.Decrypt(test.Nonce, ct, test.Tag, output, test.Aad);
+            var result = new byte[ct.Length];
+            aead.Decrypt(test.Nonce, ct, test.Tag, result, test.Aad);
 
             // Assert
-            output.Should().Equal(test.PlainText);
+            result.ShouldBe(test.PlainText);
         }
     }
 
@@ -518,7 +515,7 @@ public class ChaCha20Poly1305Test
 
                     if (test.Result == "invalid")
                     {
-                        _output.WriteLine($"FAIL {id}: accepting invalid ciphertext, cleartext: {test.Msg}, decrypted: {CryptoBytes.ToHexStringLower(decrypted)}");
+                        output.WriteLine($"FAIL {id}: accepting invalid ciphertext, cleartext: {test.Msg}, decrypted: {CryptoBytes.ToHexStringLower(decrypted)}");
                         errors++;
 
                         continue;
@@ -526,7 +523,7 @@ public class ChaCha20Poly1305Test
 
                     if (!CryptoBytes.ConstantTimeEquals(msg, decrypted))
                     {
-                        _output.WriteLine($"FAIL {id}: incorrect decryption, result: {CryptoBytes.ToHexStringLower(decrypted)}, expected: {test.Msg}");
+                        output.WriteLine($"FAIL {id}: incorrect decryption, result: {CryptoBytes.ToHexStringLower(decrypted)}, expected: {test.Msg}");
                         errors++;
                     }
                 }
@@ -534,14 +531,14 @@ public class ChaCha20Poly1305Test
                 {
                     if (test.Result == "valid")
                     {
-                        _output.WriteLine($"FAIL {id}: cannot decrypt, exception: {ex}");
+                        output.WriteLine($"FAIL {id}: cannot decrypt, exception: {ex}");
                         errors++;
                     }
                 }
             }
         }
 
-        errors.Should().Be(0);
+        errors.ShouldBe(0);
     }
 
     private string GetWycheproofTestVector()
