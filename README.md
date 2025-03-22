@@ -1,7 +1,7 @@
 # NaCl.Core, a cryptography library for .NET
 
 [![Build Status](https://dev.azure.com/idaviddesmet/NaCl.Core/_apis/build/status/NaCl.Core-CI?branchName=master)](https://dev.azure.com/idaviddesmet/NaCl.Core/_build/latest?definitionId=3&branchName=master)
-[![CI](https://github.com/daviddesmet/NaCl.Core/actions/workflows/dotnet-core.yml/badge.svg)](https://github.com/daviddesmet/NaCl.Core/actions/workflows/dotnet-core.yml)
+[![CI](https://github.com/daviddesmet/NaCl.Core/actions/workflows/ci.yml/badge.svg)](https://github.com/daviddesmet/NaCl.Core/actions/workflows/ci.yml)
 [![Build status](https://ci.appveyor.com/api/projects/status/2k3cxt2e1r2jyinx?svg=true)](https://ci.appveyor.com/project/idaviddesmet/nacl-core)
 [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/daviddesmet/NaCl.Core/issues)
 
@@ -70,9 +70,9 @@ Poly1305.VerifyMac(key, data, tag);
 
 ## Test Coverage
 
+[![codecov](https://codecov.io/gh/daviddesmet/NaCl.Core/branch/master/graph/badge.svg?token=evqDLCtC1K)](https://codecov.io/gh/daviddesmet/NaCl.Core)
 [![Azure DevOps tests](https://img.shields.io/azure-devops/tests/idaviddesmet/NaCl.Core/3?logo=azure-devops)](https://dev.azure.com/idaviddesmet/NaCl.Core/_build/latest?definitionId=3)
 [![Azure DevOps coverage](https://img.shields.io/azure-devops/coverage/idaviddesmet/NaCl.Core/3.svg)](https://dev.azure.com/idaviddesmet/NaCl.Core/_build/latest?definitionId=3)
-[![codecov](https://codecov.io/gh/daviddesmet/NaCl.Core/branch/master/graph/badge.svg?token=evqDLCtC1K)](https://codecov.io/gh/daviddesmet/NaCl.Core)
 
 - Includes the mandatory RFC [test vectors](https://github.com/daviddesmet/NaCl.Core/tree/master/test/NaCl.Core.Tests).
 - [Project Wycheproof](https://github.com/google/wycheproof) by members of Google Security Team, for testing against known attacks (when applicable).

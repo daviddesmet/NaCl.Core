@@ -58,10 +58,10 @@ jobs:
   # The steps to run to execute the build.
   steps:
   - task: UseDotNet@2
-    displayName: 'Use .NET SDK 7.0'
+    displayName: 'Use .NET SDK 9.0'
     inputs:
       packageType: 'sdk'
-      version: '7.0.x'
+      version: '9.0.x'
       installationPath: $(Agent.ToolsDirectory)/dotnet
   - task: DotNetCoreCLI@2
     displayName: 'Build Project in $(BuildConfiguration) mode'
@@ -69,7 +69,7 @@ jobs:
       command: 'build'
       projects: '**/NaCl.Core.csproj'
       arguments: '-c $(BuildConfiguration)'
-  - script: dotnet test -f net7.0 test/NaCl.Core.Tests --logger trx /p:CollectCoverage=true /p:CoverletOutput=$(Build.SourcesDirectory)/TestResults/ /p:CoverletOutputFormat=cobertura /p:Exclude='[NaCl.Core.Tests]*'
+  - script: dotnet test -f net9.0 test/NaCl.Core.Tests --logger trx /p:CollectCoverage=true /p:CoverletOutput=$(Build.SourcesDirectory)/TestResults/ /p:CoverletOutputFormat=cobertura /p:Exclude='[NaCl.Core.Tests]*'
     displayName: 'Unit testing'
     enabled: false
   - task: DotNetCoreCLI@2
@@ -86,7 +86,7 @@ jobs:
       targetdir: '$(Build.ArtifactStagingDirectory)/TestResults/'
       reporttypes: 'HtmlInline_AzurePipelines_Dark;Cobertura;Badges'
     enabled: false
-  - script: dotnet test -f net7.0 test/NaCl.Core.Tests --logger trx
+  - script: dotnet test -f net9.0 test/NaCl.Core.Tests --logger trx
     displayName: 'Run Unit Tests'
   - task: PublishTestResults@2
     displayName: 'Publish Test Results'
@@ -108,7 +108,7 @@ jobs:
     displayName: 'Publish Library'
     inputs:
       command: 'publish'
-      arguments: '-c $(BuildConfiguration) -f net6.0 -o $(Build.ArtifactStagingDirectory) --no-restore'
+      arguments: '-c $(BuildConfiguration) -f net9.0 -o $(Build.ArtifactStagingDirectory) --no-restore'
       projects: src/NaCl.Core/NaCl.Core.csproj
       publishWebProjects: false
       modifyOutputPath: true
@@ -132,16 +132,16 @@ jobs:
     BuildConfiguration: 'release'
   steps:
   - task: UseDotNet@2
-    displayName: 'Use .NET SDK 7.0'
+    displayName: 'Use .NET SDK 9.0'
     inputs:
       packageType: 'sdk'
-      version: '7.0.x'
+      version: '9.0.x'
       installationPath: $(Agent.ToolsDirectory)/dotnet
   - script: dotnet restore
     displayName: 'Restore Project'
   - script: dotnet build -c $(BuildConfiguration) --no-restore
     displayName: 'Build Project in $(BuildConfiguration) mode'
-  - script: dotnet test -f net7.0 test/NaCl.Core.Tests --logger trx
+  - script: dotnet test -f net9.0 test/NaCl.Core.Tests --logger trx
     displayName: 'Run Unit Tests'
   - task: PublishTestResults@2
     displayName: 'Publish Test Results'
@@ -164,10 +164,10 @@ jobs:
     displayName: 'Authenticate with Azure Artifacts'
     condition: ne(variables['Build.Reason'], 'PullRequest')
   - task: UseDotNet@2
-    displayName: 'Use .NET SDK 7.0'
+    displayName: 'Use .NET SDK 9.0'
     inputs:
       packageType: 'sdk'
-      version: '7.0.x'
+      version: '9.0.x'
   - task: DotNetCoreCLI@2
     displayName: 'Build Project in $(BuildConfiguration) mode'
     inputs:
@@ -210,7 +210,7 @@ jobs:
     displayName: 'Publish Library'
     inputs:
       command: 'publish'
-      arguments: '-c $(BuildConfiguration) -f net7.0 -o $(Build.ArtifactStagingDirectory) --no-restore'
+      arguments: '-c $(BuildConfiguration) -f net9.0 -o $(Build.ArtifactStagingDirectory) --no-restore'
       projects: src/NaCl.Core/NaCl.Core.csproj
       publishWebProjects: false
     enabled: false
