@@ -95,7 +95,7 @@ jobs:
       testResultsFiles: '**/*.trx'
     continueOnError: true
     condition: always()
-  - task: PublishCodeCoverageResults@1
+  - task: PublishCodeCoverageResults@2
     displayName: 'Publish Coverage Results'
     inputs:
       codeCoverageTool: 'Cobertura'
@@ -160,7 +160,7 @@ jobs:
     BuildPlatform: 'any cpu'
     disable.coverage.autogenerate: 'true'
   steps:
-  - task: NuGetAuthenticate@0
+  - task: NuGetAuthenticate@1
     displayName: 'Authenticate with Azure Artifacts'
     condition: ne(variables['Build.Reason'], 'PullRequest')
   - task: UseDotNet@2
@@ -186,7 +186,7 @@ jobs:
       reports: '$(Build.SourcesDirectory)/**/coverage.opencover.xml'
       targetdir: '$(Build.ArtifactStagingDirectory)/TestResults/'
       reporttypes: 'HtmlInline_AzurePipelines_Dark;HTMLChart;Cobertura'
-  - task: PublishCodeCoverageResults@1
+  - task: PublishCodeCoverageResults@2
     displayName: 'Publish Coverage Results'
     inputs:
       codeCoverageTool: 'Cobertura'
