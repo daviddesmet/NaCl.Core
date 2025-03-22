@@ -356,6 +356,7 @@ MigrationBackup/
 .ionide/
 
 Artifacts/
+tools/
 
 # macOS system files
 .DS_Store
