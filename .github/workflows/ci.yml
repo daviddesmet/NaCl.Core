@@ -84,6 +84,13 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         name: 'ubuntu-latest'
+    - name: 'Install .NET SDK'
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: | 
+          6.0.x
+          8.0.x
+          9.0.x
     - name: 'Install ReportGenerator'
       run: dotnet tool install -g dotnet-reportgenerator-globaltool
     - name: 'Generate Coverage Report'
