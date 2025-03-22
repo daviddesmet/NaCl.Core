@@ -2,7 +2,7 @@
 
   <PropertyGroup Label="Build">
     <TargetFrameworks>netstandard2.0;netstandard2.1;netcoreapp3.1;net6.0;net8.0;net9.0</TargetFrameworks>
-    <TargetFrameworks Condition="'$(OS)' != 'Unix'">netstandard2.0;netstandard2.1;netcoreapp3.1;net45;net48;net6.0;net8.0;net9.0</TargetFrameworks>
+    <TargetFrameworks Condition="'$(OS)' != 'Unix'">netstandard2.0;netstandard2.1;netcoreapp3.1;net45;net48;net481;net6.0;net8.0;net9.0</TargetFrameworks>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
@@ -53,12 +53,17 @@
     </PackageReference>
   </ItemGroup>
 
-  <ItemGroup Label="Package References for Windows" Condition="$(TargetFramework) != 'net9.0' AND $(TargetFramework) != 'net8.0' AND $(TargetFramework) != 'net6.0' AND $(TargetFramework) != 'netcoreapp3.1' AND $(TargetFramework) != 'netstandard2.1'">
+  <ItemGroup Label="Package References for Windows" Condition="$(TargetFramework) == 'netstandard2.0' OR $(TargetFramework) == 'net48' OR $(TargetFramework) == 'net481'">
     <PackageReference Include="IndexRange" Version="1.0.2" />
     <PackageReference Include="System.Memory" Version="4.6.2" />
   </ItemGroup>
 
-  <PropertyGroup Label="Constants Definition" Condition="$(TargetFramework) == 'netcoreapp3.1' OR $(TargetFramework) == 'net6.0' OR $(TargetFramework) == 'net8.0' OR $(TargetFramework) == 'net9.0'">
+  <ItemGroup Label="Package References for Windows" Condition="$(TargetFramework) == 'net45'">
+    <PackageReference Include="IndexRange" Version="1.0.2" />
+    <PackageReference Include="System.Memory" Version="4.5.5" />
+  </ItemGroup>
+
+  <PropertyGroup Label="Constants Definition" Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp' AND '$(TargetFrameworkVersion)' >= 'v3.1'">
     <DefineConstants>FCL_BITOPS</DefineConstants>
   </PropertyGroup>
 
