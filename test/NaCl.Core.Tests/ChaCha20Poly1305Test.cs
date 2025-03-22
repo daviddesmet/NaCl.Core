@@ -6,9 +6,9 @@ using System.IO;
 using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 
 using Shouldly;
-using Newtonsoft.Json;
 using Xunit;
 using Xunit.Abstractions;
 using Xunit.Categories;
@@ -482,7 +482,7 @@ public class ChaCha20Poly1305Test(ITestOutputHelper output)
     {
         var json = GetWycheproofTestVector();
 
-        var vector = JsonConvert.DeserializeObject<WycheproofVector>(json); //Utf8Json.JsonSerializer.Deserialize<WycheproofVector>(json);
+        var vector = JsonSerializer.Deserialize<WycheproofVector>(json, JsonSerializerOptions.Web); //Utf8Json.JsonSerializer.Deserialize<WycheproofVector>(json);
 
         var errors = 0;
         foreach (var group in vector.TestGroups)
