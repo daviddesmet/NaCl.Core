@@ -1,3 +1,5 @@
+#tool nuget:?package=ReportGenerator&version=5.3.0
+
 var target = Argument("Target", "Default");
 var configuration =
     HasArgument("Configuration") ? Argument<string>("Configuration") :
@@ -41,24 +43,36 @@ Task("Test")
     .DoesForEach(GetFiles("./test/**/*.Tests.csproj"), project =>
     {
         Information($"Preparing {project.GetFilename()} for test");
-
-        DotNetTest(
-            project.ToString(),
-            new DotNetTestSettings()
+        var settings = new DotNetTestSettings()
+        {
+            Blame = true,
+            Collectors = new string[] { "XPlat Code Coverage" },
+            Configuration = configuration,
+            Loggers = new string[]
             {
-                Blame = true,
-                Collectors = new string[] { "XPlat Code Coverage" },
-                Configuration = configuration,
-                Loggers = new string[]
-                {
-                    $"trx;LogFileName={project.GetFilenameWithoutExtension()}.trx",
-                    $"html;LogFileName={project.GetFilenameWithoutExtension()}.html",
-                },
-                NoBuild = true,
-                NoRestore = true,
-                ResultsDirectory = $"{artifactsDirectory}/TestResults",
-                Settings = "CodeCoverage.runsettings"
-            });
+                $"trx;LogFileName={project.GetFilenameWithoutExtension()}.trx",
+                $"html;LogFileName={project.GetFilenameWithoutExtension()}.html",
+            },
+            NoBuild = true,
+            NoRestore = true,
+            ResultsDirectory = $"{artifactsDirectory}/TestResults",
+            Settings = "CodeCoverage.runsettings"
+        };
+
+        settings.EnvironmentVariables["COMPlus_EnableAVX2"] = "1";
+        settings.EnvironmentVariables["COMPlus_EnableSSE3"] = "1";
+        Information($"Running default {project.GetFilename()} test with SSE3 and AVX2 enabled");
+        DotNetTest(project.ToString(), settings);
+
+        settings.EnvironmentVariables["COMPlus_EnableAVX2"] = "0";
+        settings.EnvironmentVariables["COMPlus_EnableSSE3"] = "1";
+        Information($"Running {project.GetFilename()} test with SSE3 enabled and AVX2 disabled");
+        DotNetTest(project.ToString(), settings);
+
+        settings.EnvironmentVariables["COMPlus_EnableAVX2"] = "0";
+        settings.EnvironmentVariables["COMPlus_EnableSSE3"] = "0";
+        Information($"Running {project.GetFilename()} test with SSE3 and AVX2 disabled");
+        DotNetTest(project.ToString(), settings);
     });
 
 Task("CoverageReport")
@@ -72,7 +86,7 @@ Task("CoverageReport")
                             ArgumentCustomization = args => args.Append("-reporttypes:HtmlInline;HTMLChart;Cobertura")
                         });
     });
-        
+
 Task("Pack")
     .Description("Creates the NuGet packages and outputs them to the artifacts directory.")
     .Does(() =>
@@ -97,6 +111,7 @@ Task("Default")
     .Description("Cleans, restores, builds the solution, runs unit tests and then create the NuGet packages.")
     .IsDependentOn("Build")
     .IsDependentOn("Test")
+    .IsDependentOn("CoverageReport")
     .IsDependentOn("Pack");
 
 RunTarget(target);

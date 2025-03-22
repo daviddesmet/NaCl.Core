@@ -7,13 +7,13 @@ using Base;
 using Internal;
 
 /// <summary>
-/// A stream cipher based on RFC 8439 (previously RFC 7539) (i.e., uses 96-bit random nonces).
-/// https://tools.ietf.org/html/rfc8439#section-2.8
-/// https://tools.ietf.org/html/rfc7539#section-2.8
+/// A stream cipher based on <a href="https://tools.ietf.org/html/rfc8439#section-2.8">RFC 8439</a> (previously <a href="https://tools.ietf.org/html/rfc7539#section-2.8">RFC 7539</a>) (i.e., uses 96-bit random nonces).
 ///
 /// This cipher is meant to be used to construct an AEAD with Poly1305.
 /// </summary>
 /// <seealso cref="NaCl.Core.Base.ChaCha20Base" />
+/// <seealso href="https://tools.ietf.org/html/rfc8439#section-2.8">RFC 8439</seealso>
+/// <seealso href="https://tools.ietf.org/html/rfc7539#section-2.8">RFC 7539</seealso>
 public class ChaCha20 : ChaCha20Base
 {
     public const int NONCE_SIZE_IN_BYTES = 12;

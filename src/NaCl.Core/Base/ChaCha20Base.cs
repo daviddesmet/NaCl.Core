@@ -2,14 +2,21 @@
 
 using System;
 using System.Runtime.CompilerServices;
+#if INTRINSICS
+using System.Runtime.InteropServices;
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
+#endif
 using System.Security.Cryptography;
 
 using Internal;
 
 /// <summary>
-/// Base class for <seealso cref="NaCl.Core.ChaCha20" /> and <seealso cref="NaCl.Core.XChaCha20" />.
+/// Base class for <see cref="NaCl.Core.ChaCha20" /> and <see cref="NaCl.Core.XChaCha20" />.
 /// </summary>
 /// <seealso cref="NaCl.Core.Base.Snuffle" />
+/// <seealso cref="NaCl.Core.ChaCha20" />
+/// <seealso cref="NaCl.Core.XChaCha20" />
 public abstract class ChaCha20Base : Snuffle
 {
     /// <summary>
@@ -72,6 +79,8 @@ public abstract class ChaCha20Base : Snuffle
         // Block function
         ShuffleState(state);
 
+        // Final subkey = state[0..4] || state[12..16]
+        // state.Slice(12, 4).CopyTo(state.Slice(4, 4));
         state[4] = state[12];
         state[5] = state[13];
         state[6] = state[14];
@@ -226,6 +235,20 @@ public abstract class ChaCha20Base : Snuffle
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected static void ShuffleState(Span<uint> state)
     {
+#if INTRINSICS
+        if (Avx2.IsSupported && BitConverter.IsLittleEndian)
+        {
+            ShuffleStateAvx2(state);
+            return;
+        }
+
+        if (Sse3.IsSupported && BitConverter.IsLittleEndian)
+        {
+            ShuffleStateSse3(state);
+            return;
+        }
+#endif
+
         // 10 loops × 2 rounds/loop = 20 rounds
         for (var i = 0; i < 10; i++)
         {
@@ -243,6 +266,75 @@ public abstract class ChaCha20Base : Snuffle
         }
     }
 
+#if INTRINSICS
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected static void ShuffleStateSse3(Span<uint> state)
+    {
+        if (!Sse3.IsSupported)
+            throw new PlatformNotSupportedException("SS3 is not supported on this platform.");
+
+        var s0 = Vector128.Create(state[0], state[1], state[2], state[3]);
+        var s1 = Vector128.Create(state[4], state[5], state[6], state[7]);
+        var s2 = Vector128.Create(state[8], state[9], state[10], state[11]);
+        var s3 = Vector128.Create(state[12], state[13], state[14], state[15]);
+
+        for (var i = 0; i < 10; i++)
+        {
+            // Odd round
+            QuarterRound(ref s0, ref s1, ref s2, ref s3);  // column 0
+
+            // Even round
+            QuarterRound(ref s0, ref s1, ref s2, ref s3);  // column 1 (main diagonal)
+        }
+
+#if NET8_0_OR_GREATER
+        s0.CopyTo(state);
+        s1.CopyTo(state[4..]);
+        s2.CopyTo(state[8..]);
+        s3.CopyTo(state[12..]);
+#elif NET6_0
+        unsafe
+        {
+            Sse2.Store((uint*)MemoryMarshal.GetReference(state), s0);
+            Sse2.Store((uint*)MemoryMarshal.GetReference(state[4..]), s1);
+            Sse2.Store((uint*)MemoryMarshal.GetReference(state[8..]), s2);
+            Sse2.Store((uint*)MemoryMarshal.GetReference(state[12..]), s3);
+        }
+#endif
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected static void ShuffleStateAvx2(Span<uint> state)
+    {
+        if (!Avx2.IsSupported)
+            throw new PlatformNotSupportedException("AVX2 is not supported on this platform.");
+
+        var s0 = Vector256.Create(state[0], state[1], state[2], state[3], state[4], state[5], state[6], state[7]);
+        var s1 = Vector256.Create(state[8], state[9], state[10], state[11], state[12], state[13], state[14], state[15]);
+
+        for (var i = 0; i < 10; i++)
+        {
+            // Odd round
+            QuarterRound(ref s0, ref s1, ref s0, ref s1);  // column 0
+
+            // Even round
+            QuarterRound(ref s0, ref s1, ref s0, ref s1);  // column 1 (main diagonal)
+        }
+
+#if NET8_0_OR_GREATER
+        s0.CopyTo(state);
+        s1.CopyTo(state[8..]);
+#elif NET6_0
+        unsafe
+        {
+            var byteSpan = MemoryMarshal.Cast<uint, byte>(state);
+            Avx.Store((byte*)MemoryMarshal.GetReference(byteSpan), s0.AsByte());
+            Avx.Store((byte*)MemoryMarshal.GetReference(byteSpan[32..]), s1.AsByte());
+        }
+#endif
+    }
+#endif
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void QuarterRound(ref uint a, ref uint b, ref uint c, ref uint d)
     {
@@ -256,12 +348,91 @@ public abstract class ChaCha20Base : Snuffle
         b = BitUtils.RotateLeft(b ^ c, 7);
     }
 
+#if INTRINSICS
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void QuarterRound(ref Vector128<uint> a, ref Vector128<uint> b, ref Vector128<uint> c, ref Vector128<uint> d)
+    {
+#if NET8_0_OR_GREATER
+        a = Sse2.Add(a, b);
+        d = Sse2.Xor(d, a);
+        d = Sse2.ShiftLeftLogical(d, 16) | Sse2.ShiftRightLogical(d, 16);
+
+        c = Sse2.Add(c, d);
+        b = Sse2.Xor(b, c);
+        b = Sse2.ShiftLeftLogical(b, 12) | Sse2.ShiftRightLogical(b, 20);
+
+        a = Sse2.Add(a, b);
+        d = Sse2.Xor(d, a);
+        d = Sse2.ShiftLeftLogical(d, 8) | Sse2.ShiftRightLogical(d, 24);
+
+        c = Sse2.Add(c, d);
+        b = Sse2.Xor(b, c);
+        b = Sse2.ShiftLeftLogical(b, 7) | Sse2.ShiftRightLogical(b, 25);
+#elif NET6_0
+        a = Sse2.Add(a, b);
+        d = Sse2.Xor(d, a);
+        d = Sse2.Or(Sse2.ShiftLeftLogical(d, 16), Sse2.ShiftRightLogical(d, 16));
+
+        c = Sse2.Add(c, d);
+        b = Sse2.Xor(b, c);
+        b = Sse2.Or(Sse2.ShiftLeftLogical(b, 12), Sse2.ShiftRightLogical(b, 20));
+
+        a = Sse2.Add(a, b);
+        d = Sse2.Xor(d, a);
+        d = Sse2.Or(Sse2.ShiftLeftLogical(d, 8), Sse2.ShiftRightLogical(d, 24));
+
+        c = Sse2.Add(c, d);
+        b = Sse2.Xor(b, c);
+        b = Sse2.Or(Sse2.ShiftLeftLogical(b, 7), Sse2.ShiftRightLogical(b, 25));
+#endif
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void QuarterRound(ref Vector256<uint> a, ref Vector256<uint> b, ref Vector256<uint> c, ref Vector256<uint> d)
+    {
+#if NET8_0_OR_GREATER
+        a = Avx2.Add(a, b);
+        d = Avx2.Xor(d, a);
+        d = Avx2.ShiftLeftLogical(d, 16) | Avx2.ShiftRightLogical(d, 16);
+
+        c = Avx2.Add(c, d);
+        b = Avx2.Xor(b, c);
+        b = Avx2.ShiftLeftLogical(b, 12) | Avx2.ShiftRightLogical(b, 20);
+
+        a = Avx2.Add(a, b);
+        d = Avx2.Xor(d, a);
+        d = Avx2.ShiftLeftLogical(d, 8) | Avx2.ShiftRightLogical(d, 24);
+
+        c = Avx2.Add(c, d);
+        b = Avx2.Xor(b, c);
+        b = Avx2.ShiftLeftLogical(b, 7) | Avx2.ShiftRightLogical(b, 25);
+#elif NET6_0
+        a = Avx2.Add(a, b);
+        d = Avx2.Xor(d, a);
+        d = Avx2.Or(Avx2.ShiftLeftLogical(d, 16), Avx2.ShiftRightLogical(d, 16));
+
+        c = Avx2.Add(c, d);
+        b = Avx2.Xor(b, c);
+        b = Avx2.Or(Avx2.ShiftLeftLogical(b, 12), Avx2.ShiftRightLogical(b, 20));
+
+        a = Avx2.Add(a, b);
+        d = Avx2.Xor(d, a);
+        d = Avx2.Or(Avx2.ShiftLeftLogical(d, 8), Avx2.ShiftRightLogical(d, 24));
+
+        c = Avx2.Add(c, d);
+        b = Avx2.Xor(b, c);
+        b = Avx2.Or(Avx2.ShiftLeftLogical(b, 7), Avx2.ShiftRightLogical(b, 25));
+#endif
+    }
+#endif
+
     /// <summary>
     /// Sets the ChaCha20 constant.
     /// </summary>
     /// <param name="state">The state.</param>
     protected static void SetSigma(Span<uint> state)
     {
+        // SIGMA.AsSpan()[..4].CopyTo(state);
         state[0] = SIGMA[0];
         state[1] = SIGMA[1];
         state[2] = SIGMA[2];
