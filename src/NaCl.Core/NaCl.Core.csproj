@@ -54,12 +54,12 @@
   </ItemGroup>
 
   <ItemGroup Label="Package References for Windows" Condition="$(TargetFramework) == 'netstandard2.0' OR $(TargetFramework) == 'net48' OR $(TargetFramework) == 'net481'">
-    <PackageReference Include="IndexRange" Version="1.0.2" />
+    <PackageReference Include="IndexRange" Version="1.0.3" />
     <PackageReference Include="System.Memory" Version="4.6.2" />
   </ItemGroup>
 
   <ItemGroup Label="Package References for Windows" Condition="$(TargetFramework) == 'net45'">
-    <PackageReference Include="IndexRange" Version="1.0.2" />
+    <PackageReference Include="IndexRange" Version="1.0.3" />
     <PackageReference Include="System.Memory" Version="4.5.5" />
   </ItemGroup>
 
