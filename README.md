@@ -77,6 +77,19 @@ Poly1305.VerifyMac(key, data, tag);
 - Includes the mandatory RFC [test vectors](https://github.com/daviddesmet/NaCl.Core/tree/master/test/NaCl.Core.Tests).
 - [Project Wycheproof](https://github.com/google/wycheproof) by members of Google Security Team, for testing against known attacks (when applicable).
 
+## Performance
+
+Refer to the [benchmarks](https://github.com/daviddesmet/NaCl.Core/tree/master/test/NaCl.Core.Benchmarks) for performance numbers.
+
+Run the benchmarks using:
+```bash
+dotnet run -c Release --framework net9.0
+```
+
+```bash
+dotnet run -c Release --framework net9.0 --filter "*ChaCha20IntrinsicsBenchmark*"
+```
+
 ## Learn More
 
 [![License](https://img.shields.io/github/license/daviddesmet/NaCl.Core.svg)](https://github.com/daviddesmet/NaCl.Core/blob/master/LICENSE)

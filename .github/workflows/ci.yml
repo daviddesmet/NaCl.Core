@@ -71,7 +71,9 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: ${{matrix.os}}
-        path: ${{env.BUILD_ARTIFACT_PATH}}
+        path: |
+          ${{env.BUILD_ARTIFACT_PATH}}
+          !${{env.BUILD_ARTIFACT_PATH}}/**/In/**/*
 
   coverage:
     name: 'Process Coverage'

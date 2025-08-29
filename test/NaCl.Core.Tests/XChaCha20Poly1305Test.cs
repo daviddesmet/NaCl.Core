@@ -521,12 +521,13 @@ public class XChaCha20Poly1305Test(ITestOutputHelper output)
         errors.ShouldBe(0);
     }
 
-    private string GetWycheproofTestVector()
+    private static string GetWycheproofTestVector()
     {
         try
         {
             using var client = new HttpClient();
-            return client.GetStringAsync("https://github.com/google/wycheproof/raw/master/testvectors/xchacha20_poly1305_test.json").Result;
+            // originally hosted at: https://github.com/google/wycheproof/raw/master/testvectors/xchacha20_poly1305_test.json
+            return client.GetStringAsync("https://github.com/C2SP/wycheproof/raw/refs/heads/main/testvectors/xchacha20_poly1305_test.json").Result;
         }
         catch (Exception)
         {

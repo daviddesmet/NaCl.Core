@@ -3,13 +3,20 @@
 using System;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
+#if NET6_0_OR_GREATER
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
+using System.Runtime.Intrinsics.Arm;
+#endif
 
 using Internal;
 
 /// <summary>
-/// Base class for <seealso cref="NaCl.Core.ChaCha20" /> and <seealso cref="NaCl.Core.XChaCha20" />.
+/// Base class for <see cref="NaCl.Core.ChaCha20" /> and <see cref="NaCl.Core.XChaCha20" />.
 /// </summary>
 /// <seealso cref="NaCl.Core.Base.Snuffle" />
+/// <seealso cref="NaCl.Core.ChaCha20" />
+/// <seealso cref="NaCl.Core.XChaCha20" />
 public abstract class ChaCha20Base : Snuffle
 {
     /// <summary>
@@ -72,6 +79,8 @@ public abstract class ChaCha20Base : Snuffle
         // Block function
         ShuffleState(state);
 
+        // Final subkey = state[0..4] || state[12..16]
+        // state.Slice(12, 4).CopyTo(state.Slice(4, 4));
         state[4] = state[12];
         state[5] = state[13];
         state[6] = state[14];
@@ -226,6 +235,30 @@ public abstract class ChaCha20Base : Snuffle
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected static void ShuffleState(Span<uint> state)
     {
+#if NET6_0_OR_GREATER
+        if (Avx2.IsSupported)
+        {
+            ShuffleStateAvx2(state);
+            return;
+        }
+        if (Ssse3.IsSupported)
+        {
+            ShuffleStateSsse3(state);
+            return;
+        }
+        if (AdvSimd.IsSupported)
+        {
+            ShuffleStateAdvSimd(state);
+            return;
+        }
+#endif
+        // Fallback to scalar implementation
+        ShuffleStateScalar(state);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void ShuffleStateScalar(Span<uint> state)
+    {
         // 10 loops × 2 rounds/loop = 20 rounds
         for (var i = 0; i < 10; i++)
         {
@@ -243,6 +276,131 @@ public abstract class ChaCha20Base : Snuffle
         }
     }
 
+#if NET6_0_OR_GREATER
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void ShuffleStateAvx2(Span<uint> state)
+    {
+        // Load the state into AVX2 registers
+        var row1 = Vector256.Create(state[0], state[1], state[2], state[3], state[0], state[1], state[2], state[3]);
+        var row2 = Vector256.Create(state[4], state[5], state[6], state[7], state[4], state[5], state[6], state[7]);
+        var row3 = Vector256.Create(state[8], state[9], state[10], state[11], state[8], state[9], state[10], state[11]);
+        var row4 = Vector256.Create(state[12], state[13], state[14], state[15], state[12], state[13], state[14], state[15]);
+
+        // Perform 20 rounds (10 double rounds)
+        for (var i = 0; i < 10; i++)
+        {
+            // Column rounds
+            QuarterRoundAvx2(ref row1, ref row2, ref row3, ref row4);
+
+            // Diagonal rounds - rotate the rows for diagonal access
+            row2 = Avx2.Shuffle(row2.AsUInt32(), 0x39).AsUInt32(); // Rotate left by 1
+            row3 = Avx2.Shuffle(row3.AsUInt32(), 0x4E).AsUInt32(); // Rotate left by 2
+            row4 = Avx2.Shuffle(row4.AsUInt32(), 0x93).AsUInt32(); // Rotate left by 3
+
+            QuarterRoundAvx2(ref row1, ref row2, ref row3, ref row4);
+
+            // Rotate back
+            row2 = Avx2.Shuffle(row2.AsUInt32(), 0x93).AsUInt32(); // Rotate right by 1
+            row3 = Avx2.Shuffle(row3.AsUInt32(), 0x4E).AsUInt32(); // Rotate right by 2
+            row4 = Avx2.Shuffle(row4.AsUInt32(), 0x39).AsUInt32(); // Rotate right by 3
+        }
+
+        // Store the results back
+        unsafe
+        {
+            fixed (uint* statePtr = state)
+            {
+                Sse2.Store(statePtr + 0, row1.GetLower());
+                Sse2.Store(statePtr + 4, row2.GetLower());
+                Sse2.Store(statePtr + 8, row3.GetLower());
+                Sse2.Store(statePtr + 12, row4.GetLower());
+            }
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void ShuffleStateSsse3(Span<uint> state)
+    {
+        // Load the state into SSE registers
+        var row1 = Vector128.Create(state[0], state[1], state[2], state[3]);
+        var row2 = Vector128.Create(state[4], state[5], state[6], state[7]);
+        var row3 = Vector128.Create(state[8], state[9], state[10], state[11]);
+        var row4 = Vector128.Create(state[12], state[13], state[14], state[15]);
+
+        // Perform 20 rounds (10 double rounds)
+        for (var i = 0; i < 10; i++)
+        {
+            // Column rounds
+            QuarterRoundSsse3(ref row1, ref row2, ref row3, ref row4);
+
+            // Diagonal rounds - rotate the rows for diagonal access
+            row2 = Ssse3.Shuffle(row2.AsByte(), Vector128.Create((byte)4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3)).AsUInt32();
+            row3 = Ssse3.Shuffle(row3.AsByte(), Vector128.Create((byte)8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7)).AsUInt32();
+            row4 = Ssse3.Shuffle(row4.AsByte(), Vector128.Create((byte)12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)).AsUInt32();
+
+            QuarterRoundSsse3(ref row1, ref row2, ref row3, ref row4);
+
+            // Rotate back
+            row2 = Ssse3.Shuffle(row2.AsByte(), Vector128.Create((byte)12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)).AsUInt32();
+            row3 = Ssse3.Shuffle(row3.AsByte(), Vector128.Create((byte)8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7)).AsUInt32();
+            row4 = Ssse3.Shuffle(row4.AsByte(), Vector128.Create((byte)4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3)).AsUInt32();
+        }
+
+        // Store the results back
+        unsafe
+        {
+            fixed (uint* statePtr = state)
+            {
+                Sse2.Store(statePtr + 0, row1);
+                Sse2.Store(statePtr + 4, row2);
+                Sse2.Store(statePtr + 8, row3);
+                Sse2.Store(statePtr + 12, row4);
+            }
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void ShuffleStateAdvSimd(Span<uint> state)
+    {
+        // Load the state into ARM AdvSIMD registers
+        var row1 = Vector128.Create(state[0], state[1], state[2], state[3]);
+        var row2 = Vector128.Create(state[4], state[5], state[6], state[7]);
+        var row3 = Vector128.Create(state[8], state[9], state[10], state[11]);
+        var row4 = Vector128.Create(state[12], state[13], state[14], state[15]);
+
+        // Perform 20 rounds (10 double rounds)
+        for (var i = 0; i < 10; i++)
+        {
+            // Column rounds
+            QuarterRoundAdvSimd(ref row1, ref row2, ref row3, ref row4);
+            
+            // Diagonal rounds - rotate the rows for diagonal access
+            row2 = AdvSimd.ExtractVector128(row2.AsByte(), row2.AsByte(), 4).AsUInt32(); // Rotate left by 1 element
+            row3 = AdvSimd.ExtractVector128(row3.AsByte(), row3.AsByte(), 8).AsUInt32(); // Rotate left by 2 elements  
+            row4 = AdvSimd.ExtractVector128(row4.AsByte(), row4.AsByte(), 12).AsUInt32(); // Rotate left by 3 elements
+            
+            QuarterRoundAdvSimd(ref row1, ref row2, ref row3, ref row4);
+            
+            // Rotate back
+            row2 = AdvSimd.ExtractVector128(row2.AsByte(), row2.AsByte(), 12).AsUInt32(); // Rotate right by 1 element
+            row3 = AdvSimd.ExtractVector128(row3.AsByte(), row3.AsByte(), 8).AsUInt32(); // Rotate right by 2 elements
+            row4 = AdvSimd.ExtractVector128(row4.AsByte(), row4.AsByte(), 4).AsUInt32(); // Rotate right by 3 elements
+        }
+
+        // Store the results back
+        unsafe
+        {
+            fixed (uint* statePtr = state)
+            {
+                AdvSimd.Store(statePtr + 0, row1);
+                AdvSimd.Store(statePtr + 4, row2);
+                AdvSimd.Store(statePtr + 8, row3);
+                AdvSimd.Store(statePtr + 12, row4);
+            }
+        }
+    }
+#endif
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void QuarterRound(ref uint a, ref uint b, ref uint c, ref uint d)
     {
@@ -256,12 +414,90 @@ public abstract class ChaCha20Base : Snuffle
         b = BitUtils.RotateLeft(b ^ c, 7);
     }
 
+#if NET6_0_OR_GREATER
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void QuarterRoundAvx2(ref Vector256<uint> row1, ref Vector256<uint> row2, ref Vector256<uint> row3, ref Vector256<uint> row4)
+    {
+        // a += b
+        row1 = Avx2.Add(row1, row2);
+        // d ^= a, d <<<= 16
+        row4 = Avx2.Xor(row4, row1);
+        row4 = BitUtils.RotateLeftVector256(row4, 16);
+        // c += d
+        row3 = Avx2.Add(row3, row4);
+        // b ^= c, b <<<= 12
+        row2 = Avx2.Xor(row2, row3);
+        row2 = BitUtils.RotateLeftVector256(row2, 12);
+        // a += b
+        row1 = Avx2.Add(row1, row2);
+        // d ^= a, d <<<= 8
+        row4 = Avx2.Xor(row4, row1);
+        row4 = BitUtils.RotateLeftVector256(row4, 8);
+        // c += d
+        row3 = Avx2.Add(row3, row4);
+        // b ^= c, b <<<= 7
+        row2 = Avx2.Xor(row2, row3);
+        row2 = BitUtils.RotateLeftVector256(row2, 7);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void QuarterRoundSsse3(ref Vector128<uint> row1, ref Vector128<uint> row2, ref Vector128<uint> row3, ref Vector128<uint> row4)
+    {
+        // a += b
+        row1 = Sse2.Add(row1, row2);
+        // d ^= a, d <<<= 16
+        row4 = Sse2.Xor(row4, row1);
+        row4 = BitUtils.RotateLeftVector128(row4, 16);
+        // c += d
+        row3 = Sse2.Add(row3, row4);
+        // b ^= c, b <<<= 12
+        row2 = Sse2.Xor(row2, row3);
+        row2 = BitUtils.RotateLeftVector128(row2, 12);
+        // a += b
+        row1 = Sse2.Add(row1, row2);
+        // d ^= a, d <<<= 8
+        row4 = Sse2.Xor(row4, row1);
+        row4 = BitUtils.RotateLeftVector128(row4, 8);
+        // c += d
+        row3 = Sse2.Add(row3, row4);
+        // b ^= c, b <<<= 7
+        row2 = Sse2.Xor(row2, row3);
+        row2 = BitUtils.RotateLeftVector128(row2, 7);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void QuarterRoundAdvSimd(ref Vector128<uint> row1, ref Vector128<uint> row2, ref Vector128<uint> row3, ref Vector128<uint> row4)
+    {
+        // a += b
+        row1 = AdvSimd.Add(row1, row2);
+        // d ^= a, d <<<= 16
+        row4 = AdvSimd.Xor(row4, row1);
+        row4 = BitUtils.RotateLeftAdvSimd(row4, 16);
+        // c += d
+        row3 = AdvSimd.Add(row3, row4);
+        // b ^= c, b <<<= 12
+        row2 = AdvSimd.Xor(row2, row3);
+        row2 = BitUtils.RotateLeftAdvSimd(row2, 12);
+        // a += b
+        row1 = AdvSimd.Add(row1, row2);
+        // d ^= a, d <<<= 8
+        row4 = AdvSimd.Xor(row4, row1);
+        row4 = BitUtils.RotateLeftAdvSimd(row4, 8);
+        // c += d
+        row3 = AdvSimd.Add(row3, row4);
+        // b ^= c, b <<<= 7
+        row2 = AdvSimd.Xor(row2, row3);
+        row2 = BitUtils.RotateLeftAdvSimd(row2, 7);
+    }
+#endif
+
     /// <summary>
     /// Sets the ChaCha20 constant.
     /// </summary>
     /// <param name="state">The state.</param>
     protected static void SetSigma(Span<uint> state)
     {
+        // SIGMA.AsSpan()[..4].CopyTo(state);
         state[0] = SIGMA[0];
         state[1] = SIGMA[1];
         state[2] = SIGMA[2];

@@ -16,13 +16,13 @@
   </PropertyGroup>
 
   <ItemGroup Label="Test Assets">
-    <Content Include="..\vectors\chacha20_poly1305_test.json" Link="Vectors\chacha20_poly1305_test.json">
+    <Content Include="..\vectors\chacha20_poly1305_test.json" Link="Vectors/chacha20_poly1305_test.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\vectors\xchacha20_poly1305_test.json" Link="Vectors\xchacha20_poly1305_test.json">
+    <Content Include="..\vectors\xchacha20_poly1305_test.json" Link="Vectors/xchacha20_poly1305_test.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\vectors\salsa20-256.64-verified.test-vectors" Link="Vectors\salsa20-256.64-verified.test-vectors">
+    <Content Include="..\vectors\salsa20-256.64-verified.test-vectors" Link="Vectors/salsa20-256.64-verified.test-vectors">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
@@ -44,7 +44,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="xunit.runner.visualstudio" Version="3.0.2">
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>

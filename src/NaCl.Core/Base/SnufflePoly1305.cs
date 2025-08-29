@@ -11,6 +11,8 @@ using Internal;
 ///
 /// This implementation produces ciphertext with the following format: {nonce || actual_ciphertext || tag} and only decrypts the same format.
 /// </summary>
+/// <seealso cref="NaCl.Core.ChaCha20Poly1305" />
+/// <seealso cref="NaCl.Core.XChaCha20Poly1305" />
 public abstract class SnufflePoly1305
 {
     private readonly Snuffle _snuffle;
