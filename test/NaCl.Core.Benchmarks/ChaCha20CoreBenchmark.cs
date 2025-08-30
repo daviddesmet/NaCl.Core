@@ -38,42 +38,17 @@ public class ChaCha20CoreBenchmark
         _cipher = new ChaCha20(_key, 0);
     }
 
-    [Benchmark(Baseline = true, Description = "Scalar (no SIMD)")]
-    public void ChaCha20_1MB_Scalar()
+    [Benchmark(Baseline = true, Description = "Default (runtime detection)")]
+    public void ChaCha20_1MB_Default()
     {
-        // Force scalar implementation
-        Environment.SetEnvironmentVariable("COMPlus_EnableAVX2", "0");
-        Environment.SetEnvironmentVariable("COMPlus_EnableSSE3", "0");
-
+        // Use default runtime detection - best available instruction set
         _cipher.Encrypt(_data1Mb, _nonce, _output1Mb);
     }
 
-    [Benchmark(Description = "SSSE3 optimized")]
-    public void ChaCha20_1MB_SSSE3()
+    [Benchmark(Description = "Intrinsics optimized")]
+    public void ChaCha20_1MB_Intrinsics()
     {
-        // Enable SSSE3, disable AVX2
-        Environment.SetEnvironmentVariable("COMPlus_EnableAVX2", "0");
-        Environment.SetEnvironmentVariable("COMPlus_EnableSSE3", "1");
-
-        _cipher.Encrypt(_data1Mb, _nonce, _output1Mb);
-    }
-
-    [Benchmark(Description = "AVX2 optimized")]
-    public void ChaCha20_1MB_AVX2()
-    {
-        // Enable both (AVX2 preferred)
-        Environment.SetEnvironmentVariable("COMPlus_EnableAVX2", "1");
-        Environment.SetEnvironmentVariable("COMPlus_EnableSSE3", "1");
-
-        _cipher.Encrypt(_data1Mb, _nonce, _output1Mb);
-    }
-
-    [Benchmark(Description = "ARM AdvSIMD optimized")]
-    public void ChaCha20_1MB_AdvSIMD()
-    {
-        // Enable ARM AdvSIMD
-        Environment.SetEnvironmentVariable("COMPlus_EnableAdvSimd", "1");
-
+        // Test intrinsics path (same as default on modern hardware)
         _cipher.Encrypt(_data1Mb, _nonce, _output1Mb);
     }
 }

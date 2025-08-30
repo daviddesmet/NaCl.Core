@@ -52,10 +52,15 @@ internal static class BitUtils
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vector128<uint> RotateLeftVector128(Vector128<uint> value, int offset) => offset switch
     {
+        // ChaCha20 rotations
         16 => Sse2.Or(Sse2.ShiftLeftLogical(value, 16), Sse2.ShiftRightLogical(value, 16)),
         12 => Sse2.Or(Sse2.ShiftLeftLogical(value, 12), Sse2.ShiftRightLogical(value, 20)),
         8 => Sse2.Or(Sse2.ShiftLeftLogical(value, 8), Sse2.ShiftRightLogical(value, 24)),
         7 => Sse2.Or(Sse2.ShiftLeftLogical(value, 7), Sse2.ShiftRightLogical(value, 25)),
+        // Salsa20 rotations
+        18 => Sse2.Or(Sse2.ShiftLeftLogical(value, 18), Sse2.ShiftRightLogical(value, 14)),
+        13 => Sse2.Or(Sse2.ShiftLeftLogical(value, 13), Sse2.ShiftRightLogical(value, 19)),
+        9 => Sse2.Or(Sse2.ShiftLeftLogical(value, 9), Sse2.ShiftRightLogical(value, 23)),
         _ => throw new ArgumentException($"Unsupported rotation offset: {offset}")
     };
 
@@ -68,10 +73,15 @@ internal static class BitUtils
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vector256<uint> RotateLeftVector256(Vector256<uint> value, int offset) => offset switch
     {
+        // ChaCha20 rotations
         16 => Avx2.Or(Avx2.ShiftLeftLogical(value, 16), Avx2.ShiftRightLogical(value, 16)),
         12 => Avx2.Or(Avx2.ShiftLeftLogical(value, 12), Avx2.ShiftRightLogical(value, 20)),
         8 => Avx2.Or(Avx2.ShiftLeftLogical(value, 8), Avx2.ShiftRightLogical(value, 24)),
         7 => Avx2.Or(Avx2.ShiftLeftLogical(value, 7), Avx2.ShiftRightLogical(value, 25)),
+        // Salsa20 rotations
+        18 => Avx2.Or(Avx2.ShiftLeftLogical(value, 18), Avx2.ShiftRightLogical(value, 14)),
+        13 => Avx2.Or(Avx2.ShiftLeftLogical(value, 13), Avx2.ShiftRightLogical(value, 19)),
+        9 => Avx2.Or(Avx2.ShiftLeftLogical(value, 9), Avx2.ShiftRightLogical(value, 23)),
         _ => throw new ArgumentException($"Unsupported rotation offset: {offset}")
     };
 
@@ -84,10 +94,15 @@ internal static class BitUtils
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vector128<uint> RotateLeftAdvSimd(Vector128<uint> value, int offset) => offset switch
     {
+        // ChaCha20 rotations
         16 => AdvSimd.Or(AdvSimd.ShiftLeftLogical(value, 16), AdvSimd.ShiftRightLogical(value, 16)),
         12 => AdvSimd.Or(AdvSimd.ShiftLeftLogical(value, 12), AdvSimd.ShiftRightLogical(value, 20)),
         8 => AdvSimd.Or(AdvSimd.ShiftLeftLogical(value, 8), AdvSimd.ShiftRightLogical(value, 24)),
         7 => AdvSimd.Or(AdvSimd.ShiftLeftLogical(value, 7), AdvSimd.ShiftRightLogical(value, 25)),
+        // Salsa20 rotations
+        18 => AdvSimd.Or(AdvSimd.ShiftLeftLogical(value, 18), AdvSimd.ShiftRightLogical(value, 14)),
+        13 => AdvSimd.Or(AdvSimd.ShiftLeftLogical(value, 13), AdvSimd.ShiftRightLogical(value, 19)),
+        9 => AdvSimd.Or(AdvSimd.ShiftLeftLogical(value, 9), AdvSimd.ShiftRightLogical(value, 23)),
         _ => throw new ArgumentException($"Unsupported rotation offset: {offset}")
     };
 #endif

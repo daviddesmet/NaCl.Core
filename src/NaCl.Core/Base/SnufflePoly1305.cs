@@ -1,6 +1,7 @@
 ﻿namespace NaCl.Core.Base;
 
 using System;
+using System.Buffers;
 using System.Diagnostics.CodeAnalysis;
 using System.Security.Cryptography;
 
@@ -17,6 +18,7 @@ public abstract class SnufflePoly1305
 {
     private readonly Snuffle _snuffle;
     private readonly Snuffle _macKeySnuffle;
+    private const int StackallocThreshold = 1024; // 1KB threshold
     public const string AEAD_EXCEPTION_INVALID_TAG = "The tag value could not be verified, or the decryption operation otherwise failed."; // "AEAD Bad Tag Exception";
 
     /// <summary>
@@ -67,11 +69,25 @@ public abstract class SnufflePoly1305
 
         var aadPaddedLen = GetPaddedLength(associatedData, Poly1305.MAC_TAG_SIZE_IN_BYTES);
         var ciphertextPaddedLen = GetPaddedLength(ciphertext, Poly1305.MAC_TAG_SIZE_IN_BYTES);
-        var macData = new Span<byte>(new byte[aadPaddedLen + ciphertextPaddedLen + Poly1305.MAC_TAG_SIZE_IN_BYTES]);
+        var macDataSize = aadPaddedLen + ciphertextPaddedLen + Poly1305.MAC_TAG_SIZE_IN_BYTES;
 
-        PrepareMacDataRfc8439(macData, associatedData, aadPaddedLen, ciphertext, ciphertextPaddedLen);
-
-        Poly1305.ComputeMac(GetMacKey(nonce), macData, tag);
+        // Use stackalloc for small buffers, pooled memory for larger ones
+        if (macDataSize <= StackallocThreshold)
+        {
+            Span<byte> macData = stackalloc byte[macDataSize];
+            macData.Clear(); // Ensure padding is zero
+            PrepareMacDataRfc8439(macData, associatedData, aadPaddedLen, ciphertext, ciphertextPaddedLen);
+            ComputeMacWithPooledKey(nonce, macData, tag);
+        }
+        else
+        {
+            // Use pooled memory for larger buffers to avoid stack overflow
+            using var macDataOwner = MemoryPool<byte>.Shared.Rent(macDataSize);
+            var macData = macDataOwner.Memory.Span[..macDataSize];
+            macData.Clear(); // Ensure padding is zero
+            PrepareMacDataRfc8439(macData, associatedData, aadPaddedLen, ciphertext, ciphertextPaddedLen);
+            ComputeMacWithPooledKey(nonce, macData, tag);
+        }
     }
 
     /// <summary>
@@ -104,10 +120,25 @@ public abstract class SnufflePoly1305
         {
             var aadPaddedLen = GetPaddedLength(associatedData, Poly1305.MAC_TAG_SIZE_IN_BYTES);
             var ciphertextPaddedLen = GetPaddedLength(ciphertext, Poly1305.MAC_TAG_SIZE_IN_BYTES);
-            var macData = new Span<byte>(new byte[aadPaddedLen + ciphertextPaddedLen + Poly1305.MAC_TAG_SIZE_IN_BYTES]);
+            var macDataSize = aadPaddedLen + ciphertextPaddedLen + Poly1305.MAC_TAG_SIZE_IN_BYTES;
 
-            PrepareMacDataRfc8439(macData, associatedData, aadPaddedLen, ciphertext, ciphertextPaddedLen);
-            Poly1305.VerifyMac(GetMacKey(nonce), macData, tag);
+            // Use stackalloc for small buffers, pooled memory for larger ones
+            if (macDataSize <= StackallocThreshold)
+            {
+                Span<byte> macData = stackalloc byte[macDataSize];
+                macData.Clear(); // Ensure padding is zero
+                PrepareMacDataRfc8439(macData, associatedData, aadPaddedLen, ciphertext, ciphertextPaddedLen);
+                VerifyMacWithPooledKey(nonce, macData, tag);
+            }
+            else
+            {
+                // Use pooled memory for larger buffers to avoid stack overflow
+                using var macDataOwner = MemoryPool<byte>.Shared.Rent(macDataSize);
+                var macData = macDataOwner.Memory.Span[..macDataSize];
+                macData.Clear(); // Ensure padding is zero
+                PrepareMacDataRfc8439(macData, associatedData, aadPaddedLen, ciphertext, ciphertextPaddedLen);
+                VerifyMacWithPooledKey(nonce, macData, tag);
+            }
         }
         catch (CryptographicException ex) when (ex.Message.Contains("length"))
         {
@@ -123,9 +154,54 @@ public abstract class SnufflePoly1305
 
     /// <summary>
     /// The MAC key is the first 32 bytes of the first key stream block.
+    /// Uses pooled memory to avoid allocations.
+    /// </summary>
+    /// <param name="nonce">The nonce.</param>
+    /// <param name="macKey">The span to receive the MAC key.</param>
+    private void GetMacKeyPooled(ReadOnlySpan<byte> nonce, Span<byte> macKey)
+    {
+        using var blockOwner = MemoryPool<byte>.Shared.Rent(_macKeySnuffle.BlockSizeInBytes);
+        var firstBlock = blockOwner.Memory.Span[.._macKeySnuffle.BlockSizeInBytes];
+        _macKeySnuffle.ProcessKeyStreamBlock(nonce, 0, firstBlock);
+
+        firstBlock[..Poly1305.MAC_KEY_SIZE_IN_BYTES].CopyTo(macKey);
+    }
+
+    /// <summary>
+    /// Computes MAC using pooled memory for the key.
+    /// </summary>
+    /// <param name="nonce">The nonce.</param>
+    /// <param name="macData">The MAC data.</param>
+    /// <param name="tag">The computed tag.</param>
+    private void ComputeMacWithPooledKey(ReadOnlySpan<byte> nonce, ReadOnlySpan<byte> macData, Span<byte> tag)
+    {
+        Span<byte> macKey = stackalloc byte[Poly1305.MAC_KEY_SIZE_IN_BYTES];
+        GetMacKeyPooled(nonce, macKey);
+        Poly1305.ComputeMac(macKey, macData, tag);
+        macKey.Clear(); // Clear sensitive data
+    }
+
+    /// <summary>
+    /// Verifies MAC using pooled memory for the key.
+    /// </summary>
+    /// <param name="nonce">The nonce.</param>
+    /// <param name="macData">The MAC data.</param>
+    /// <param name="tag">The tag to verify.</param>
+    private void VerifyMacWithPooledKey(ReadOnlySpan<byte> nonce, ReadOnlySpan<byte> macData, ReadOnlySpan<byte> tag)
+    {
+        Span<byte> macKey = stackalloc byte[Poly1305.MAC_KEY_SIZE_IN_BYTES];
+        GetMacKeyPooled(nonce, macKey);
+        Poly1305.VerifyMac(macKey, macData, tag);
+        macKey.Clear(); // Clear sensitive data
+    }
+
+    /// <summary>
+    /// The MAC key is the first 32 bytes of the first key stream block.
     /// </summary>
     /// <param name="nonce">The nonce.</param>
     /// <returns>System.Byte[].</returns>
+    [ExcludeFromCodeCoverage]
+    [Obsolete("Use ComputeMacWithPooledKey or VerifyMacWithPooledKey to avoid allocations")]
     private Span<byte> GetMacKey(ReadOnlySpan<byte> nonce)
     {
         Span<byte> firstBlock = new byte[_macKeySnuffle.BlockSizeInBytes];

@@ -2,6 +2,11 @@
 
 using System;
 using System.Security.Cryptography;
+#if NET6_0_OR_GREATER
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
+using System.Runtime.Intrinsics.Arm;
+#endif
 
 using Internal;
 
@@ -17,77 +22,19 @@ public static class Poly1305
     public static int MAC_KEY_SIZE_IN_BYTES = 32;
     public const string MAC_EXCEPTION_INVALID = "Invalid MAC";
 
-    /*
-    private static long Load32(ReadOnlySpan<byte> buf, int idx)
-    {
-        //return ByteIntegerConverter.LoadLittleEndian32(buf, idx);
-        return ((buf[idx] & 0xff)
-                | ((buf[idx + 1] & 0xff) << 8)
-                | ((buf[idx + 2] & 0xff) << 16)
-                | ((buf[idx + 3] & 0xff) << 24))
-                & 0xffffffffL;
-    }
-
-    private static long Load26(ReadOnlySpan<byte> buf, int idx, int shift) => (Load32(buf, idx) >> shift) & 0x3ffffff;
-
-    private static void ToByteArray(byte[] output, long num, int idx)
-    {
-        for (var i = 0; i < 4; i++, num >>= 8)
-            output[idx + i] = (byte)(num & 0xff);
-    }
-    */
-
-    // private static void Fill<T>(T[] array, int start, int end, T value)
-    // {
-    //     /*
-    //      * Shouldn't run into any exception since is not exposed to public
-    //      *
-    //     if (array is null)
-    //         throw new ArgumentNullException(nameof(array));
-
-    //     if (start < 0 || start >= end)
-    //         throw new ArgumentOutOfRangeException(nameof(start));
-
-    //     if (end > array.Length)
-    //         throw new ArgumentOutOfRangeException(nameof(end));
-    //     */
-
-    //     for (var i = start; i < end; i++)
-    //         array[i] = value;
-    // }
-
-    /*
-    private static void ProcessBlock(byte[] output, ReadOnlySpan<byte> buf, int idx)
+    private static void GetLastBlock(ReadOnlySpan<byte> buf, int idx, Span<byte> output)
     {
         var copyCount = Math.Min(MAC_TAG_SIZE_IN_BYTES, buf.Length - idx);
-        //Array.Copy(buf.ToArray(), idx, output, 0, copyCount);
 
+        // Clear the output buffer first (ensure padding is zero)
+        output.Clear();
+
+        // Copy the remaining data
         for (var i = 0; i < copyCount; i++)
             output[i] = buf[idx + i];
 
+        // Add the padding bit
         output[copyCount] = 1;
-
-        if (copyCount != MAC_TAG_SIZE_IN_BYTES)
-            Fill(output, copyCount + 1, output.Length, (byte)0);
-    }
-    */
-
-    private static byte[] GetLastBlock(ReadOnlySpan<byte> buf, int idx)
-    {
-        var output = new byte[MAC_KEY_SIZE_IN_BYTES];
-
-        var copyCount = Math.Min(MAC_TAG_SIZE_IN_BYTES, buf.Length - idx);
-        //Array.Copy(buf.ToArray(), idx, output, 0, copyCount);
-
-        for (var i = 0; i < copyCount; i++)
-            output[i] = buf[idx + i];
-
-        output[copyCount] = 1;
-
-        //if (copyCount != MAC_TAG_SIZE_IN_BYTES)
-        //    Fill(output, copyCount + 1, output.Length, (byte)0);
-
-        return output;
     }
 
     /// <summary>
@@ -133,6 +80,36 @@ public static class Poly1305
     /// <returns>System.Byte[].</returns>
     /// <exception cref="CryptographicException">The key length in bytes must be {MAC_KEY_SIZE_IN_BYTES}</exception>
     public static void ComputeMac(ReadOnlySpan<byte> key, ReadOnlySpan<byte> data, Span<byte> tag)
+    {
+#if NET6_0_OR_GREATER
+        if (Avx2.IsSupported)
+        {
+            ComputeMacAvx2(key, data, tag);
+            return;
+        }
+        if (Sse2.IsSupported)
+        {
+            ComputeMacSse2(key, data, tag);
+            return;
+        }
+        if (AdvSimd.IsSupported)
+        {
+            ComputeMacAdvSimd(key, data, tag);
+            return;
+        }
+#endif
+        ComputeMacScalar(key, data, tag);
+    }
+
+    /// <summary>
+    /// Computes the authentication <paramref name="tag"/> into a destination buffer using the specified <paramref name="key"/> and <paramref name="data"/> using scalar operations.
+    /// </summary>
+    /// <param name="key">The secret key.</param>
+    /// <param name="data">The input to compute the authentication tag.</param>
+    /// <param name="tag">The byte span to receive the generated authentication tag.</param>
+    /// <returns>System.Byte[].</returns>
+    /// <exception cref="CryptographicException">The key length in bytes must be {MAC_KEY_SIZE_IN_BYTES}</exception>
+    private static void ComputeMacScalar(ReadOnlySpan<byte> key, ReadOnlySpan<byte> data, Span<byte> tag)
     {
         if (key.Length != MAC_KEY_SIZE_IN_BYTES)
             throw new CryptographicException($"The key length in bytes must be {MAC_KEY_SIZE_IN_BYTES}.");
@@ -183,19 +160,20 @@ public static class Poly1305
         var s4 = r4 * 5;
 
         // Process blocks
+        Span<byte> block = stackalloc byte[MAC_KEY_SIZE_IN_BYTES]; // Move stackalloc out of loop
         for (var i = 0; i < data.Length; i += MAC_TAG_SIZE_IN_BYTES)
         {
             var lastBlock = (data.Length - i) < MAC_TAG_SIZE_IN_BYTES;
             if (lastBlock)
             {
-                var block = GetLastBlock(data, i); // TODO: Remove allocation
+                GetLastBlock(data, i, block);
 
                 t0 = ArrayUtils.LoadUInt32LittleEndian(block, 0);
                 t1 = ArrayUtils.LoadUInt32LittleEndian(block, 4);
                 t2 = ArrayUtils.LoadUInt32LittleEndian(block, 8);
                 t3 = ArrayUtils.LoadUInt32LittleEndian(block, 12);
 
-                CryptoBytes.Wipe(block);
+                block.Clear(); // Clear sensitive data
             }
             else
             {
@@ -268,151 +246,208 @@ public static class Poly1305
         ArrayUtils.StoreUInt32LittleEndian(tag, 12, (uint)f3);
     }
 
+#if NET6_0_OR_GREATER
     /// <summary>
-    /// Computes the mac value using the specified key and data.
+    /// Computes the authentication <paramref name="tag"/> using AVX2 intrinsics.
     /// </summary>
-    /// <param name="key">The key.</param>
-    /// <param name="data">The data.</param>
-    /// <returns>System.Byte[].</returns>
-    /// <exception cref="CryptographicException">The key length in bytes must be {MAC_KEY_SIZE_IN_BYTES}</exception>
-    /*
-    public static byte[] ComputeMacLegacy(ReadOnlySpan<byte> key, ReadOnlySpan<byte> data)
+    private static void ComputeMacAvx2(ReadOnlySpan<byte> key, ReadOnlySpan<byte> data, Span<byte> tag)
     {
         if (key.Length != MAC_KEY_SIZE_IN_BYTES)
             throw new CryptographicException($"The key length in bytes must be {MAC_KEY_SIZE_IN_BYTES}.");
 
-        long h0 = 0;
-        long h1 = 0;
-        long h2 = 0;
-        long h3 = 0;
-        long h4 = 0;
-        long d0;
-        long d1;
-        long d2;
-        long d3;
-        long d4;
-        long c;
+        if (tag.Length != MAC_TAG_SIZE_IN_BYTES)
+            throw new CryptographicException($"The tag length in bytes must be {MAC_TAG_SIZE_IN_BYTES}.");
 
-        // r &= 0xffffffc0ffffffc0ffffffc0fffffff
-        var r0 = Load26(key, 0, 0) & 0x3ffffff;
-        var r1 = Load26(key, 3, 2) & 0x3ffff03;
-        var r2 = Load26(key, 6, 4) & 0x3ffc0ff;
-        var r3 = Load26(key, 9, 6) & 0x3f03fff;
-        var r4 = Load26(key, 12, 8) & 0x00fffff;
+        // Load and clamp key using SIMD
+        var keyVec = Vector256.Create(
+            ArrayUtils.LoadUInt32LittleEndian(key, 0),
+            ArrayUtils.LoadUInt32LittleEndian(key, 4),
+            ArrayUtils.LoadUInt32LittleEndian(key, 8),
+            ArrayUtils.LoadUInt32LittleEndian(key, 12),
+            ArrayUtils.LoadUInt32LittleEndian(key, 16),
+            ArrayUtils.LoadUInt32LittleEndian(key, 20),
+            ArrayUtils.LoadUInt32LittleEndian(key, 24),
+            ArrayUtils.LoadUInt32LittleEndian(key, 28)
+        );
 
-        var s1 = r1 * 5;
-        var s2 = r2 * 5;
-        var s3 = r3 * 5;
-        var s4 = r4 * 5;
+        // Extract and clamp r values
+        var t0 = keyVec.GetElement(0);
+        var t1 = keyVec.GetElement(1);
+        var t2 = keyVec.GetElement(2);
+        var t3 = keyVec.GetElement(3);
 
-        var buf = new byte[MAC_TAG_SIZE_IN_BYTES + 1];
+        var r0 = t0 & 0x3ffffff; t0 >>= 26; t0 |= t1 << 6;
+        var r1 = t0 & 0x3ffff03; t1 >>= 20; t1 |= t2 << 12;
+        var r2 = t1 & 0x3ffc0ff; t2 >>= 14; t2 |= t3 << 18;
+        var r3 = t2 & 0x3f03fff; t3 >>= 8;
+        var r4 = t3 & 0x00fffff;
+
+        // Precompute s values and create vectors for parallel operations
+        var rVec = Vector256.Create(r0, r1, r2, r3, r4, 0u, 0u, 0u);
+        var sVec = Vector256.Create(r1 * 5, r2 * 5, r3 * 5, r4 * 5, 0u, 0u, 0u, 0u);
+
+        // Initialize state
+        var hVec = Vector256<uint>.Zero; // h0, h1, h2, h3, h4
+
+        // Process data blocks
+        Span<byte> block = stackalloc byte[MAC_KEY_SIZE_IN_BYTES]; // Move stackalloc out of loop
         for (var i = 0; i < data.Length; i += MAC_TAG_SIZE_IN_BYTES)
         {
-            ProcessBlock(buf, data, i);
-            h0 += Load26(buf, 0, 0);
-            h1 += Load26(buf, 3, 2);
-            h2 += Load26(buf, 6, 4);
-            h3 += Load26(buf, 9, 6);
-            h4 += Load26(buf, 12, 8) | (buf[MAC_TAG_SIZE_IN_BYTES] << 24);
+            var lastBlock = (data.Length - i) < MAC_TAG_SIZE_IN_BYTES;
+            Vector256<uint> blockVec;
 
-            // d = r * h
-            d0 = h0 * r0 + h1 * s4 + h2 * s3 + h3 * s2 + h4 * s1;
-            d1 = h0 * r1 + h1 * r0 + h2 * s4 + h3 * s3 + h4 * s2;
-            d2 = h0 * r2 + h1 * r1 + h2 * r0 + h3 * s4 + h4 * s3;
-            d3 = h0 * r3 + h1 * r2 + h2 * r1 + h3 * r0 + h4 * s4;
-            d4 = h0 * r4 + h1 * r3 + h2 * r2 + h3 * r1 + h4 * r0;
+            if (lastBlock)
+            {
+                GetLastBlock(data, i, block);
+                blockVec = Vector256.Create(
+                    ArrayUtils.LoadUInt32LittleEndian(block, 0),
+                    ArrayUtils.LoadUInt32LittleEndian(block, 4),
+                    ArrayUtils.LoadUInt32LittleEndian(block, 8),
+                    ArrayUtils.LoadUInt32LittleEndian(block, 12),
+                    0u, 0u, 0u, 0u
+                );
+                block.Clear(); // Clear sensitive data
+            }
+            else
+            {
+                blockVec = Vector256.Create(
+                    ArrayUtils.LoadUInt32LittleEndian(data, i + 0),
+                    ArrayUtils.LoadUInt32LittleEndian(data, i + 4),
+                    ArrayUtils.LoadUInt32LittleEndian(data, i + 8),
+                    ArrayUtils.LoadUInt32LittleEndian(data, i + 12),
+                    0u, 0u, 0u, 0u
+                );
+            }
 
-            // Partial reduction mod 2^130-5, resulting h1 might not be 26bits.
-            c = d0 >> 26;
-            h0 = d0 & 0x3ffffff;
-            d1 += c;
-            c = d1 >> 26;
-            h1 = d1 & 0x3ffffff;
-            d2 += c;
-            c = d2 >> 26;
-            h2 = d2 & 0x3ffffff;
-            d3 += c;
-            c = d3 >> 26;
-            h3 = d3 & 0x3ffffff;
-            d4 += c;
-            c = d4 >> 26;
-            h4 = d4 & 0x3ffffff;
-            h0 += c * 5;
-            c = h0 >> 26;
-            h0 = h0 & 0x3ffffff;
-            h1 += c;
+            // Extract values and perform polynomial operations
+            // This is a simplified version - the full vectorization would be more complex
+            // Due to the interdependent nature of Poly1305's field arithmetic
+            ComputeBlockScalar(ref hVec, blockVec, rVec, sVec, lastBlock);
         }
-        // Do final reduction mod 2^130-5
-        c = h1 >> 26;
-        h1 = h1 & 0x3ffffff;
-        h2 += c;
-        c = h2 >> 26;
-        h2 = h2 & 0x3ffffff;
-        h3 += c;
-        c = h3 >> 26;
-        h3 = h3 & 0x3ffffff;
-        h4 += c;
-        c = h4 >> 26;
-        h4 = h4 & 0x3ffffff;
-        h0 += c * 5; // c * 5 can be at most 5
-        c = h0 >> 26;
-        h0 = h0 & 0x3ffffff;
-        h1 += c;
+
+        // Final reduction and output (scalar for now)
+        FinalizeTagAvx2(hVec, keyVec, tag);
+    }
+
+    /// <summary>
+    /// Computes the authentication <paramref name="tag"/> using SSE2 intrinsics.
+    /// </summary>
+    private static void ComputeMacSse2(ReadOnlySpan<byte> key, ReadOnlySpan<byte> data, Span<byte> tag)
+    {
+        // For SSE2, we can still use some optimizations but fallback to scalar for complex operations
+        ComputeMacScalar(key, data, tag);
+    }
+
+    /// <summary>
+    /// Computes the authentication <paramref name="tag"/> using ARM AdvSIMD intrinsics.
+    /// </summary>
+    private static void ComputeMacAdvSimd(ReadOnlySpan<byte> key, ReadOnlySpan<byte> data, Span<byte> tag)
+    {
+        // Similar to SSE2, ARM AdvSIMD optimization would need careful implementation
+        ComputeMacScalar(key, data, tag);
+    }
+
+    private static void ComputeBlockScalar(ref Vector256<uint> hVec, Vector256<uint> blockVec, Vector256<uint> rVec, Vector256<uint> sVec, bool lastBlock)
+    {
+        // Extract current hash state
+        var h0 = hVec.GetElement(0);
+        var h1 = hVec.GetElement(1);
+        var h2 = hVec.GetElement(2);
+        var h3 = hVec.GetElement(3);
+        var h4 = hVec.GetElement(4);
+
+        // Extract block values
+        var t0 = blockVec.GetElement(0);
+        var t1 = blockVec.GetElement(1);
+        var t2 = blockVec.GetElement(2);
+        var t3 = blockVec.GetElement(3);
+
+        // Extract r and s values
+        var r0 = rVec.GetElement(0);
+        var r1 = rVec.GetElement(1);
+        var r2 = rVec.GetElement(2);
+        var r3 = rVec.GetElement(3);
+        var r4 = rVec.GetElement(4);
+        var s1 = sVec.GetElement(0);
+        var s2 = sVec.GetElement(1);
+        var s3 = sVec.GetElement(2);
+        var s4 = sVec.GetElement(3);
+
+        // Add block to accumulator
+        h0 += t0 & 0x3ffffff;
+        h1 += (uint)(((((ulong)t1 << 32) | t0) >> 26) & 0x3ffffff);
+        h2 += (uint)(((((ulong)t2 << 32) | t1) >> 20) & 0x3ffffff);
+        h3 += (uint)(((((ulong)t3 << 32) | t2) >> 14) & 0x3ffffff);
+        h4 = lastBlock ? h4 + (t3 >> 8) : h4 + ((t3 >> 8) | (1u << 24));
+
+        // Polynomial multiplication d = r * h
+        var tt0 = (ulong)h0 * r0 + (ulong)h1 * s4 + (ulong)h2 * s3 + (ulong)h3 * s2 + (ulong)h4 * s1;
+        var tt1 = (ulong)h0 * r1 + (ulong)h1 * r0 + (ulong)h2 * s4 + (ulong)h3 * s3 + (ulong)h4 * s2;
+        var tt2 = (ulong)h0 * r2 + (ulong)h1 * r1 + (ulong)h2 * r0 + (ulong)h3 * s4 + (ulong)h4 * s3;
+        var tt3 = (ulong)h0 * r3 + (ulong)h1 * r2 + (ulong)h2 * r1 + (ulong)h3 * r0 + (ulong)h4 * s4;
+        var tt4 = (ulong)h0 * r4 + (ulong)h1 * r3 + (ulong)h2 * r2 + (ulong)h3 * r1 + (ulong)h4 * r0;
+
+        // Partial reduction mod 2^130-5
+        unchecked
+        {
+            h0 = (uint)tt0 & 0x3ffffff; var c = (tt0 >> 26);
+            tt1 += c; h1 = (uint)tt1 & 0x3ffffff; var b = (uint)(tt1 >> 26);
+            tt2 += b; h2 = (uint)tt2 & 0x3ffffff; b = (uint)(tt2 >> 26);
+            tt3 += b; h3 = (uint)tt3 & 0x3ffffff; b = (uint)(tt3 >> 26);
+            tt4 += b; h4 = (uint)tt4 & 0x3ffffff; b = (uint)(tt4 >> 26);
+            h0 += b * 5;
+        }
+
+        // Update hash vector
+        hVec = Vector256.Create(h0, h1, h2, h3, h4, 0u, 0u, 0u);
+    }
+
+    private static void FinalizeTagAvx2(Vector256<uint> hVec, Vector256<uint> keyVec, Span<byte> tag)
+    {
+        // Extract final hash state
+        var h0 = hVec.GetElement(0);
+        var h1 = hVec.GetElement(1);
+        var h2 = hVec.GetElement(2);
+        var h3 = hVec.GetElement(3);
+        var h4 = hVec.GetElement(4);
+
+        // Final reduction mod 2^130-5
+        var b = h0 >> 26; h0 &= 0x3ffffff;
+        h1 += b; b = h1 >> 26; h1 &= 0x3ffffff;
+        h2 += b; b = h2 >> 26; h2 &= 0x3ffffff;
+        h3 += b; b = h3 >> 26; h3 &= 0x3ffffff;
+        h4 += b; b = h4 >> 26; h4 &= 0x3ffffff;
+        h0 += b * 5;
 
         // Compute h - p
-        var g0 = h0 + 5;
-        c = g0 >> 26;
-        g0 &= 0x3ffffff;
-        var g1 = h1 + c;
-        c = g1 >> 26;
-        g1 &= 0x3ffffff;
-        var g2 = h2 + c;
-        c = g2 >> 26;
-        g2 &= 0x3ffffff;
-        var g3 = h3 + c;
-        c = g3 >> 26;
-        g3 &= 0x3ffffff;
-        var g4 = h4 + c - (1 << 26);
+        var g0 = h0 + 5; b = g0 >> 26; g0 &= 0x3ffffff;
+        var g1 = h1 + b; b = g1 >> 26; g1 &= 0x3ffffff;
+        var g2 = h2 + b; b = g2 >> 26; g2 &= 0x3ffffff;
+        var g3 = h3 + b; b = g3 >> 26; g3 &= 0x3ffffff;
+        var g4 = unchecked(h4 + b - (1u << 26));
 
         // Select h if h < p, or h - p if h >= p
-        var mask = g4 >> 63; // mask is either 0 (h >= p) or -1 (h < p)
-        h0 &= mask;
-        h1 &= mask;
-        h2 &= mask;
-        h3 &= mask;
-        h4 &= mask;
-        mask = ~mask;
-        h0 |= g0 & mask;
-        h1 |= g1 & mask;
-        h2 |= g2 & mask;
-        h3 |= g3 & mask;
-        h4 |= g4 & mask;
+        b = (g4 >> 31) - 1;
+        var nb = ~b;
+        h0 = (h0 & nb) | (g0 & b);
+        h1 = (h1 & nb) | (g1 & b);
+        h2 = (h2 & nb) | (g2 & b);
+        h3 = (h3 & nb) | (g3 & b);
+        h4 = (h4 & nb) | (g4 & b);
 
         // h = h % (2^128)
-        h0 = (h0 | (h1 << 26)) & 0xffffffffL;
-        h1 = ((h1 >> 6) | (h2 << 20)) & 0xffffffffL;
-        h2 = ((h2 >> 12) | (h3 << 14)) & 0xffffffffL;
-        h3 = ((h3 >> 18) | (h4 << 8)) & 0xffffffffL;
+        var f0 = ((h0) | (h1 << 26)) + (ulong)keyVec.GetElement(4);
+        var f1 = ((h1 >> 6) | (h2 << 20)) + (ulong)keyVec.GetElement(5);
+        var f2 = ((h2 >> 12) | (h3 << 14)) + (ulong)keyVec.GetElement(6);
+        var f3 = ((h3 >> 18) | (h4 << 8)) + (ulong)keyVec.GetElement(7);
 
         // mac = (h + pad) % (2^128)
-        c = h0 + Load32(key, 16);
-        h0 = c & 0xffffffffL;
-        c = h1 + Load32(key, 20) + (c >> 32);
-        h1 = c & 0xffffffffL;
-        c = h2 + Load32(key, 24) + (c >> 32);
-        h2 = c & 0xffffffffL;
-        c = h3 + Load32(key, 28) + (c >> 32);
-        h3 = c & 0xffffffffL;
-
-        var mac = new byte[MAC_TAG_SIZE_IN_BYTES];
-        ToByteArray(mac, h0, 0);
-        ToByteArray(mac, h1, 4);
-        ToByteArray(mac, h2, 8);
-        ToByteArray(mac, h3, 12);
-
-        return mac;
+        ArrayUtils.StoreUInt32LittleEndian(tag, 0, (uint)f0); f1 += (f0 >> 32);
+        ArrayUtils.StoreUInt32LittleEndian(tag, 4, (uint)f1); f2 += (f1 >> 32);
+        ArrayUtils.StoreUInt32LittleEndian(tag, 8, (uint)f2); f3 += (f2 >> 32);
+        ArrayUtils.StoreUInt32LittleEndian(tag, 12, (uint)f3);
     }
-    */
+#endif
 
     /// <summary>
     /// Verifies the authentication <paramref name="mac"/> using the specified <paramref name="key"/> and <paramref name="data"/>.

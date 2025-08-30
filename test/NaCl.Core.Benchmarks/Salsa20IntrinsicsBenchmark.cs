@@ -12,14 +12,14 @@ using Base;
 [MemoryDiagnoser]
 [RPlotExporter, RankColumn]
 [GroupBenchmarksBy(BenchmarkLogicalGroupRule.ByCategory)]
-public class ChaCha20IntrinsicsBenchmark
+public class Salsa20IntrinsicsBenchmark
 {
     private static readonly Random Rnd = new(42);
 
     private Memory<byte> _key;
     private Memory<byte> _nonce;
     private Memory<byte> _message;
-    private ChaCha20 _cipher;
+    private Salsa20 _cipher;
 
     [Params(
         (int)1E+3,  // 1 KB - small data
@@ -33,13 +33,13 @@ public class ChaCha20IntrinsicsBenchmark
         _key = new byte[Snuffle.KEY_SIZE_IN_BYTES];
         Rnd.NextBytes(_key.Span);
 
-        _nonce = new byte[12];
+        _nonce = new byte[8]; // Salsa20 uses 8-byte nonce
         Rnd.NextBytes(_nonce.Span);
 
         _message = new byte[Size];
         Rnd.NextBytes(_message.Span);
 
-        _cipher = new ChaCha20(_key, 0);
+        _cipher = new Salsa20(_key, 0);
     }
 
     [Benchmark(Baseline = true)]

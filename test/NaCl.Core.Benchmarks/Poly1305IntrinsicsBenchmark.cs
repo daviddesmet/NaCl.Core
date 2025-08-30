@@ -5,21 +5,17 @@ using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Jobs;
 
-using Base;
-
 [SimpleJob(RuntimeMoniker.Net90)]
 [BenchmarkCategory("Hardware Intrinsics")]
 [MemoryDiagnoser]
 [RPlotExporter, RankColumn]
 [GroupBenchmarksBy(BenchmarkLogicalGroupRule.ByCategory)]
-public class ChaCha20IntrinsicsBenchmark
+public class Poly1305IntrinsicsBenchmark
 {
     private static readonly Random Rnd = new(42);
 
     private Memory<byte> _key;
-    private Memory<byte> _nonce;
-    private Memory<byte> _message;
-    private ChaCha20 _cipher;
+    private Memory<byte> _data;
 
     [Params(
         (int)1E+3,  // 1 KB - small data
@@ -30,33 +26,28 @@ public class ChaCha20IntrinsicsBenchmark
     [GlobalSetup]
     public void Setup()
     {
-        _key = new byte[Snuffle.KEY_SIZE_IN_BYTES];
+        _key = new byte[Poly1305.MAC_KEY_SIZE_IN_BYTES];
         Rnd.NextBytes(_key.Span);
 
-        _nonce = new byte[12];
-        Rnd.NextBytes(_nonce.Span);
-
-        _message = new byte[Size];
-        Rnd.NextBytes(_message.Span);
-
-        _cipher = new ChaCha20(_key, 0);
+        _data = new byte[Size];
+        Rnd.NextBytes(_data.Span);
     }
 
     [Benchmark(Baseline = true)]
     [BenchmarkCategory("Default")]
-    public void EncryptDefault()
+    public void ComputeDefault()
     {
         // Use default runtime detection - best available instruction set
-        var ciphertext = new byte[_message.Length];
-        _cipher.Encrypt(_message.Span, _nonce.Span, ciphertext);
+        var mac = new byte[Poly1305.MAC_TAG_SIZE_IN_BYTES];
+        Poly1305.ComputeMac(_key.Span, _data.Span, mac);
     }
 
     [Benchmark]
     [BenchmarkCategory("Intrinsics")]
-    public void EncryptIntrinsics()
+    public void ComputeIntrinsics()
     {
         // Test intrinsics path (same as default on modern hardware)
-        var ciphertext = new byte[_message.Length];
-        _cipher.Encrypt(_message.Span, _nonce.Span, ciphertext);
+        var mac = new byte[Poly1305.MAC_TAG_SIZE_IN_BYTES];
+        Poly1305.ComputeMac(_key.Span, _data.Span, mac);
     }
 }

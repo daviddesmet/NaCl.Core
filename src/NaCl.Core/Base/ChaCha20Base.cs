@@ -278,43 +278,41 @@ public abstract class ChaCha20Base : Snuffle
 
 #if NET6_0_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void ShuffleStateAvx2(Span<uint> state)
+    private static unsafe void ShuffleStateAvx2(Span<uint> state)
     {
-        // Load the state into AVX2 registers
-        var row1 = Vector256.Create(state[0], state[1], state[2], state[3], state[0], state[1], state[2], state[3]);
-        var row2 = Vector256.Create(state[4], state[5], state[6], state[7], state[4], state[5], state[6], state[7]);
-        var row3 = Vector256.Create(state[8], state[9], state[10], state[11], state[8], state[9], state[10], state[11]);
-        var row4 = Vector256.Create(state[12], state[13], state[14], state[15], state[12], state[13], state[14], state[15]);
-
-        // Perform 20 rounds (10 double rounds)
-        for (var i = 0; i < 10; i++)
+        // Use Vector128 operations instead of wasting Vector256 capacity
+        // This is more efficient for single-block processing
+        fixed (uint* statePtr = state)
         {
-            // Column rounds
-            QuarterRoundAvx2(ref row1, ref row2, ref row3, ref row4);
+            var row1 = Sse2.LoadVector128(statePtr + 0);  // state[0..3]
+            var row2 = Sse2.LoadVector128(statePtr + 4);  // state[4..7]
+            var row3 = Sse2.LoadVector128(statePtr + 8);  // state[8..11]
+            var row4 = Sse2.LoadVector128(statePtr + 12); // state[12..15]
 
-            // Diagonal rounds - rotate the rows for diagonal access
-            row2 = Avx2.Shuffle(row2.AsUInt32(), 0x39).AsUInt32(); // Rotate left by 1
-            row3 = Avx2.Shuffle(row3.AsUInt32(), 0x4E).AsUInt32(); // Rotate left by 2
-            row4 = Avx2.Shuffle(row4.AsUInt32(), 0x93).AsUInt32(); // Rotate left by 3
-
-            QuarterRoundAvx2(ref row1, ref row2, ref row3, ref row4);
-
-            // Rotate back
-            row2 = Avx2.Shuffle(row2.AsUInt32(), 0x93).AsUInt32(); // Rotate right by 1
-            row3 = Avx2.Shuffle(row3.AsUInt32(), 0x4E).AsUInt32(); // Rotate right by 2
-            row4 = Avx2.Shuffle(row4.AsUInt32(), 0x39).AsUInt32(); // Rotate right by 3
-        }
-
-        // Store the results back
-        unsafe
-        {
-            fixed (uint* statePtr = state)
+            // Perform 20 rounds (10 double rounds)
+            for (var i = 0; i < 10; i++)
             {
-                Sse2.Store(statePtr + 0, row1.GetLower());
-                Sse2.Store(statePtr + 4, row2.GetLower());
-                Sse2.Store(statePtr + 8, row3.GetLower());
-                Sse2.Store(statePtr + 12, row4.GetLower());
+                // Column rounds
+                QuarterRoundSsse3(ref row1, ref row2, ref row3, ref row4);
+
+                // Diagonal rounds - rotate the rows for diagonal access
+                row2 = Sse2.Shuffle(row2, 0x39); // Rotate left by 1
+                row3 = Sse2.Shuffle(row3, 0x4E); // Rotate left by 2
+                row4 = Sse2.Shuffle(row4, 0x93); // Rotate left by 3
+
+                QuarterRoundSsse3(ref row1, ref row2, ref row3, ref row4);
+
+                // Rotate back
+                row2 = Sse2.Shuffle(row2, 0x93); // Rotate right by 1
+                row3 = Sse2.Shuffle(row3, 0x4E); // Rotate right by 2
+                row4 = Sse2.Shuffle(row4, 0x39); // Rotate right by 3
             }
+
+            // Store the results back efficiently - using full vector width
+            Sse2.Store(statePtr + 0, row1);
+            Sse2.Store(statePtr + 4, row2);
+            Sse2.Store(statePtr + 8, row3);
+            Sse2.Store(statePtr + 12, row4);
         }
     }
 
@@ -415,8 +413,68 @@ public abstract class ChaCha20Base : Snuffle
     }
 
 #if NET6_0_OR_GREATER
+    /// <summary>
+    /// Processes two ChaCha20 blocks in parallel using full AVX2 256-bit vectors.
+    /// This approach efficiently uses the full vector capacity for multiple blocks.
+    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void QuarterRoundAvx2(ref Vector256<uint> row1, ref Vector256<uint> row2, ref Vector256<uint> row3, ref Vector256<uint> row4)
+    private static unsafe void ShuffleStateDualBlockAvx2(Span<uint> state1, Span<uint> state2)
+    {
+        fixed (uint* state1Ptr = state1)
+        fixed (uint* state2Ptr = state2)
+        {
+            // Load two blocks into 256-bit vectors - efficient use of full vector capacity
+            var row1 = Vector256.Create(
+                state1[0], state1[1], state1[2], state1[3],  // Block 1
+                state2[0], state2[1], state2[2], state2[3]   // Block 2
+            );
+            var row2 = Vector256.Create(
+                state1[4], state1[5], state1[6], state1[7],
+                state2[4], state2[5], state2[6], state2[7]
+            );
+            var row3 = Vector256.Create(
+                state1[8], state1[9], state1[10], state1[11],
+                state2[8], state2[9], state2[10], state2[11]
+            );
+            var row4 = Vector256.Create(
+                state1[12], state1[13], state1[14], state1[15],
+                state2[12], state2[13], state2[14], state2[15]
+            );
+
+            // Perform 20 rounds (10 double rounds) on both blocks simultaneously
+            for (var i = 0; i < 10; i++)
+            {
+                // Column rounds
+                QuarterRoundAvx2DualBlock(ref row1, ref row2, ref row3, ref row4);
+
+                // Diagonal rounds - rotate for diagonal access
+                row2 = Avx2.Shuffle(row2, 0x39); // Rotate left by 1
+                row3 = Avx2.Shuffle(row3, 0x4E); // Rotate left by 2
+                row4 = Avx2.Shuffle(row4, 0x93); // Rotate left by 3
+
+                QuarterRoundAvx2DualBlock(ref row1, ref row2, ref row3, ref row4);
+
+                // Rotate back
+                row2 = Avx2.Shuffle(row2, 0x93); // Rotate right by 1
+                row3 = Avx2.Shuffle(row3, 0x4E); // Rotate right by 2
+                row4 = Avx2.Shuffle(row4, 0x39); // Rotate right by 3
+            }
+
+            // Store both blocks back efficiently using full 256-bit vectors
+            Sse2.Store(state1Ptr + 0, row1.GetLower());
+            Sse2.Store(state1Ptr + 4, row2.GetLower());
+            Sse2.Store(state1Ptr + 8, row3.GetLower());
+            Sse2.Store(state1Ptr + 12, row4.GetLower());
+
+            Sse2.Store(state2Ptr + 0, row1.GetUpper());
+            Sse2.Store(state2Ptr + 4, row2.GetUpper());
+            Sse2.Store(state2Ptr + 8, row3.GetUpper());
+            Sse2.Store(state2Ptr + 12, row4.GetUpper());
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void QuarterRoundAvx2DualBlock(ref Vector256<uint> row1, ref Vector256<uint> row2, ref Vector256<uint> row3, ref Vector256<uint> row4)
     {
         // a += b
         row1 = Avx2.Add(row1, row2);

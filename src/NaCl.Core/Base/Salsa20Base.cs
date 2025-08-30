@@ -3,6 +3,11 @@
 using System;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
+#if NET6_0_OR_GREATER
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
+using System.Runtime.Intrinsics.Arm;
+#endif
 
 using Internal;
 
@@ -116,6 +121,29 @@ public abstract class Salsa20Base : Snuffle
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected static void ShuffleState(Span<uint> state)
     {
+#if NET6_0_OR_GREATER
+        if (Avx2.IsSupported && state.Length == BLOCK_SIZE_IN_INTS)
+        {
+            ShuffleStateAvx2(state);
+            return;
+        }
+        if (Sse2.IsSupported && state.Length == BLOCK_SIZE_IN_INTS)
+        {
+            ShuffleStateSse2(state);
+            return;
+        }
+        if (AdvSimd.IsSupported && state.Length == BLOCK_SIZE_IN_INTS)
+        {
+            ShuffleStateAdvSimd(state);
+            return;
+        }
+#endif
+        ShuffleStateScalar(state);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected static void ShuffleStateScalar(Span<uint> state)
+    {
         // 10 loops × 2 rounds/loop = 20 rounds
         for (var i = 0; i < 10; i++)
         {
@@ -132,6 +160,232 @@ public abstract class Salsa20Base : Snuffle
             QuarterRound(ref state[15], ref state[12], ref state[13], ref state[14]); // row 4
         }
     }
+
+#if NET6_0_OR_GREATER
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected static unsafe void ShuffleStateAvx2(Span<uint> state)
+    {
+        fixed (uint* statePtr = state)
+        {
+            var s0 = Avx.LoadVector256(statePtr + 0);
+            var s1 = Avx.LoadVector256(statePtr + 8);
+
+            // 10 loops × 2 rounds/loop = 20 rounds
+            for (var i = 0; i < 10; i++)
+            {
+                // Odd round - column operations
+                QuarterRoundAvx2(ref s0, ref s1, 0, 4, 8, 12);
+                QuarterRoundAvx2(ref s0, ref s1, 5, 9, 13, 1);
+                QuarterRoundAvx2(ref s0, ref s1, 10, 14, 2, 6);
+                QuarterRoundAvx2(ref s0, ref s1, 15, 3, 7, 11);
+
+                // Even round - row operations
+                QuarterRoundAvx2(ref s0, ref s1, 0, 1, 2, 3);
+                QuarterRoundAvx2(ref s0, ref s1, 5, 6, 7, 4);
+                QuarterRoundAvx2(ref s0, ref s1, 10, 11, 8, 9);
+                QuarterRoundAvx2(ref s0, ref s1, 15, 12, 13, 14);
+            }
+
+            Avx.Store(statePtr + 0, s0);
+            Avx.Store(statePtr + 8, s1);
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected static unsafe void ShuffleStateSse2(Span<uint> state)
+    {
+        fixed (uint* statePtr = state)
+        {
+            var s0 = Sse2.LoadVector128(statePtr + 0);
+            var s1 = Sse2.LoadVector128(statePtr + 4);
+            var s2 = Sse2.LoadVector128(statePtr + 8);
+            var s3 = Sse2.LoadVector128(statePtr + 12);
+
+            // 10 loops × 2 rounds/loop = 20 rounds
+            for (var i = 0; i < 10; i++)
+            {
+                // Odd round - column operations
+                QuarterRoundSse2(ref s0, ref s1, ref s2, ref s3, 0, 4, 8, 12);
+                QuarterRoundSse2(ref s0, ref s1, ref s2, ref s3, 5, 9, 13, 1);
+                QuarterRoundSse2(ref s0, ref s1, ref s2, ref s3, 10, 14, 2, 6);
+                QuarterRoundSse2(ref s0, ref s1, ref s2, ref s3, 15, 3, 7, 11);
+
+                // Even round - row operations
+                QuarterRoundSse2(ref s0, ref s1, ref s2, ref s3, 0, 1, 2, 3);
+                QuarterRoundSse2(ref s0, ref s1, ref s2, ref s3, 5, 6, 7, 4);
+                QuarterRoundSse2(ref s0, ref s1, ref s2, ref s3, 10, 11, 8, 9);
+                QuarterRoundSse2(ref s0, ref s1, ref s2, ref s3, 15, 12, 13, 14);
+            }
+
+            Sse2.Store(statePtr + 0, s0);
+            Sse2.Store(statePtr + 4, s1);
+            Sse2.Store(statePtr + 8, s2);
+            Sse2.Store(statePtr + 12, s3);
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    protected static unsafe void ShuffleStateAdvSimd(Span<uint> state)
+    {
+        fixed (uint* statePtr = state)
+        {
+            var s0 = AdvSimd.LoadVector128(statePtr + 0);
+            var s1 = AdvSimd.LoadVector128(statePtr + 4);
+            var s2 = AdvSimd.LoadVector128(statePtr + 8);
+            var s3 = AdvSimd.LoadVector128(statePtr + 12);
+
+            // 10 loops × 2 rounds/loop = 20 rounds
+            for (var i = 0; i < 10; i++)
+            {
+                // Odd round - column operations
+                QuarterRoundAdvSimd(ref s0, ref s1, ref s2, ref s3, 0, 4, 8, 12);
+                QuarterRoundAdvSimd(ref s0, ref s1, ref s2, ref s3, 5, 9, 13, 1);
+                QuarterRoundAdvSimd(ref s0, ref s1, ref s2, ref s3, 10, 14, 2, 6);
+                QuarterRoundAdvSimd(ref s0, ref s1, ref s2, ref s3, 15, 3, 7, 11);
+
+                // Even round - row operations
+                QuarterRoundAdvSimd(ref s0, ref s1, ref s2, ref s3, 0, 1, 2, 3);
+                QuarterRoundAdvSimd(ref s0, ref s1, ref s2, ref s3, 5, 6, 7, 4);
+                QuarterRoundAdvSimd(ref s0, ref s1, ref s2, ref s3, 10, 11, 8, 9);
+                QuarterRoundAdvSimd(ref s0, ref s1, ref s2, ref s3, 15, 12, 13, 14);
+            }
+
+            AdvSimd.Store(statePtr + 0, s0);
+            AdvSimd.Store(statePtr + 4, s1);
+            AdvSimd.Store(statePtr + 8, s2);
+            AdvSimd.Store(statePtr + 12, s3);
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void QuarterRoundAvx2(ref Vector256<uint> s0, ref Vector256<uint> s1, int a, int b, int c, int d)
+    {
+        var va = GetElementAvx2(s0, s1, a);
+        var vb = GetElementAvx2(s0, s1, b);
+        var vc = GetElementAvx2(s0, s1, c);
+        var vd = GetElementAvx2(s0, s1, d);
+
+        vb = Avx2.Xor(vb, BitUtils.RotateLeftVector256(Avx2.Add(va, vd), 7));
+        vc = Avx2.Xor(vc, BitUtils.RotateLeftVector256(Avx2.Add(vb, va), 9));
+        vd = Avx2.Xor(vd, BitUtils.RotateLeftVector256(Avx2.Add(vc, vb), 13));
+        va = Avx2.Xor(va, BitUtils.RotateLeftVector256(Avx2.Add(vd, vc), 18));
+
+        SetElementAvx2(ref s0, ref s1, a, va);
+        SetElementAvx2(ref s0, ref s1, b, vb);
+        SetElementAvx2(ref s0, ref s1, c, vc);
+        SetElementAvx2(ref s0, ref s1, d, vd);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void QuarterRoundSse2(ref Vector128<uint> s0, ref Vector128<uint> s1, ref Vector128<uint> s2, ref Vector128<uint> s3, int a, int b, int c, int d)
+    {
+        var va = GetElementSse2(s0, s1, s2, s3, a);
+        var vb = GetElementSse2(s0, s1, s2, s3, b);
+        var vc = GetElementSse2(s0, s1, s2, s3, c);
+        var vd = GetElementSse2(s0, s1, s2, s3, d);
+
+        vb = Sse2.Xor(vb, BitUtils.RotateLeftVector128(Sse2.Add(va, vd), 7));
+        vc = Sse2.Xor(vc, BitUtils.RotateLeftVector128(Sse2.Add(vb, va), 9));
+        vd = Sse2.Xor(vd, BitUtils.RotateLeftVector128(Sse2.Add(vc, vb), 13));
+        va = Sse2.Xor(va, BitUtils.RotateLeftVector128(Sse2.Add(vd, vc), 18));
+
+        SetElementSse2(ref s0, ref s1, ref s2, ref s3, a, va);
+        SetElementSse2(ref s0, ref s1, ref s2, ref s3, b, vb);
+        SetElementSse2(ref s0, ref s1, ref s2, ref s3, c, vc);
+        SetElementSse2(ref s0, ref s1, ref s2, ref s3, d, vd);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void QuarterRoundAdvSimd(ref Vector128<uint> s0, ref Vector128<uint> s1, ref Vector128<uint> s2, ref Vector128<uint> s3, int a, int b, int c, int d)
+    {
+        var va = GetElementAdvSimd(s0, s1, s2, s3, a);
+        var vb = GetElementAdvSimd(s0, s1, s2, s3, b);
+        var vc = GetElementAdvSimd(s0, s1, s2, s3, c);
+        var vd = GetElementAdvSimd(s0, s1, s2, s3, d);
+
+        vb = AdvSimd.Xor(vb, BitUtils.RotateLeftAdvSimd(AdvSimd.Add(va, vd), 7));
+        vc = AdvSimd.Xor(vc, BitUtils.RotateLeftAdvSimd(AdvSimd.Add(vb, va), 9));
+        vd = AdvSimd.Xor(vd, BitUtils.RotateLeftAdvSimd(AdvSimd.Add(vc, vb), 13));
+        va = AdvSimd.Xor(va, BitUtils.RotateLeftAdvSimd(AdvSimd.Add(vd, vc), 18));
+
+        SetElementAdvSimd(ref s0, ref s1, ref s2, ref s3, a, va);
+        SetElementAdvSimd(ref s0, ref s1, ref s2, ref s3, b, vb);
+        SetElementAdvSimd(ref s0, ref s1, ref s2, ref s3, c, vc);
+        SetElementAdvSimd(ref s0, ref s1, ref s2, ref s3, d, vd);
+    }
+
+    // Helper methods for vector element access
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static Vector256<uint> GetElementAvx2(Vector256<uint> s0, Vector256<uint> s1, int index)
+    {
+        var scalar = index < 8 ? s0.GetElement(index) : s1.GetElement(index - 8);
+        return Vector256.Create(scalar);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void SetElementAvx2(ref Vector256<uint> s0, ref Vector256<uint> s1, int index, Vector256<uint> value)
+    {
+        var scalar = value.GetElement(0);
+        if (index < 8)
+        {
+            s0 = s0.WithElement(index, scalar);
+        }
+        else
+        {
+            s1 = s1.WithElement(index - 8, scalar);
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static Vector128<uint> GetElementSse2(Vector128<uint> s0, Vector128<uint> s1, Vector128<uint> s2, Vector128<uint> s3, int index)
+    {
+        return index switch
+        {
+            < 4 => Vector128.Create(s0.GetElement(index)),
+            < 8 => Vector128.Create(s1.GetElement(index - 4)),
+            < 12 => Vector128.Create(s2.GetElement(index - 8)),
+            _ => Vector128.Create(s3.GetElement(index - 12))
+        };
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void SetElementSse2(ref Vector128<uint> s0, ref Vector128<uint> s1, ref Vector128<uint> s2, ref Vector128<uint> s3, int index, Vector128<uint> value)
+    {
+        var scalar = value.GetElement(0);
+        switch (index)
+        {
+            case < 4: s0 = s0.WithElement(index, scalar); break;
+            case < 8: s1 = s1.WithElement(index - 4, scalar); break;
+            case < 12: s2 = s2.WithElement(index - 8, scalar); break;
+            default: s3 = s3.WithElement(index - 12, scalar); break;
+        }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static Vector128<uint> GetElementAdvSimd(Vector128<uint> s0, Vector128<uint> s1, Vector128<uint> s2, Vector128<uint> s3, int index)
+    {
+        return index switch
+        {
+            < 4 => Vector128.Create(s0.GetElement(index)),
+            < 8 => Vector128.Create(s1.GetElement(index - 4)),
+            < 12 => Vector128.Create(s2.GetElement(index - 8)),
+            _ => Vector128.Create(s3.GetElement(index - 12))
+        };
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void SetElementAdvSimd(ref Vector128<uint> s0, ref Vector128<uint> s1, ref Vector128<uint> s2, ref Vector128<uint> s3, int index, Vector128<uint> value)
+    {
+        var scalar = value.GetElement(0);
+        switch (index)
+        {
+            case < 4: s0 = s0.WithElement(index, scalar); break;
+            case < 8: s1 = s1.WithElement(index - 4, scalar); break;
+            case < 12: s2 = s2.WithElement(index - 8, scalar); break;
+            default: s3 = s3.WithElement(index - 12, scalar); break;
+        }
+    }
+#endif
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void QuarterRound(ref uint a, ref uint b, ref uint c, ref uint d)
