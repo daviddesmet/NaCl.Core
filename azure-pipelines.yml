@@ -79,7 +79,7 @@ jobs:
       projects: '**/NaCl.Core.Tests.csproj'
       arguments: '/p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:Include="[NaCl.*]*" /p:Exclude="[*Tests]*"'
     enabled: false
-  - task: reportgenerator@4
+  - task: reportgenerator@5
     displayName: 'Generate Coverage Report'
     inputs:
       reports: '$(Build.SourcesDirectory)/**/coverage.cobertura.xml'
@@ -206,6 +206,7 @@ jobs:
       packagesToPush: '$(Build.ArtifactStagingDirectory)/**/*.nupkg;!$(Build.ArtifactStagingDirectory)/**/*.symbols.nupkg'
       nuGetFeedType: 'internal'
       publishVstsFeed: 'ffbd9fd0-ffca-4040-8576-0fa5065bd6d9/b465c74e-3671-458e-996f-8bbf45f957bc'
+    continueOnError: true
   - task: DotNetCoreCLI@2
     displayName: 'Publish Library'
     inputs:

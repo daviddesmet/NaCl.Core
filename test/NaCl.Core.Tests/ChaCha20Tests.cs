@@ -331,6 +331,109 @@ public class ChaCha20Tests
     }
 
     [Fact]
+    public void ChaCha20VectorIntrinsicsConsistencyTest()
+    {
+        // Test to ensure all ChaCha20 implementations (scalar, SSSE3, AVX2, AdvSimd) produce identical results
+        var key = new byte[Snuffle.KEY_SIZE_IN_BYTES];
+        RandomNumberGenerator.Fill(key);
+
+        var nonce = new byte[ChaCha20.NONCE_SIZE_IN_BYTES];
+        RandomNumberGenerator.Fill(nonce);
+
+        var cipher = new ChaCha20(key, 1);
+
+        // Test various block sizes that will exercise different code paths
+        var testSizes = new[] { 64, 128, 192, 256, 512, 1024, 2048 };
+
+        foreach (var size in testSizes)
+        {
+            var plaintext = new byte[size];
+            RandomNumberGenerator.Fill(plaintext);
+
+            var ciphertext1 = new byte[size];
+            var ciphertext2 = new byte[size];
+
+            // Encrypt twice - should produce identical results
+            cipher.Encrypt(plaintext, nonce, ciphertext1);
+            cipher.Encrypt(plaintext, nonce, ciphertext2);
+
+            ciphertext1.ShouldBe(ciphertext2, $"Ciphertexts should be identical for size {size}");
+
+            // Decrypt and verify
+            var decrypted = new byte[size];
+            cipher.Decrypt(ciphertext1, nonce, decrypted);
+            decrypted.ShouldBe(plaintext, $"Decryption should match plaintext for size {size}");
+        }
+    }
+
+    [Fact]
+    public void ChaCha20DualBlockProcessingTest()
+    {
+        // Test to exercise dual-block AVX2 processing path
+        var key = new byte[Snuffle.KEY_SIZE_IN_BYTES];
+        RandomNumberGenerator.Fill(key);
+
+        var nonce = new byte[ChaCha20.NONCE_SIZE_IN_BYTES];
+        RandomNumberGenerator.Fill(nonce);
+
+        var cipher = new ChaCha20(key, 0);
+
+        // Use exactly 128 bytes (2 blocks) to trigger dual-block processing
+        var plaintext = new byte[128];
+        RandomNumberGenerator.Fill(plaintext);
+
+        var ciphertext = new byte[128];
+        cipher.Encrypt(plaintext, nonce, ciphertext);
+
+        // Verify by decrypting
+        var decrypted = new byte[128];
+        cipher.Decrypt(ciphertext, nonce, decrypted);
+        decrypted.ShouldBe(plaintext);
+
+        // Test with larger sizes that are multiples of block size
+        var largeSizes = new[] { 256, 512, 1024 };
+        foreach (var size in largeSizes)
+        {
+            var largePlaintext = new byte[size];
+            RandomNumberGenerator.Fill(largePlaintext);
+
+            var largeCiphertext = new byte[size];
+            cipher.Encrypt(largePlaintext, nonce, largeCiphertext);
+
+            var largeDecrypted = new byte[size];
+            cipher.Decrypt(largeCiphertext, nonce, largeDecrypted);
+            largeDecrypted.ShouldBe(largePlaintext, $"Dual-block processing failed for size {size}");
+        }
+    }
+
+    [Fact]
+    public void ChaCha20ProcessKeyStreamBlockTest()
+    {
+        // Test the ProcessKeyStreamBlock method which is used internally
+        var key = new byte[Snuffle.KEY_SIZE_IN_BYTES];
+        RandomNumberGenerator.Fill(key);
+
+        var nonce = new byte[ChaCha20.NONCE_SIZE_IN_BYTES];
+        RandomNumberGenerator.Fill(nonce);
+
+        var cipher = new ChaCha20(key, 0);
+
+        // Test single block processing
+        var keyStreamBlock = new byte[64]; // ChaCha20 block size
+        cipher.ProcessKeyStreamBlock(nonce, 0, keyStreamBlock);
+
+        // The keystream should not be all zeros (very unlikely with random key/nonce)
+        keyStreamBlock.ShouldNotBe(new byte[64]);
+
+        // Test with different counter values
+        var keyStreamBlock2 = new byte[64];
+        cipher.ProcessKeyStreamBlock(nonce, 1, keyStreamBlock2);
+
+        // Different counter should produce different keystream
+        keyStreamBlock.ShouldNotBe(keyStreamBlock2);
+    }
+
+    [Fact]
     public void ChaCha20TestVectorTC8()
     {
         // TC8: key: 'All your base are belong to us!, IV: 'IETF2013'

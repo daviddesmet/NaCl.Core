@@ -541,6 +541,104 @@ public class ChaCha20Poly1305Test(ITestOutputHelper output)
         errors.ShouldBe(0);
     }
 
+    [Fact]
+    public void EncryptDecryptLargeBufferPooledMemoryTest()
+    {
+        var key = new byte[Snuffle.KEY_SIZE_IN_BYTES];
+        RandomNumberGenerator.Fill(key);
+
+        var nonce = new byte[ChaCha20.NONCE_SIZE_IN_BYTES];
+        RandomNumberGenerator.Fill(nonce);
+
+        var aead = new NaCl.Core.ChaCha20Poly1305(key);
+
+        // Test with large AAD that exceeds StackallocThreshold (1KB)
+        var largeAad = new byte[2048]; // 2KB AAD
+        RandomNumberGenerator.Fill(largeAad);
+
+        var message = new byte[100];
+        RandomNumberGenerator.Fill(message);
+
+        var tag = new byte[Poly1305.MAC_TAG_SIZE_IN_BYTES];
+        var ciphertext = new byte[message.Length];
+        var decrypted = new byte[message.Length];
+
+        // This should trigger the pooled memory path for large buffers
+        aead.Encrypt(nonce, message, ciphertext, tag, largeAad);
+        aead.Decrypt(nonce, ciphertext, tag, decrypted, largeAad);
+
+        decrypted.ShouldBe(message);
+    }
+
+    [Fact]
+    public void EncryptDecryptLargeCiphertextPooledMemoryTest()
+    {
+        var key = new byte[Snuffle.KEY_SIZE_IN_BYTES];
+        RandomNumberGenerator.Fill(key);
+
+        var nonce = new byte[ChaCha20.NONCE_SIZE_IN_BYTES];
+        RandomNumberGenerator.Fill(nonce);
+
+        var aead = new NaCl.Core.ChaCha20Poly1305(key);
+
+        // Test with large message that when padded exceeds StackallocThreshold
+        var largeMessage = new byte[2048]; // 2KB message
+        RandomNumberGenerator.Fill(largeMessage);
+
+        var aad = new byte[16];
+        RandomNumberGenerator.Fill(aad);
+
+        var tag = new byte[Poly1305.MAC_TAG_SIZE_IN_BYTES];
+        var ciphertext = new byte[largeMessage.Length];
+        var decrypted = new byte[largeMessage.Length];
+
+        // This should trigger the pooled memory path for large buffers
+        aead.Encrypt(nonce, largeMessage, ciphertext, tag, aad);
+        aead.Decrypt(nonce, ciphertext, tag, decrypted, aad);
+
+        decrypted.ShouldBe(largeMessage);
+    }
+
+    [Fact]
+    public void EncryptDecryptStackallocThresholdBoundaryTest()
+    {
+        var key = new byte[Snuffle.KEY_SIZE_IN_BYTES];
+        RandomNumberGenerator.Fill(key);
+
+        var nonce = new byte[ChaCha20.NONCE_SIZE_IN_BYTES];
+        RandomNumberGenerator.Fill(nonce);
+
+        var aead = new NaCl.Core.ChaCha20Poly1305(key);
+
+        // Test exactly at the boundary (1024 bytes)
+        var boundaryMessage = new byte[1008]; // 1008 + 16 (padding) = 1024
+        RandomNumberGenerator.Fill(boundaryMessage);
+
+        var aad = Array.Empty<byte>();
+        var tag = new byte[Poly1305.MAC_TAG_SIZE_IN_BYTES];
+        var ciphertext = new byte[boundaryMessage.Length];
+        var decrypted = new byte[boundaryMessage.Length];
+
+        // This should use stackalloc (right at threshold)
+        aead.Encrypt(nonce, boundaryMessage, ciphertext, tag, aad);
+        aead.Decrypt(nonce, ciphertext, tag, decrypted, aad);
+
+        decrypted.ShouldBe(boundaryMessage);
+
+        // Test just over the boundary
+        var overBoundaryMessage = new byte[1009]; // 1009 + 16 (padding) = 1025
+        RandomNumberGenerator.Fill(overBoundaryMessage);
+
+        ciphertext = new byte[overBoundaryMessage.Length];
+        decrypted = new byte[overBoundaryMessage.Length];
+
+        // This should use pooled memory
+        aead.Encrypt(nonce, overBoundaryMessage, ciphertext, tag, aad);
+        aead.Decrypt(nonce, ciphertext, tag, decrypted, aad);
+
+        decrypted.ShouldBe(overBoundaryMessage);
+    }
+
     private static string GetWycheproofTestVector()
     {
         try

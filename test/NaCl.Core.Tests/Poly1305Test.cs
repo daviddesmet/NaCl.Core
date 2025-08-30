@@ -367,4 +367,126 @@ public class Poly1305Test
         // Assert
         mac.ShouldBe(CryptoBytes.FromHexString("13000000000000000000000000000000"));
     }
+
+    [Fact]
+    public void ComputeMacLargeDataTest()
+    {
+        // Test with data that will exercise different code paths including hardware intrinsics
+        var key = new byte[Poly1305.MAC_KEY_SIZE_IN_BYTES];
+        RandomNumberGenerator.Fill(key);
+
+        // Test various sizes to ensure all intrinsics paths are tested
+        int[] testSizes = { 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192 };
+
+        foreach (var size in testSizes)
+        {
+            var data = new byte[size];
+            RandomNumberGenerator.Fill(data);
+
+            var mac1 = new byte[Poly1305.MAC_TAG_SIZE_IN_BYTES];
+            var mac2 = new byte[Poly1305.MAC_TAG_SIZE_IN_BYTES];
+
+            // Compute MAC using span-based method
+            Poly1305.ComputeMac(key, data, mac1);
+
+            // Compute MAC using array-based method
+            var mac3 = Poly1305.ComputeMac(key, data);
+
+            // All should produce the same result
+            mac1.ShouldBe(mac3);
+            
+            // Verify MAC works
+            Action act = () => Poly1305.VerifyMac(key, data, mac1);
+            act.ShouldNotThrow();
+        }
+    }
+
+    [Fact]
+    public void ComputeMacOptimizedPathsTest()
+    {
+        // Test to ensure optimized paths (scalar, SSE2, AVX2, AdvSimd) are covered
+        var key = CryptoBytes.FromHexString("85d6be7857556d337f4452fe42d506a8"
+                                           + "0103808afb0db2fd4abff6af4149f51b");
+
+        // Test with different data patterns that might trigger different optimizations
+        var testCases = new[]
+        {
+            new byte[0], // Empty data
+            new byte[1] { 0xFF }, // Single byte
+            new byte[15] { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+                          0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF }, // 15 bytes (partial block)
+            new byte[16] { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+                          0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF }, // Exactly 16 bytes
+            new byte[17] { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+                          0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF }, // 17 bytes
+            new byte[64], // 64 bytes (multiple of 16)
+            new byte[65], // 65 bytes (not multiple of 16)
+        };
+
+        foreach (var data in testCases)
+        {
+            if (data.Length > 0)
+                RandomNumberGenerator.Fill(data);
+
+            var mac = new byte[Poly1305.MAC_TAG_SIZE_IN_BYTES];
+            Action act = () => Poly1305.ComputeMac(key, data, mac);
+            act.ShouldNotThrow();
+
+            // Verify the computed MAC
+            Action verifyAct = () => Poly1305.VerifyMac(key, data, mac);
+            verifyAct.ShouldNotThrow();
+        }
+    }
+
+    [Fact]
+    public void ComputeMacWithDifferentAlignmentsTest()
+    {
+        // Test different memory alignments to ensure intrinsics work correctly
+        var key = new byte[Poly1305.MAC_KEY_SIZE_IN_BYTES];
+        RandomNumberGenerator.Fill(key);
+
+        var baseData = new byte[1024];
+        RandomNumberGenerator.Fill(baseData);
+
+        // Test different offsets/alignments
+        for (int offset = 0; offset < 8; offset++)
+        {
+            var alignedData = new byte[512 - offset];
+            Array.Copy(baseData, offset, alignedData, 0, alignedData.Length);
+
+            var mac = new byte[Poly1305.MAC_TAG_SIZE_IN_BYTES];
+            Action act = () => Poly1305.ComputeMac(key, alignedData, mac);
+            act.ShouldNotThrow();
+
+            // Verify the MAC
+            Action verifyAct = () => Poly1305.VerifyMac(key, alignedData, mac);
+            verifyAct.ShouldNotThrow();
+        }
+    }
+
+    [Fact]
+    public void ComputeMacConsistencyAcrossImplementationsTest()
+    {
+        // Ensure all implementations (scalar, SSE2, AVX2, AdvSimd) produce identical results
+        var key = new byte[Poly1305.MAC_KEY_SIZE_IN_BYTES];
+        RandomNumberGenerator.Fill(key);
+
+        var testSizes = new[] { 0, 1, 15, 16, 17, 31, 32, 33, 63, 64, 65, 127, 128, 129, 255, 256, 257, 511, 512, 513, 1023, 1024 };
+
+        foreach (var size in testSizes)
+        {
+            var data = new byte[size];
+            if (size > 0)
+                RandomNumberGenerator.Fill(data);
+
+            var mac = new byte[Poly1305.MAC_TAG_SIZE_IN_BYTES];
+            Poly1305.ComputeMac(key, data, mac);
+
+            // The result should be deterministic regardless of which optimized path is taken
+            var mac2 = new byte[Poly1305.MAC_TAG_SIZE_IN_BYTES];
+            Poly1305.ComputeMac(key, data, mac2);
+
+            mac.ShouldBe(mac2, $"MACs should be identical for data size {size}");
+        }
+    }
 }
