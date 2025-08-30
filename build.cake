@@ -1,5 +1,3 @@
-#tool nuget:?package=ReportGenerator&version=5.3.0
-
 var target = Argument("Target", "Default");
 var configuration =
     HasArgument("Configuration") ? Argument<string>("Configuration") :
@@ -61,13 +59,13 @@ Task("Test")
         };
 
         // Platform-specific intrinsics testing
-        if (IsRunningOnUnix() && Environment.OSVersion.Platform == PlatformID.Unix)
+        if (IsRunningOnUnix())
         {
             // ARM/Mac testing with AdvSIMD
             settings.EnvironmentVariables["COMPlus_EnableAdvSimd"] = "1";
             Information($"Running default {project.GetFilename()} test with ARM AdvSIMD enabled");
             DotNetTest(project.ToString(), settings);
-            
+
             settings.EnvironmentVariables["COMPlus_EnableAdvSimd"] = "0";
             Information($"Running {project.GetFilename()} test with ARM AdvSIMD disabled (scalar only)");
             DotNetTest(project.ToString(), settings);
@@ -128,7 +126,6 @@ Task("Default")
     .Description("Cleans, restores, builds the solution, runs unit tests and then create the NuGet packages.")
     .IsDependentOn("Build")
     .IsDependentOn("Test")
-    .IsDependentOn("CoverageReport")
     .IsDependentOn("Pack");
 
 RunTarget(target);
