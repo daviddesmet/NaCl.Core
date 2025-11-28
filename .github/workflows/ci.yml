@@ -82,10 +82,12 @@ jobs:
     steps:
     - name: 'Checkout'
       uses: actions/checkout@v4
-    - name: 'Download Artifact'
+    - name: 'Download All Artifacts'
       uses: actions/download-artifact@v4
       with:
-        name: 'ubuntu-latest'
+        path: ./artifacts
+        pattern: '*-latest'
+        merge-multiple: false
     - name: 'Install .NET SDK'
       uses: actions/setup-dotnet@v4
       with:
@@ -93,14 +95,15 @@ jobs:
           6.0.x
           8.0.x
           9.0.x
+          10.0.x
     - name: 'Install ReportGenerator'
       run: dotnet tool install -g dotnet-reportgenerator-globaltool
-    - name: 'Generate Coverage Report'
-      run: reportgenerator -reports:./TestResults/**/coverage.cobertura.xml -targetdir:${{env.BUILD_ARTIFACT_PATH}}/TestResults/Coverage/Reports "-reporttypes:HtmlInline;HTMLChart;Cobertura"
+    - name: 'Generate Merged Coverage Report'
+      run: reportgenerator -reports:"./artifacts/**/coverage.cobertura.xml" -targetdir:${{env.BUILD_ARTIFACT_PATH}}/TestResults/Coverage/Reports "-reporttypes:HtmlInline;HTMLChart;Cobertura"
     - name: 'Upload Coverage'
       uses: codecov/codecov-action@v4
       with:
-        file: Cobertura.xml
+        file: ${{env.BUILD_ARTIFACT_PATH}}/TestResults/Coverage/Reports/Cobertura.xml
         fail_ci_if_error: false
         token: ${{ secrets.CODECOV_TOKEN }}
     - name: 'Publish Coverage Report'
