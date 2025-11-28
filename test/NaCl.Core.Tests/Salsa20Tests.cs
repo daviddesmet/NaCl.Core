@@ -289,7 +289,7 @@ public class Salsa20Tests(ITestOutputHelper output)
         }
         catch (Exception)
         {
-            return File.ReadAllText(@"Vectors\salsa20-256.64-verified.test-vectors");
+            return File.ReadAllText(Path.Combine("Vectors", "salsa20-256.64-verified.test-vectors"));
         }
     }
 

@@ -645,11 +645,11 @@ public class ChaCha20Poly1305Test(ITestOutputHelper output)
         {
             using var client = new HttpClient();
             // originally hosted at: https://github.com/google/wycheproof/raw/master/testvectors/chacha20_poly1305_test.json
-            return client.GetStringAsync("https://github.com/C2SP/wycheproof/raw/refs/heads/main/testvectors/chacha20_poly1305_test.json").Result;
+            return client.GetStringAsync("https://github.com/C2SP/wycheproof/raw/refs/heads/main/testvectors_v1/chacha20_poly1305_test.json").Result;
         }
         catch (Exception)
         {
-            return File.ReadAllText(@"Vectors\chacha20_poly1305_test.json");
+            return File.ReadAllText(Path.Combine("Vectors", "chacha20_poly1305_test.json"));
         }
     }
 }
