@@ -1,8 +1,11 @@
-﻿namespace NaCl.Core.Internal;
+namespace NaCl.Core.Internal;
 
 using System;
 using System.Linq;
 using System.Runtime.CompilerServices;
+#if NET6_0_OR_GREATER
+using System.Security.Cryptography;
+#endif
 
 internal static class CryptoBytes
 {
@@ -25,7 +28,11 @@ internal static class CryptoBytes
         if (x.Length != y.Length)
             throw new ArgumentException("x.Length must equal y.Length");
 
+#if NET6_0_OR_GREATER
+        return CryptographicOperations.FixedTimeEquals(x, y);
+#else
         return InternalConstantTimeEquals(x, 0, y, 0, x.Length) != 0;
+#endif
     }
 
     public static bool ConstantTimeEquals(ArraySegment<byte> x, ArraySegment<byte> y)

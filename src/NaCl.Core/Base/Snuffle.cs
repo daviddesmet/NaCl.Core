@@ -2,7 +2,13 @@
 
 using System;
 using System.Buffers;
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
+#if NET6_0_OR_GREATER
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
+using System.Runtime.Intrinsics.Arm;
+#endif
 
 /// <summary>
 /// Abstract base class for XSalsa20, ChaCha20, XChaCha20 and their variants.
@@ -41,7 +47,7 @@ public abstract class Snuffle
     /// </summary>
     /// <param name="key">The secret key.</param>
     /// <param name="initialCounter">The initial counter.</param>
-    /// <exception cref="CryptographicException"></exception>
+    /// <exception cref="CryptographicException">Thrown when the key length is invalid.</exception>
     protected Snuffle(ReadOnlyMemory<byte> key, int initialCounter)
     {
         if (key.Length != KEY_SIZE_IN_BYTES)
@@ -82,7 +88,7 @@ public abstract class Snuffle
     /// <param name="plaintext">The content to encrypt.</param>
     /// <param name="nonce">The nonce associated with this message, which should be a unique value for every operation with the same key.</param>
     /// <param name="ciphertext">The byte array to receive the encrypted contents.</param>
-    /// <exception cref="CryptographicException">plaintext or nonce</exception>
+    /// <exception cref="ArgumentException">Thrown when plaintext and ciphertext lengths don't match, or nonce length is invalid.</exception>
     public void Encrypt(ReadOnlySpan<byte> plaintext, ReadOnlySpan<byte> nonce, Span<byte> ciphertext)
     {
         //if (plaintext.Length > int.MaxValue - NonceSizeInBytes())
@@ -103,7 +109,7 @@ public abstract class Snuffle
     /// <param name="ciphertext">The encrypted content to decrypt.</param>
     /// <param name="nonce">The nonce associated with this message, which must match the value provided during encryption.</param>
     /// <param name="plaintext">The byte span to receive the decrypted contents.</param>
-    /// <exception cref="CryptographicException">ciphertext or nonce.</exception>
+    /// <exception cref="ArgumentException">Thrown when plaintext and ciphertext lengths don't match, or nonce length is invalid.</exception>
     public void Decrypt(ReadOnlySpan<byte> ciphertext, ReadOnlySpan<byte> nonce, Span<byte> plaintext)
     {
         if (plaintext.Length != ciphertext.Length)
@@ -176,16 +182,73 @@ public abstract class Snuffle
     /// <param name="len">The length.</param>
     /// <param name="offset">The output's starting offset.</param>
     /// <param name="curBlock">The current block number.</param>
-    /// <exception cref="CryptographicException">The combination of blocks, offsets and length to be XORed is out-of-bonds.</exception>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void Xor(Span<byte> output, ReadOnlySpan<byte> input, ReadOnlySpan<byte> block, int len, int offset, int curBlock)
     {
         var blockOffset = curBlock * BlockSizeInBytes;
 
-        // Since is not called directly from outside, there's no need to check
-        //if (len < 0 || offset < 0 || curBlock < 0 || output.Length < len || (input.Length - blockOffset) < len || block.Length < len)
-        //    throw new CryptographicException("The combination of blocks, offsets and length to be XORed is out-of-bonds.");
-
-        for (var i = 0; i < len; i++)
-            output[i + offset + blockOffset] = (byte)(input[i + blockOffset] ^ block[i]);
+#if NET6_0_OR_GREATER
+        XorVectorized(output, input, block, len, offset + blockOffset, blockOffset);
+#else
+        XorScalar(output, input, block, len, offset + blockOffset, blockOffset);
+#endif
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void XorScalar(Span<byte> output, ReadOnlySpan<byte> input, ReadOnlySpan<byte> block, int len, int outputOffset, int inputOffset)
+    {
+        for (var i = 0; i < len; i++)
+            output[outputOffset + i] = (byte)(input[inputOffset + i] ^ block[i]);
+    }
+
+#if NET6_0_OR_GREATER
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static unsafe void XorVectorized(Span<byte> output, ReadOnlySpan<byte> input, ReadOnlySpan<byte> block, int len, int outputOffset, int inputOffset)
+    {
+        var i = 0;
+
+        fixed (byte* outputPtr = output)
+        fixed (byte* inputPtr = input)
+        fixed (byte* blockPtr = block)
+        {
+            if (Avx2.IsSupported && len >= Vector256<byte>.Count)
+            {
+                var vectorSize = Vector256<byte>.Count; // 32 bytes
+                for (; i + vectorSize <= len; i += vectorSize)
+                {
+                    var inputVec = Avx.LoadVector256(inputPtr + inputOffset + i);
+                    var blockVec = Avx.LoadVector256(blockPtr + i);
+                    var result = Avx2.Xor(inputVec, blockVec);
+                    Avx.Store(outputPtr + outputOffset + i, result);
+                }
+            }
+            else if (Sse2.IsSupported && len >= Vector128<byte>.Count)
+            {
+                var vectorSize = Vector128<byte>.Count; // 16 bytes
+                for (; i + vectorSize <= len; i += vectorSize)
+                {
+                    var inputVec = Sse2.LoadVector128(inputPtr + inputOffset + i);
+                    var blockVec = Sse2.LoadVector128(blockPtr + i);
+                    var result = Sse2.Xor(inputVec, blockVec);
+                    Sse2.Store(outputPtr + outputOffset + i, result);
+                }
+            }
+            else if (AdvSimd.IsSupported && len >= Vector128<byte>.Count)
+            {
+                var vectorSize = Vector128<byte>.Count; // 16 bytes
+                for (; i + vectorSize <= len; i += vectorSize)
+                {
+                    var inputVec = AdvSimd.LoadVector128(inputPtr + inputOffset + i);
+                    var blockVec = AdvSimd.LoadVector128(blockPtr + i);
+                    var result = AdvSimd.Xor(inputVec, blockVec);
+                    AdvSimd.Store(outputPtr + outputOffset + i, result);
+                }
+            }
+        }
+
+        // Handle remaining bytes with scalar XOR
+        for (; i < len; i++)
+            output[outputOffset + i] = (byte)(input[inputOffset + i] ^ block[i]);
+    }
+#endif
 }

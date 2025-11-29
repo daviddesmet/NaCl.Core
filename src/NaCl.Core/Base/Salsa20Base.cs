@@ -70,7 +70,7 @@ public abstract class Salsa20Base : Snuffle
     {
         // See: http://cr.yp.to/snuffle/xsalsa-20081128.pdf under 2. Specification - Definition of HSalsa20
 
-        Span<uint> state = stackalloc uint[BLOCK_SIZE_IN_BYTES];
+        Span<uint> state = stackalloc uint[BLOCK_SIZE_IN_INTS];
 
         // Setting HSalsa20 initial state
         HSalsa20InitialState(state, nonce);
