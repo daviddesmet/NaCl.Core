@@ -48,8 +48,8 @@ Daily NuGet builds of the project are also available in the [Azure Artifacts](ht
 #### Symmetric Key Encryption
 
 ```csharp
-// Create the primitive
-var aead = new ChaCha20Poly1305(key);
+// Create the primitive (implements IDisposable for secure key cleanup)
+using var aead = new ChaCha20Poly1305(key);
 
 // Use the primitive to encrypt a plaintext
 aead.Encrypt(nonce, plaintext, ciphertext, tag, aad);
@@ -57,6 +57,8 @@ aead.Encrypt(nonce, plaintext, ciphertext, tag, aad);
 // ... or to decrypt a ciphertext
 aead.Decrypt(nonce, ciphertext, tag, plaintext, aad);
 ```
+
+> **Note:** All cipher classes (`ChaCha20`, `XChaCha20`, `Salsa20`, `XSalsa20`, `ChaCha20Poly1305`, `XChaCha20Poly1305`) implement `IDisposable`. Call `Dispose()` or use `using` statements to securely zero the key from memory when done.
 
 #### MAC (Message Authentication Code)
 
@@ -76,6 +78,19 @@ Poly1305.VerifyMac(key, data, tag);
 
 - Includes the mandatory RFC [test vectors](https://github.com/daviddesmet/NaCl.Core/tree/master/test/NaCl.Core.Tests).
 - [Project Wycheproof](https://github.com/google/wycheproof) by members of Google Security Team, for testing against known attacks (when applicable).
+
+## Performance
+
+Refer to the [benchmarks](https://github.com/daviddesmet/NaCl.Core/tree/master/test/NaCl.Core.Benchmarks) for performance numbers.
+
+Run the benchmarks using:
+```bash
+dotnet run -c Release --framework net9.0
+```
+
+```bash
+dotnet run -c Release --framework net9.0 --filter "*ChaCha20IntrinsicsBenchmark*"
+```
 
 ## Learn More
 

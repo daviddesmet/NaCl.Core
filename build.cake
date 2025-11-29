@@ -42,23 +42,57 @@ Task("Test")
     {
         Information($"Preparing {project.GetFilename()} for test");
 
-        DotNetTest(
-            project.ToString(),
-            new DotNetTestSettings()
+        var settings = new DotNetTestSettings()
+        {
+            Blame = true,
+            Collectors = new string[] { "XPlat Code Coverage" },
+            Configuration = configuration,
+            Loggers = new string[]
             {
-                Blame = true,
-                Collectors = new string[] { "XPlat Code Coverage" },
-                Configuration = configuration,
-                Loggers = new string[]
-                {
-                    $"trx;LogFileName={project.GetFilenameWithoutExtension()}.trx",
-                    $"html;LogFileName={project.GetFilenameWithoutExtension()}.html",
-                },
-                NoBuild = true,
-                NoRestore = true,
-                ResultsDirectory = $"{artifactsDirectory}/TestResults",
-                Settings = "CodeCoverage.runsettings"
-            });
+                $"trx;LogFileName={project.GetFilenameWithoutExtension()}.trx",
+                $"html;LogFileName={project.GetFilenameWithoutExtension()}.html",
+            },
+            NoBuild = true,
+            NoRestore = true,
+            ResultsDirectory = $"{artifactsDirectory}/TestResults",
+            Settings = "CodeCoverage.runsettings"
+        };
+
+        // Platform-specific intrinsics testing
+        if (IsRunningOnUnix())
+        {
+            // ARM/Mac testing with AdvSIMD
+            settings.EnvironmentVariables["COMPlus_EnableAdvSimd"] = "1";
+            settings.ResultsDirectory = $"{artifactsDirectory}/TestResults/AdvSimd";
+            Information($"Running default {project.GetFilename()} test with ARM AdvSIMD enabled");
+            DotNetTest(project.ToString(), settings);
+
+            settings.EnvironmentVariables["COMPlus_EnableAdvSimd"] = "0";
+            settings.ResultsDirectory = $"{artifactsDirectory}/TestResults/Scalar";
+            Information($"Running {project.GetFilename()} test with ARM AdvSIMD disabled (scalar only)");
+            DotNetTest(project.ToString(), settings);
+        }
+        else
+        {
+            // x86/x64 testing with AVX2/SSE3
+            settings.EnvironmentVariables["COMPlus_EnableAVX2"] = "1";
+            settings.EnvironmentVariables["COMPlus_EnableSSE3"] = "1";
+            settings.ResultsDirectory = $"{artifactsDirectory}/TestResults/Avx2";
+            Information($"Running default {project.GetFilename()} test with SSE3 and AVX2 enabled");
+            DotNetTest(project.ToString(), settings);
+
+            settings.EnvironmentVariables["COMPlus_EnableAVX2"] = "0";
+            settings.EnvironmentVariables["COMPlus_EnableSSE3"] = "1";
+            settings.ResultsDirectory = $"{artifactsDirectory}/TestResults/Sse3";
+            Information($"Running {project.GetFilename()} test with SSE3 enabled and AVX2 disabled");
+            DotNetTest(project.ToString(), settings);
+
+            settings.EnvironmentVariables["COMPlus_EnableAVX2"] = "0";
+            settings.EnvironmentVariables["COMPlus_EnableSSE3"] = "0";
+            settings.ResultsDirectory = $"{artifactsDirectory}/TestResults/Scalar";
+            Information($"Running {project.GetFilename()} test with SSE3 and AVX2 disabled");
+            DotNetTest(project.ToString(), settings);
+        }
     });
 
 Task("CoverageReport")
@@ -72,7 +106,7 @@ Task("CoverageReport")
                             ArgumentCustomization = args => args.Append("-reporttypes:HtmlInline;HTMLChart;Cobertura")
                         });
     });
-        
+
 Task("Pack")
     .Description("Creates the NuGet packages and outputs them to the artifacts directory.")
     .Does(() =>

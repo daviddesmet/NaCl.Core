@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup Label="Build">
-    <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <LangVersion>latest</LangVersion>
     <IsTestProject>true</IsTestProject>
   </PropertyGroup>
@@ -16,13 +16,13 @@
   </PropertyGroup>
 
   <ItemGroup Label="Test Assets">
-    <Content Include="..\vectors\chacha20_poly1305_test.json" Link="Vectors\chacha20_poly1305_test.json">
+    <Content Include="..\vectors\chacha20_poly1305_test.json" Link="Vectors/chacha20_poly1305_test.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\vectors\xchacha20_poly1305_test.json" Link="Vectors\xchacha20_poly1305_test.json">
+    <Content Include="..\vectors\xchacha20_poly1305_test.json" Link="Vectors/xchacha20_poly1305_test.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\vectors\salsa20-256.64-verified.test-vectors" Link="Vectors\salsa20-256.64-verified.test-vectors">
+    <Content Include="..\vectors\salsa20-256.64-verified.test-vectors" Link="Vectors/salsa20-256.64-verified.test-vectors">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
@@ -36,15 +36,16 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
     <PackageReference Include="Shouldly" Version="4.3.0" />
     <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="Xunit.SkippableFact" Version="1.5.23" />
     <PackageReference Include="xunit.categories" Version="3.0.1" />
     <PackageReference Include="xunit.runner.console" Version="2.9.3">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="xunit.runner.visualstudio" Version="3.0.2">
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>

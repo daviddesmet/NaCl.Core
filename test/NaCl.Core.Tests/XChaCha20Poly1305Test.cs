@@ -521,16 +521,86 @@ public class XChaCha20Poly1305Test(ITestOutputHelper output)
         errors.ShouldBe(0);
     }
 
-    private string GetWycheproofTestVector()
+    [Fact]
+    public void EncryptDecryptLargeBufferPooledMemoryTest()
+    {
+        var key = new byte[Snuffle.KEY_SIZE_IN_BYTES];
+        RandomNumberGenerator.Fill(key);
+
+        var nonce = new byte[XChaCha20.NONCE_SIZE_IN_BYTES];
+        RandomNumberGenerator.Fill(nonce);
+
+        var aead = new XChaCha20Poly1305(key);
+
+        // Test with large AAD that exceeds StackallocThreshold (1KB)
+        var largeAad = new byte[2048]; // 2KB AAD
+        RandomNumberGenerator.Fill(largeAad);
+
+        var message = new byte[100];
+        RandomNumberGenerator.Fill(message);
+
+        var tag = new byte[Poly1305.MAC_TAG_SIZE_IN_BYTES];
+        var ciphertext = new byte[message.Length];
+        var decrypted = new byte[message.Length];
+
+        // This should trigger the pooled memory path for large buffers
+        aead.Encrypt(nonce, message, ciphertext, tag, largeAad);
+        aead.Decrypt(nonce, ciphertext, tag, decrypted, largeAad);
+
+        decrypted.ShouldBe(message);
+    }
+
+    [Fact]
+    public void EncryptDecryptStackallocThresholdBoundaryTest()
+    {
+        var key = new byte[Snuffle.KEY_SIZE_IN_BYTES];
+        RandomNumberGenerator.Fill(key);
+
+        var nonce = new byte[XChaCha20.NONCE_SIZE_IN_BYTES];
+        RandomNumberGenerator.Fill(nonce);
+
+        var aead = new XChaCha20Poly1305(key);
+
+        // Test exactly at the boundary (1024 bytes)
+        var boundaryMessage = new byte[1008]; // 1008 + 16 (padding) = 1024
+        RandomNumberGenerator.Fill(boundaryMessage);
+
+        var aad = Array.Empty<byte>();
+        var tag = new byte[Poly1305.MAC_TAG_SIZE_IN_BYTES];
+        var ciphertext = new byte[boundaryMessage.Length];
+        var decrypted = new byte[boundaryMessage.Length];
+
+        // This should use stackalloc (right at threshold)
+        aead.Encrypt(nonce, boundaryMessage, ciphertext, tag, aad);
+        aead.Decrypt(nonce, ciphertext, tag, decrypted, aad);
+
+        decrypted.ShouldBe(boundaryMessage);
+
+        // Test just over the boundary
+        var overBoundaryMessage = new byte[1009]; // 1009 + 16 (padding) = 1025
+        RandomNumberGenerator.Fill(overBoundaryMessage);
+
+        ciphertext = new byte[overBoundaryMessage.Length];
+        decrypted = new byte[overBoundaryMessage.Length];
+
+        // This should use pooled memory
+        aead.Encrypt(nonce, overBoundaryMessage, ciphertext, tag, aad);
+        aead.Decrypt(nonce, ciphertext, tag, decrypted, aad);
+
+        decrypted.ShouldBe(overBoundaryMessage);
+    }
+
+    private static string GetWycheproofTestVector()
     {
         try
         {
             using var client = new HttpClient();
-            return client.GetStringAsync("https://github.com/google/wycheproof/raw/master/testvectors/xchacha20_poly1305_test.json").Result;
+            // originally hosted at: https://github.com/google/wycheproof/raw/master/testvectors/xchacha20_poly1305_test.json
+            return client.GetStringAsync("https://github.com/C2SP/wycheproof/raw/refs/heads/main/testvectors_v1/xchacha20_poly1305_test.json").Result;
         }
         catch (Exception)
         {
-            return File.ReadAllText(@"Vectors\xchacha20_poly1305_test.json");
+            return File.ReadAllText(Path.Combine("Vectors", "xchacha20_poly1305_test.json"));
         }
     }
 }
