@@ -209,6 +209,7 @@ jobs:
       packagesToPush: '$(Build.ArtifactStagingDirectory)/**/*.nupkg;!$(Build.ArtifactStagingDirectory)/**/*.symbols.nupkg'
       nuGetFeedType: 'internal'
       publishVstsFeed: 'ffbd9fd0-ffca-4040-8576-0fa5065bd6d9/b465c74e-3671-458e-996f-8bbf45f957bc'
+      allowPackageConflicts: true
     continueOnError: true
   - task: DotNetCoreCLI@2
     displayName: 'Publish Library'
