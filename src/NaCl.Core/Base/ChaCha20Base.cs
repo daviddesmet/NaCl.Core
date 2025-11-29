@@ -10,6 +10,7 @@ using System.Runtime.Intrinsics.Arm;
 #endif
 
 using Internal;
+using System.Diagnostics.CodeAnalysis;
 
 /// <summary>
 /// Base class for <see cref="NaCl.Core.ChaCha20" /> and <see cref="NaCl.Core.XChaCha20" />.
@@ -371,14 +372,14 @@ public abstract class ChaCha20Base : Snuffle
         {
             // Column rounds
             QuarterRoundAdvSimd(ref row1, ref row2, ref row3, ref row4);
-            
+
             // Diagonal rounds - rotate the rows for diagonal access
             row2 = AdvSimd.ExtractVector128(row2.AsByte(), row2.AsByte(), 4).AsUInt32(); // Rotate left by 1 element
             row3 = AdvSimd.ExtractVector128(row3.AsByte(), row3.AsByte(), 8).AsUInt32(); // Rotate left by 2 elements  
             row4 = AdvSimd.ExtractVector128(row4.AsByte(), row4.AsByte(), 12).AsUInt32(); // Rotate left by 3 elements
-            
+
             QuarterRoundAdvSimd(ref row1, ref row2, ref row3, ref row4);
-            
+
             // Rotate back
             row2 = AdvSimd.ExtractVector128(row2.AsByte(), row2.AsByte(), 12).AsUInt32(); // Rotate right by 1 element
             row3 = AdvSimd.ExtractVector128(row3.AsByte(), row3.AsByte(), 8).AsUInt32(); // Rotate right by 2 elements
@@ -417,6 +418,7 @@ public abstract class ChaCha20Base : Snuffle
     /// Processes two ChaCha20 blocks in parallel using full AVX2 256-bit vectors.
     /// This approach efficiently uses the full vector capacity for multiple blocks.
     /// </summary>
+    [ExcludeFromCodeCoverage]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static unsafe void ShuffleStateDualBlockAvx2(Span<uint> state1, Span<uint> state2)
     {
@@ -473,6 +475,7 @@ public abstract class ChaCha20Base : Snuffle
         }
     }
 
+    [ExcludeFromCodeCoverage]
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void QuarterRoundAvx2DualBlock(ref Vector256<uint> row1, ref Vector256<uint> row2, ref Vector256<uint> row3, ref Vector256<uint> row4)
     {
