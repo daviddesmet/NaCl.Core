@@ -18,8 +18,8 @@ using Internal;
 /// </summary>
 public static class Poly1305
 {
-    public static int MAC_TAG_SIZE_IN_BYTES = 16;
-    public static int MAC_KEY_SIZE_IN_BYTES = 32;
+    public const int MAC_TAG_SIZE_IN_BYTES = 16;
+    public const int MAC_KEY_SIZE_IN_BYTES = 32;
     public const string MAC_EXCEPTION_INVALID = "Invalid MAC";
 
     private static void GetLastBlock(ReadOnlySpan<byte> buf, int idx, Span<byte> output)
@@ -329,24 +329,6 @@ public static class Poly1305
         FinalizeTagAvx2(hVec, keyVec, tag);
     }
 
-    /// <summary>
-    /// Computes the authentication <paramref name="tag"/> using SSE2 intrinsics.
-    /// </summary>
-    private static void ComputeMacSse2(ReadOnlySpan<byte> key, ReadOnlySpan<byte> data, Span<byte> tag)
-    {
-        // For SSE2, we can still use some optimizations but fallback to scalar for complex operations
-        ComputeMacScalar(key, data, tag);
-    }
-
-    /// <summary>
-    /// Computes the authentication <paramref name="tag"/> using ARM AdvSIMD intrinsics.
-    /// </summary>
-    private static void ComputeMacAdvSimd(ReadOnlySpan<byte> key, ReadOnlySpan<byte> data, Span<byte> tag)
-    {
-        // Similar to SSE2, ARM AdvSIMD optimization would need careful implementation
-        ComputeMacScalar(key, data, tag);
-    }
-
     private static void ComputeBlockScalar(ref Vector256<uint> hVec, Vector256<uint> blockVec, Vector256<uint> rVec, Vector256<uint> sVec, bool lastBlock)
     {
         // Extract current hash state
@@ -447,24 +429,308 @@ public static class Poly1305
         ArrayUtils.StoreUInt32LittleEndian(tag, 8, (uint)f2); f3 += (f2 >> 32);
         ArrayUtils.StoreUInt32LittleEndian(tag, 12, (uint)f3);
     }
+
+    /// <summary>
+    /// Computes the authentication <paramref name="tag"/> using SSE2 intrinsics.
+    /// Uses SIMD for data loading and final operations while maintaining scalar polynomial arithmetic.
+    /// </summary>
+    private static unsafe void ComputeMacSse2(ReadOnlySpan<byte> key, ReadOnlySpan<byte> data, Span<byte> tag)
+    {
+        if (key.Length != MAC_KEY_SIZE_IN_BYTES)
+            throw new CryptographicException($"The key length in bytes must be {MAC_KEY_SIZE_IN_BYTES}.");
+
+        if (tag.Length != MAC_TAG_SIZE_IN_BYTES)
+            throw new CryptographicException($"The tag length in bytes must be {MAC_TAG_SIZE_IN_BYTES}.");
+
+        // Load key using SIMD
+        fixed (byte* keyPtr = key)
+        {
+            var keyLo = Sse2.LoadVector128((uint*)keyPtr);       // First 16 bytes (r)
+            var keyHi = Sse2.LoadVector128((uint*)(keyPtr + 16)); // Last 16 bytes (s/pad)
+
+            // Extract and clamp r values
+            var t0 = keyLo.GetElement(0);
+            var t1 = keyLo.GetElement(1);
+            var t2 = keyLo.GetElement(2);
+            var t3 = keyLo.GetElement(3);
+
+            var r0 = t0 & 0x3ffffff; t0 >>= 26; t0 |= t1 << 6;
+            var r1 = t0 & 0x3ffff03; t1 >>= 20; t1 |= t2 << 12;
+            var r2 = t1 & 0x3ffc0ff; t2 >>= 14; t2 |= t3 << 18;
+            var r3 = t2 & 0x3f03fff; t3 >>= 8;
+            var r4 = t3 & 0x00fffff;
+
+            var s1 = r1 * 5;
+            var s2 = r2 * 5;
+            var s3 = r3 * 5;
+            var s4 = r4 * 5;
+
+            // Initialize hash state
+            uint h0 = 0, h1 = 0, h2 = 0, h3 = 0, h4 = 0;
+
+            // Process data blocks
+            Span<byte> block = stackalloc byte[MAC_KEY_SIZE_IN_BYTES];
+            fixed (byte* dataPtr = data)
+            fixed (byte* blockPtr = block)
+            {
+                for (var i = 0; i < data.Length; i += MAC_TAG_SIZE_IN_BYTES)
+                {
+                    var lastBlock = (data.Length - i) < MAC_TAG_SIZE_IN_BYTES;
+                    Vector128<uint> dataVec;
+
+                    if (lastBlock)
+                    {
+                        GetLastBlock(data, i, block);
+                        dataVec = Sse2.LoadVector128((uint*)blockPtr);
+                        block.Clear();
+                    }
+                    else
+                    {
+                        // Use SIMD load for aligned/unaligned data
+                        dataVec = Sse2.LoadVector128((uint*)(dataPtr + i));
+                    }
+
+                    // Extract block values from vector
+                    t0 = dataVec.GetElement(0);
+                    t1 = dataVec.GetElement(1);
+                    t2 = dataVec.GetElement(2);
+                    t3 = dataVec.GetElement(3);
+
+                    // Add block to accumulator
+                    h0 += t0 & 0x3ffffff;
+                    h1 += (uint)(((((ulong)t1 << 32) | t0) >> 26) & 0x3ffffff);
+                    h2 += (uint)(((((ulong)t2 << 32) | t1) >> 20) & 0x3ffffff);
+                    h3 += (uint)(((((ulong)t3 << 32) | t2) >> 14) & 0x3ffffff);
+                    h4 = lastBlock ? h4 + (t3 >> 8) : h4 + ((t3 >> 8) | (1u << 24));
+
+                    // Polynomial multiplication d = r * h
+                    var tt0 = (ulong)h0 * r0 + (ulong)h1 * s4 + (ulong)h2 * s3 + (ulong)h3 * s2 + (ulong)h4 * s1;
+                    var tt1 = (ulong)h0 * r1 + (ulong)h1 * r0 + (ulong)h2 * s4 + (ulong)h3 * s3 + (ulong)h4 * s2;
+                    var tt2 = (ulong)h0 * r2 + (ulong)h1 * r1 + (ulong)h2 * r0 + (ulong)h3 * s4 + (ulong)h4 * s3;
+                    var tt3 = (ulong)h0 * r3 + (ulong)h1 * r2 + (ulong)h2 * r1 + (ulong)h3 * r0 + (ulong)h4 * s4;
+                    var tt4 = (ulong)h0 * r4 + (ulong)h1 * r3 + (ulong)h2 * r2 + (ulong)h3 * r1 + (ulong)h4 * r0;
+
+                    // Partial reduction mod 2^130-5
+                    unchecked
+                    {
+                        h0 = (uint)tt0 & 0x3ffffff; var c = (tt0 >> 26);
+                        tt1 += c; h1 = (uint)tt1 & 0x3ffffff; var b = (uint)(tt1 >> 26);
+                        tt2 += b; h2 = (uint)tt2 & 0x3ffffff; b = (uint)(tt2 >> 26);
+                        tt3 += b; h3 = (uint)tt3 & 0x3ffffff; b = (uint)(tt3 >> 26);
+                        tt4 += b; h4 = (uint)tt4 & 0x3ffffff; b = (uint)(tt4 >> 26);
+                        h0 += b * 5;
+                    }
+                }
+            }
+
+            // Finalize using SIMD for final operations
+            FinalizeTagSse2(h0, h1, h2, h3, h4, keyHi, tag);
+        }
+    }
+
+    private static unsafe void FinalizeTagSse2(uint h0, uint h1, uint h2, uint h3, uint h4, Vector128<uint> padVec, Span<byte> tag)
+    {
+        // Final reduction mod 2^130-5
+        var b = h0 >> 26; h0 &= 0x3ffffff;
+        h1 += b; b = h1 >> 26; h1 &= 0x3ffffff;
+        h2 += b; b = h2 >> 26; h2 &= 0x3ffffff;
+        h3 += b; b = h3 >> 26; h3 &= 0x3ffffff;
+        h4 += b; b = h4 >> 26; h4 &= 0x3ffffff;
+        h0 += b * 5;
+
+        // Compute h - p
+        var g0 = h0 + 5; b = g0 >> 26; g0 &= 0x3ffffff;
+        var g1 = h1 + b; b = g1 >> 26; g1 &= 0x3ffffff;
+        var g2 = h2 + b; b = g2 >> 26; g2 &= 0x3ffffff;
+        var g3 = h3 + b; b = g3 >> 26; g3 &= 0x3ffffff;
+        var g4 = unchecked(h4 + b - (1u << 26));
+
+        // Select h if h < p, or h - p if h >= p
+        b = (g4 >> 31) - 1;
+        var nb = ~b;
+        h0 = (h0 & nb) | (g0 & b);
+        h1 = (h1 & nb) | (g1 & b);
+        h2 = (h2 & nb) | (g2 & b);
+        h3 = (h3 & nb) | (g3 & b);
+        h4 = (h4 & nb) | (g4 & b);
+
+        // h = h % (2^128) + pad
+        var f0 = ((h0) | (h1 << 26)) + (ulong)padVec.GetElement(0);
+        var f1 = ((h1 >> 6) | (h2 << 20)) + (ulong)padVec.GetElement(1);
+        var f2 = ((h2 >> 12) | (h3 << 14)) + (ulong)padVec.GetElement(2);
+        var f3 = ((h3 >> 18) | (h4 << 8)) + (ulong)padVec.GetElement(3);
+
+        // Propagate carries and store using SIMD
+        f1 += (f0 >> 32);
+        f2 += (f1 >> 32);
+        f3 += (f2 >> 32);
+
+        var result = Vector128.Create((uint)f0, (uint)f1, (uint)f2, (uint)f3);
+        fixed (byte* tagPtr = tag)
+        {
+            Sse2.Store((uint*)tagPtr, result);
+        }
+    }
+
+    /// <summary>
+    /// Computes the authentication <paramref name="tag"/> using ARM AdvSIMD intrinsics.
+    /// Uses SIMD for data loading and final operations while maintaining scalar polynomial arithmetic.
+    /// </summary>
+    private static unsafe void ComputeMacAdvSimd(ReadOnlySpan<byte> key, ReadOnlySpan<byte> data, Span<byte> tag)
+    {
+        if (key.Length != MAC_KEY_SIZE_IN_BYTES)
+            throw new CryptographicException($"The key length in bytes must be {MAC_KEY_SIZE_IN_BYTES}.");
+
+        if (tag.Length != MAC_TAG_SIZE_IN_BYTES)
+            throw new CryptographicException($"The tag length in bytes must be {MAC_TAG_SIZE_IN_BYTES}.");
+
+        // Load key using SIMD
+        fixed (byte* keyPtr = key)
+        {
+            var keyLo = AdvSimd.LoadVector128((uint*)keyPtr);       // First 16 bytes (r)
+            var keyHi = AdvSimd.LoadVector128((uint*)(keyPtr + 16)); // Last 16 bytes (s/pad)
+
+            // Extract and clamp r values
+            var t0 = keyLo.GetElement(0);
+            var t1 = keyLo.GetElement(1);
+            var t2 = keyLo.GetElement(2);
+            var t3 = keyLo.GetElement(3);
+
+            var r0 = t0 & 0x3ffffff; t0 >>= 26; t0 |= t1 << 6;
+            var r1 = t0 & 0x3ffff03; t1 >>= 20; t1 |= t2 << 12;
+            var r2 = t1 & 0x3ffc0ff; t2 >>= 14; t2 |= t3 << 18;
+            var r3 = t2 & 0x3f03fff; t3 >>= 8;
+            var r4 = t3 & 0x00fffff;
+
+            var s1 = r1 * 5;
+            var s2 = r2 * 5;
+            var s3 = r3 * 5;
+            var s4 = r4 * 5;
+
+            // Initialize hash state
+            uint h0 = 0, h1 = 0, h2 = 0, h3 = 0, h4 = 0;
+
+            // Process data blocks
+            Span<byte> block = stackalloc byte[MAC_KEY_SIZE_IN_BYTES];
+            fixed (byte* dataPtr = data)
+            fixed (byte* blockPtr = block)
+            {
+                for (var i = 0; i < data.Length; i += MAC_TAG_SIZE_IN_BYTES)
+                {
+                    var lastBlock = (data.Length - i) < MAC_TAG_SIZE_IN_BYTES;
+                    Vector128<uint> dataVec;
+
+                    if (lastBlock)
+                    {
+                        GetLastBlock(data, i, block);
+                        dataVec = AdvSimd.LoadVector128((uint*)blockPtr);
+                        block.Clear();
+                    }
+                    else
+                    {
+                        // Use SIMD load for data
+                        dataVec = AdvSimd.LoadVector128((uint*)(dataPtr + i));
+                    }
+
+                    // Extract block values from vector
+                    t0 = dataVec.GetElement(0);
+                    t1 = dataVec.GetElement(1);
+                    t2 = dataVec.GetElement(2);
+                    t3 = dataVec.GetElement(3);
+
+                    // Add block to accumulator
+                    h0 += t0 & 0x3ffffff;
+                    h1 += (uint)(((((ulong)t1 << 32) | t0) >> 26) & 0x3ffffff);
+                    h2 += (uint)(((((ulong)t2 << 32) | t1) >> 20) & 0x3ffffff);
+                    h3 += (uint)(((((ulong)t3 << 32) | t2) >> 14) & 0x3ffffff);
+                    h4 = lastBlock ? h4 + (t3 >> 8) : h4 + ((t3 >> 8) | (1u << 24));
+
+                    // Polynomial multiplication d = r * h
+                    var tt0 = (ulong)h0 * r0 + (ulong)h1 * s4 + (ulong)h2 * s3 + (ulong)h3 * s2 + (ulong)h4 * s1;
+                    var tt1 = (ulong)h0 * r1 + (ulong)h1 * r0 + (ulong)h2 * s4 + (ulong)h3 * s3 + (ulong)h4 * s2;
+                    var tt2 = (ulong)h0 * r2 + (ulong)h1 * r1 + (ulong)h2 * r0 + (ulong)h3 * s4 + (ulong)h4 * s3;
+                    var tt3 = (ulong)h0 * r3 + (ulong)h1 * r2 + (ulong)h2 * r1 + (ulong)h3 * r0 + (ulong)h4 * s4;
+                    var tt4 = (ulong)h0 * r4 + (ulong)h1 * r3 + (ulong)h2 * r2 + (ulong)h3 * r1 + (ulong)h4 * r0;
+
+                    // Partial reduction mod 2^130-5
+                    unchecked
+                    {
+                        h0 = (uint)tt0 & 0x3ffffff; var c = (tt0 >> 26);
+                        tt1 += c; h1 = (uint)tt1 & 0x3ffffff; var b = (uint)(tt1 >> 26);
+                        tt2 += b; h2 = (uint)tt2 & 0x3ffffff; b = (uint)(tt2 >> 26);
+                        tt3 += b; h3 = (uint)tt3 & 0x3ffffff; b = (uint)(tt3 >> 26);
+                        tt4 += b; h4 = (uint)tt4 & 0x3ffffff; b = (uint)(tt4 >> 26);
+                        h0 += b * 5;
+                    }
+                }
+            }
+
+            // Finalize using SIMD for final operations
+            FinalizeTagAdvSimd(h0, h1, h2, h3, h4, keyHi, tag);
+        }
+    }
+
+    private static unsafe void FinalizeTagAdvSimd(uint h0, uint h1, uint h2, uint h3, uint h4, Vector128<uint> padVec, Span<byte> tag)
+    {
+        // Final reduction mod 2^130-5
+        var b = h0 >> 26; h0 &= 0x3ffffff;
+        h1 += b; b = h1 >> 26; h1 &= 0x3ffffff;
+        h2 += b; b = h2 >> 26; h2 &= 0x3ffffff;
+        h3 += b; b = h3 >> 26; h3 &= 0x3ffffff;
+        h4 += b; b = h4 >> 26; h4 &= 0x3ffffff;
+        h0 += b * 5;
+
+        // Compute h - p
+        var g0 = h0 + 5; b = g0 >> 26; g0 &= 0x3ffffff;
+        var g1 = h1 + b; b = g1 >> 26; g1 &= 0x3ffffff;
+        var g2 = h2 + b; b = g2 >> 26; g2 &= 0x3ffffff;
+        var g3 = h3 + b; b = g3 >> 26; g3 &= 0x3ffffff;
+        var g4 = unchecked(h4 + b - (1u << 26));
+
+        // Select h if h < p, or h - p if h >= p
+        b = (g4 >> 31) - 1;
+        var nb = ~b;
+        h0 = (h0 & nb) | (g0 & b);
+        h1 = (h1 & nb) | (g1 & b);
+        h2 = (h2 & nb) | (g2 & b);
+        h3 = (h3 & nb) | (g3 & b);
+        h4 = (h4 & nb) | (g4 & b);
+
+        // h = h % (2^128) + pad
+        var f0 = ((h0) | (h1 << 26)) + (ulong)padVec.GetElement(0);
+        var f1 = ((h1 >> 6) | (h2 << 20)) + (ulong)padVec.GetElement(1);
+        var f2 = ((h2 >> 12) | (h3 << 14)) + (ulong)padVec.GetElement(2);
+        var f3 = ((h3 >> 18) | (h4 << 8)) + (ulong)padVec.GetElement(3);
+
+        // Propagate carries and store using SIMD
+        f1 += (f0 >> 32);
+        f2 += (f1 >> 32);
+        f3 += (f2 >> 32);
+
+        var result = Vector128.Create((uint)f0, (uint)f1, (uint)f2, (uint)f3);
+        fixed (byte* tagPtr = tag)
+        {
+            AdvSimd.Store((uint*)tagPtr, result);
+        }
+    }
 #endif
 
     /// <summary>
-    /// Verifies the authentication <paramref name="mac"/> using the specified <paramref name="key"/> and <paramref name="data"/>.
+    /// Verifies the authentication tag using the specified <paramref name="key"/> and <paramref name="data"/>.
     /// </summary>
     /// <param name="key">The secret key.</param>
     /// <param name="data">The data.</param>
-    /// <param name="tag">The authentication tag.</param>
-    /// <exception cref="CryptographicException"></exception>
+    /// <param name="tag">The authentication tag to verify.</param>
+    /// <exception cref="CryptographicException">Thrown when the key length is invalid, tag length is invalid, or the tag verification fails.</exception>
     public static void VerifyMac(byte[] key, byte[] data, byte[] tag) => VerifyMac((ReadOnlySpan<byte>)key, (ReadOnlySpan<byte>)data, (ReadOnlySpan<byte>)tag);
 
     /// <summary>
-    /// Verifies the authentication <paramref name="mac"/> using the specified <paramref name="key"/> and <paramref name="data"/>.
+    /// Verifies the authentication tag using the specified <paramref name="key"/> and <paramref name="data"/>.
     /// </summary>
     /// <param name="key">The secret key.</param>
     /// <param name="data">The data.</param>
-    /// <param name="tag">The authentication tag.</param>
-    /// <exception cref="CryptographicException"></exception>
+    /// <param name="tag">The authentication tag to verify.</param>
+    /// <exception cref="CryptographicException">Thrown when the key length is invalid, tag length is invalid, or the tag verification fails.</exception>
     public static void VerifyMac(ReadOnlySpan<byte> key, ReadOnlySpan<byte> data, ReadOnlySpan<byte> tag)
     {
         if (tag.Length != MAC_TAG_SIZE_IN_BYTES)
