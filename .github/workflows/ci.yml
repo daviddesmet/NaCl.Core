@@ -98,6 +98,8 @@ jobs:
           10.0.x
     - name: 'Install ReportGenerator'
       run: dotnet tool install -g dotnet-reportgenerator-globaltool
+    - name: 'List Coverage Files'
+      run: find ./artifacts -name "coverage.cobertura.xml" -type f
     - name: 'Generate Merged Coverage Report'
       run: reportgenerator -reports:"./artifacts/**/coverage.cobertura.xml" -targetdir:${{env.BUILD_ARTIFACT_PATH}}/TestResults/Coverage/Reports "-reporttypes:HtmlInline;HTMLChart;Cobertura"
     - name: 'Upload Coverage'

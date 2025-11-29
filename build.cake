@@ -63,10 +63,12 @@ Task("Test")
         {
             // ARM/Mac testing with AdvSIMD
             settings.EnvironmentVariables["COMPlus_EnableAdvSimd"] = "1";
+            settings.ResultsDirectory = $"{artifactsDirectory}/TestResults/AdvSimd";
             Information($"Running default {project.GetFilename()} test with ARM AdvSIMD enabled");
             DotNetTest(project.ToString(), settings);
 
             settings.EnvironmentVariables["COMPlus_EnableAdvSimd"] = "0";
+            settings.ResultsDirectory = $"{artifactsDirectory}/TestResults/Scalar";
             Information($"Running {project.GetFilename()} test with ARM AdvSIMD disabled (scalar only)");
             DotNetTest(project.ToString(), settings);
         }
@@ -75,16 +77,19 @@ Task("Test")
             // x86/x64 testing with AVX2/SSE3
             settings.EnvironmentVariables["COMPlus_EnableAVX2"] = "1";
             settings.EnvironmentVariables["COMPlus_EnableSSE3"] = "1";
+            settings.ResultsDirectory = $"{artifactsDirectory}/TestResults/Avx2";
             Information($"Running default {project.GetFilename()} test with SSE3 and AVX2 enabled");
             DotNetTest(project.ToString(), settings);
 
             settings.EnvironmentVariables["COMPlus_EnableAVX2"] = "0";
             settings.EnvironmentVariables["COMPlus_EnableSSE3"] = "1";
+            settings.ResultsDirectory = $"{artifactsDirectory}/TestResults/Sse3";
             Information($"Running {project.GetFilename()} test with SSE3 enabled and AVX2 disabled");
             DotNetTest(project.ToString(), settings);
 
             settings.EnvironmentVariables["COMPlus_EnableAVX2"] = "0";
             settings.EnvironmentVariables["COMPlus_EnableSSE3"] = "0";
+            settings.ResultsDirectory = $"{artifactsDirectory}/TestResults/Scalar";
             Information($"Running {project.GetFilename()} test with SSE3 and AVX2 disabled");
             DotNetTest(project.ToString(), settings);
         }
