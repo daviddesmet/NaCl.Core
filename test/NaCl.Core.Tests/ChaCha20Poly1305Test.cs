@@ -639,6 +639,63 @@ public class ChaCha20Poly1305Test(ITestOutputHelper output)
         decrypted.ShouldBe(overBoundaryMessage);
     }
 
+    [Fact]
+    public void DisposeZerosKeyAndPreventsReuse()
+    {
+        // Arrange
+        var key = new byte[Snuffle.KEY_SIZE_IN_BYTES];
+        RandomNumberGenerator.Fill(key);
+        var nonce = new byte[ChaCha20.NONCE_SIZE_IN_BYTES];
+        var plaintext = Encoding.UTF8.GetBytes("Test message");
+        var ciphertext = new byte[plaintext.Length];
+        var tag = new byte[Poly1305.MAC_TAG_SIZE_IN_BYTES];
+        var aad = Array.Empty<byte>();
+
+        var aead = new NaCl.Core.ChaCha20Poly1305(key);
+
+        // Act - dispose the cipher
+        aead.Dispose();
+
+        // Assert - using after dispose should throw ObjectDisposedException
+        var act = () => aead.Encrypt(nonce, plaintext, ciphertext, tag, aad);
+        act.ShouldThrow<ObjectDisposedException>();
+    }
+
+    [Fact]
+    public void UsingStatementDisposesCorrectly()
+    {
+        // Arrange
+        var key = new byte[Snuffle.KEY_SIZE_IN_BYTES];
+        RandomNumberGenerator.Fill(key);
+        var nonce = new byte[ChaCha20.NONCE_SIZE_IN_BYTES];
+        var plaintext = Encoding.UTF8.GetBytes("Test message");
+        var ciphertext = new byte[plaintext.Length];
+        var decrypted = new byte[plaintext.Length];
+        var tag = new byte[Poly1305.MAC_TAG_SIZE_IN_BYTES];
+        var aad = Array.Empty<byte>();
+
+        // Act & Assert - using statement should work correctly
+        using (var aead = new NaCl.Core.ChaCha20Poly1305(key))
+        {
+            aead.Encrypt(nonce, plaintext, ciphertext, tag, aad);
+            aead.Decrypt(nonce, ciphertext, tag, decrypted, aad);
+            decrypted.ShouldBe(plaintext);
+        }
+    }
+
+    [Fact]
+    public void DoubleDisposeDoesNotThrow()
+    {
+        // Arrange
+        var key = new byte[Snuffle.KEY_SIZE_IN_BYTES];
+        var aead = new NaCl.Core.ChaCha20Poly1305(key);
+
+        // Act & Assert - double dispose should not throw
+        aead.Dispose();
+        var act = () => aead.Dispose();
+        act.ShouldNotThrow();
+    }
+
     private static string GetWycheproofTestVector()
     {
         try

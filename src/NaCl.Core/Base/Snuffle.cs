@@ -30,16 +30,20 @@ using System.Runtime.Intrinsics.Arm;
 /// <seealso cref="NaCl.Core.ChaCha20Poly1305" />
 /// <seealso cref="NaCl.Core.XChaCha20" />
 /// <seealso cref="NaCl.Core.XChaCha20Poly1305" />
-public abstract class Snuffle
+public abstract class Snuffle : IDisposable
 {
+    private bool _disposed;
+    private readonly byte[] _key;
+
     protected const int KEY_SIZE_IN_INTS = 8;
     public const int KEY_SIZE_IN_BYTES = KEY_SIZE_IN_INTS * 4; // 32
     protected const int BLOCK_SIZE_IN_INTS = 16;
     public const int BLOCK_SIZE_IN_BYTES = BLOCK_SIZE_IN_INTS * 4; // 64
 
-    protected static uint[] SIGMA = new uint[] { 0x61707865, 0x3320646E, 0x79622D32, 0x6B206574 }; // "expand 32-byte k" (4 words constant: "expa", "nd 3", "2-by", and "te k")
+    protected static uint[] SIGMA = [0x61707865, 0x3320646E, 0x79622D32, 0x6B206574]; // "expand 32-byte k" (4 words constant: "expa", "nd 3", "2-by", and "te k")
 
-    protected readonly ReadOnlyMemory<byte> Key;
+    protected ReadOnlyMemory<byte> Key => _key;
+
     protected readonly int InitialCounter;
 
     /// <summary>
@@ -53,7 +57,8 @@ public abstract class Snuffle
         if (key.Length != KEY_SIZE_IN_BYTES)
             throw new CryptographicException($"The key length in bytes must be {KEY_SIZE_IN_BYTES}.");
 
-        Key = key;
+        // Make a private copy of the key for secure disposal
+        _key = key.ToArray();
         InitialCounter = initialCounter;
     }
 
@@ -89,10 +94,10 @@ public abstract class Snuffle
     /// <param name="nonce">The nonce associated with this message, which should be a unique value for every operation with the same key.</param>
     /// <param name="ciphertext">The byte array to receive the encrypted contents.</param>
     /// <exception cref="ArgumentException">Thrown when plaintext and ciphertext lengths don't match, or nonce length is invalid.</exception>
+    /// <exception cref="ObjectDisposedException">Thrown when the instance has been disposed.</exception>
     public void Encrypt(ReadOnlySpan<byte> plaintext, ReadOnlySpan<byte> nonce, Span<byte> ciphertext)
     {
-        //if (plaintext.Length > int.MaxValue - NonceSizeInBytes())
-        //    throw new ArgumentException($"The {nameof(plaintext)} is too long.");
+        ThrowIfDisposed();
 
         if (plaintext.Length != ciphertext.Length)
             throw new ArgumentException("The plaintext parameter and the ciphertext do not have the same length.");
@@ -110,8 +115,11 @@ public abstract class Snuffle
     /// <param name="nonce">The nonce associated with this message, which must match the value provided during encryption.</param>
     /// <param name="plaintext">The byte span to receive the decrypted contents.</param>
     /// <exception cref="ArgumentException">Thrown when plaintext and ciphertext lengths don't match, or nonce length is invalid.</exception>
+    /// <exception cref="ObjectDisposedException">Thrown when the instance has been disposed.</exception>
     public void Decrypt(ReadOnlySpan<byte> ciphertext, ReadOnlySpan<byte> nonce, Span<byte> plaintext)
     {
+        ThrowIfDisposed();
+
         if (plaintext.Length != ciphertext.Length)
             throw new ArgumentException("The ciphertext parameter and the plaintext do not have the same length.");
 
@@ -172,6 +180,53 @@ public abstract class Snuffle
     /// <param name="expected">The expected nonce length.</param>
     /// <returns>System.String.</returns>
     internal static string FormatNonceLengthExceptionMessage(string name, int actual, int expected) => $"{name} uses {expected * 8}-bit nonces, but got a {actual * 8}-bit nonce. The nonce length in bytes must be {expected}.";
+
+    /// <summary>
+    /// Throws an <see cref="ObjectDisposedException"/> if the instance has been disposed.
+    /// </summary>
+    /// <exception cref="ObjectDisposedException">Thrown when the instance has been disposed.</exception>
+    protected void ThrowIfDisposed()
+    {
+#if NET7_0_OR_GREATER
+#pragma warning disable IDE0022 // Use expression body for method
+        ObjectDisposedException.ThrowIf(_disposed, this);
+#pragma warning restore IDE0022 // Use expression body for method
+#else
+        if (_disposed)
+            throw new ObjectDisposedException(GetType().Name);
+#endif
+    }
+
+    /// <summary>
+    /// Releases all resources used by the current instance of <see cref="Snuffle"/>.
+    /// </summary>
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// Releases the unmanaged resources used by the <see cref="Snuffle"/> and optionally releases the managed resources.
+    /// </summary>
+    /// <param name="disposing">true to release both managed and unmanaged resources; false to release only unmanaged resources.</param>
+    protected virtual void Dispose(bool disposing)
+    {
+        if (_disposed)
+            return;
+
+        if (disposing)
+        {
+            // Clear the key from memory
+#if NET6_0_OR_GREATER
+            CryptographicOperations.ZeroMemory(_key);
+#else
+            Array.Clear(_key, 0, _key.Length);
+#endif
+        }
+
+        _disposed = true;
+    }
 
     /// <summary>
     /// XOR the specified output.

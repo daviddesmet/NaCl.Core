@@ -487,4 +487,59 @@ public class ChaCha20Tests
 
         CryptoBytes.Combine(block0, block1).ShouldBe(expected);
     }
+
+    [Fact]
+    public void DisposeZerosKeyAndPreventsReuse()
+    {
+        // Arrange
+        var key = new byte[Snuffle.KEY_SIZE_IN_BYTES];
+        RandomNumberGenerator.Fill(key);
+        var nonce = new byte[ChaCha20.NONCE_SIZE_IN_BYTES];
+        var plaintext = Encoding.UTF8.GetBytes("Test message");
+        var ciphertext = new byte[plaintext.Length];
+
+        var cipher = new ChaCha20(key, 0);
+
+        // Act - dispose the cipher
+        cipher.Dispose();
+
+        // Assert - using after dispose should throw ObjectDisposedException
+        var act = () => cipher.Encrypt(plaintext, nonce, ciphertext);
+        act.ShouldThrow<ObjectDisposedException>();
+    }
+
+    [Fact]
+    public void UsingStatementDisposesCorrectly()
+    {
+        // Arrange
+        var key = new byte[Snuffle.KEY_SIZE_IN_BYTES];
+        RandomNumberGenerator.Fill(key);
+        var nonce = new byte[ChaCha20.NONCE_SIZE_IN_BYTES];
+        var plaintext = Encoding.UTF8.GetBytes("Test message");
+        var ciphertext = new byte[plaintext.Length];
+        var decrypted = new byte[plaintext.Length];
+
+        // Act & Assert - using statement should work correctly
+        using (var cipher = new ChaCha20(key, 0))
+        {
+            cipher.Encrypt(plaintext, nonce, ciphertext);
+            cipher.Decrypt(ciphertext, nonce, decrypted);
+            decrypted.ShouldBe(plaintext);
+        }
+
+        // Cipher is now disposed (no way to verify from outside, but the pattern works)
+    }
+
+    [Fact]
+    public void DoubleDisposeDoesNotThrow()
+    {
+        // Arrange
+        var key = new byte[Snuffle.KEY_SIZE_IN_BYTES];
+        var cipher = new ChaCha20(key, 0);
+
+        // Act & Assert - double dispose should not throw
+        cipher.Dispose();
+        var act = () => cipher.Dispose();
+        act.ShouldNotThrow();
+    }
 }

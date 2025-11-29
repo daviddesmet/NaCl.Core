@@ -1,6 +1,9 @@
-﻿namespace NaCl.Core.Tests;
+namespace NaCl.Core.Tests;
 
 using System;
+#if NET6_0_OR_GREATER
+using System.Runtime.Intrinsics;
+#endif
 using Xunit;
 using Xunit.Categories;
 
@@ -142,31 +145,180 @@ public class BitUtilsTests
         }
     }
 
-    /*
-    [Theory(DisplayName = "BitOps RotateRight UInt32")]
-    [InlineData(0b10000000_00000000_00000000_00000000u, int.MaxValue, 0b00000000_00000000_00000000_00000001u)] // % 32 = 31
-    [InlineData(0b00000000_00001000_00000000_00001010u, 3, 0b01000000_00000001_00000000_00000001u)]
-    [InlineData(0b00000000_00000100_00000000_00000101u, 2, 0b01000000_00000001_00000000_00000001u)]
-    [InlineData(0b01010101_01010101_01010101_01010101u, 1, 0b10101010_10101010_10101010_10101010u)]
-    [InlineData(0b01010101_11111111_01010101_01010101u, 0, 0b01010101_11111111_01010101_01010101u)]
-    [InlineData(0b10000000_00000000_00000000_00000000u, -1, 0b00000000_00000000_00000000_00000001u)]
-    [InlineData(0b00000000_00000000_00000000_00000001u, -2, 0b00000000_00000000_00000000_00000100u)]
-    [InlineData(0b01000000_00000000_00000000_00000000u, -3, 0b00000000_00000000_00000000_00000010u)]
-    [InlineData(0b01010101_11111111_01010101_01010101u, int.MinValue, 0b01010101_11111111_01010101_01010101u)] // % 32 = 0
-    public static void BitOps_RotateRight_uint(uint n, int offset, uint expected)
+#if NET6_0_OR_GREATER
+    [SkippableTheory(DisplayName = "BitOps RotateLeftVector128 All ChaCha20 Rotations")]
+    [InlineData(16)] // ChaCha20
+    [InlineData(12)] // ChaCha20
+    [InlineData(8)]  // ChaCha20
+    [InlineData(7)]  // ChaCha20
+    public static void BitOps_RotateLeftVector128_ChaCha20Rotations(int rotation)
     {
-        Assert.Equal(expected, BitUtils.RotateRight(n, offset));
+        Skip.IfNot(System.Runtime.Intrinsics.X86.Sse2.IsSupported, "SSE2 not supported on this platform");
+
+        var testValues = new uint[] { 0x12345678u, 0x87654321u, 0xAABBCCDDu, 0x55AA55AAu };
+        var vector = System.Runtime.Intrinsics.Vector128.Create(testValues[0], testValues[1], testValues[2], testValues[3]);
+
+        var result = BitUtils.RotateLeftVector128(vector, rotation);
+
+        // Verify each element matches scalar rotation
+        for (int i = 0; i < 4; i++)
+        {
+            var expected = BitUtils.RotateLeft(testValues[i], rotation);
+            Assert.Equal(expected, result.GetElement(i));
+        }
     }
 
-    [Fact(DisplayName = "BitOps RotateRight UInt64")]
-    public static void BitOps_RotateRight_ulong()
+    [SkippableTheory(DisplayName = "BitOps RotateLeftVector128 All Salsa20 Rotations")]
+    [InlineData(18)] // Salsa20
+    [InlineData(13)] // Salsa20
+    [InlineData(9)]  // Salsa20
+    public static void BitOps_RotateLeftVector128_Salsa20Rotations(int rotation)
     {
-        ulong value = 0b01010101_01010101_01010101_01010101_01010101_01010101_01010101_01010101ul;
-        Assert.Equal(0b10101010_10101010_10101010_10101010_10101010_10101010_10101010_10101010ul, BitUtils.RotateRight(value, 1));
-        Assert.Equal(0b01010101_01010101_01010101_01010101_01010101_01010101_01010101_01010101ul, BitUtils.RotateRight(value, 2));
-        Assert.Equal(0b10101010_10101010_10101010_10101010_10101010_10101010_10101010_10101010ul, BitUtils.RotateRight(value, 3));
-        Assert.Equal(value, BitUtils.RotateRight(value, int.MinValue)); // % 64 = 0
-        Assert.Equal(BitUtils.RotateLeft(value, 63), BitUtils.RotateRight(value, int.MaxValue)); // % 64 = 63
+        Skip.IfNot(System.Runtime.Intrinsics.X86.Sse2.IsSupported, "SSE2 not supported on this platform");
+
+        var testValues = new uint[] { 0xF0F0F0F0u, 0x0F0F0F0Fu, 0xFF00FF00u, 0x00FF00FFu };
+        var vector = System.Runtime.Intrinsics.Vector128.Create(testValues[0], testValues[1], testValues[2], testValues[3]);
+
+        var result = BitUtils.RotateLeftVector128(vector, rotation);
+
+        // Verify each element matches scalar rotation
+        for (int i = 0; i < 4; i++)
+        {
+            var expected = BitUtils.RotateLeft(testValues[i], rotation);
+            Assert.Equal(expected, result.GetElement(i));
+        }
     }
-    */
+
+    [SkippableFact(DisplayName = "BitOps RotateLeftVector128 Invalid Rotation Throws")]
+    public static void BitOps_RotateLeftVector128_InvalidRotation_Throws()
+    {
+        Skip.IfNot(System.Runtime.Intrinsics.X86.Sse2.IsSupported, "SSE2 not supported on this platform");
+
+        var vector = System.Runtime.Intrinsics.Vector128.Create(1u, 2u, 3u, 4u);
+
+        // Test unsupported rotation values
+        Assert.Throws<ArgumentException>(() => BitUtils.RotateLeftVector128(vector, 1));
+        Assert.Throws<ArgumentException>(() => BitUtils.RotateLeftVector128(vector, 5));
+        Assert.Throws<ArgumentException>(() => BitUtils.RotateLeftVector128(vector, 10));
+        Assert.Throws<ArgumentException>(() => BitUtils.RotateLeftVector128(vector, 32));
+    }
+
+    [SkippableTheory(DisplayName = "BitOps RotateLeftVector256 All ChaCha20 Rotations")]
+    [InlineData(16)] // ChaCha20
+    [InlineData(12)] // ChaCha20
+    [InlineData(8)]  // ChaCha20
+    [InlineData(7)]  // ChaCha20
+    public static void BitOps_RotateLeftVector256_ChaCha20Rotations(int rotation)
+    {
+        Skip.IfNot(System.Runtime.Intrinsics.X86.Avx2.IsSupported, "AVX2 not supported on this platform");
+
+        var testValues = new uint[] { 0x12345678u, 0x87654321u, 0xAABBCCDDu, 0x55AA55AAu,
+                                       0xF0F0F0F0u, 0x0F0F0F0Fu, 0xFF00FF00u, 0x00FF00FFu };
+        var vector = System.Runtime.Intrinsics.Vector256.Create(testValues[0], testValues[1], testValues[2], testValues[3],
+                                                                  testValues[4], testValues[5], testValues[6], testValues[7]);
+
+        var result = BitUtils.RotateLeftVector256(vector, rotation);
+
+        // Verify each element matches scalar rotation
+        for (int i = 0; i < 8; i++)
+        {
+            var expected = BitUtils.RotateLeft(testValues[i], rotation);
+            Assert.Equal(expected, result.GetElement(i));
+        }
+    }
+
+    [SkippableTheory(DisplayName = "BitOps RotateLeftVector256 All Salsa20 Rotations")]
+    [InlineData(18)] // Salsa20
+    [InlineData(13)] // Salsa20
+    [InlineData(9)]  // Salsa20
+    public static void BitOps_RotateLeftVector256_Salsa20Rotations(int rotation)
+    {
+        Skip.IfNot(System.Runtime.Intrinsics.X86.Avx2.IsSupported, "AVX2 not supported on this platform");
+
+        var testValues = new uint[] { 0x11111111u, 0x22222222u, 0x33333333u, 0x44444444u,
+                                       0x55555555u, 0x66666666u, 0x77777777u, 0x88888888u };
+        var vector = System.Runtime.Intrinsics.Vector256.Create(testValues[0], testValues[1], testValues[2], testValues[3],
+                                                                  testValues[4], testValues[5], testValues[6], testValues[7]);
+
+        var result = BitUtils.RotateLeftVector256(vector, rotation);
+
+        // Verify each element matches scalar rotation
+        for (int i = 0; i < 8; i++)
+        {
+            var expected = BitUtils.RotateLeft(testValues[i], rotation);
+            Assert.Equal(expected, result.GetElement(i));
+        }
+    }
+
+    [SkippableFact(DisplayName = "BitOps RotateLeftVector256 Invalid Rotation Throws")]
+    public static void BitOps_RotateLeftVector256_InvalidRotation_Throws()
+    {
+        Skip.IfNot(System.Runtime.Intrinsics.X86.Avx2.IsSupported, "AVX2 not supported on this platform");
+
+        var vector = System.Runtime.Intrinsics.Vector256.Create(1u, 2u, 3u, 4u, 5u, 6u, 7u, 8u);
+
+        // Test unsupported rotation values
+        Assert.Throws<ArgumentException>(() => BitUtils.RotateLeftVector256(vector, 1));
+        Assert.Throws<ArgumentException>(() => BitUtils.RotateLeftVector256(vector, 5));
+        Assert.Throws<ArgumentException>(() => BitUtils.RotateLeftVector256(vector, 10));
+        Assert.Throws<ArgumentException>(() => BitUtils.RotateLeftVector256(vector, 32));
+    }
+
+    [SkippableTheory(DisplayName = "BitOps RotateLeftAdvSimd All ChaCha20 Rotations")]
+    [InlineData(16)] // ChaCha20
+    [InlineData(12)] // ChaCha20
+    [InlineData(8)]  // ChaCha20
+    [InlineData(7)]  // ChaCha20
+    public static void BitOps_RotateLeftAdvSimd_ChaCha20Rotations(int rotation)
+    {
+        Skip.IfNot(System.Runtime.Intrinsics.Arm.AdvSimd.IsSupported, "AdvSIMD not supported on this platform");
+
+        var testValues = new uint[] { 0x12345678u, 0x87654321u, 0xAABBCCDDu, 0x55AA55AAu };
+        var vector = System.Runtime.Intrinsics.Vector128.Create(testValues[0], testValues[1], testValues[2], testValues[3]);
+
+        var result = BitUtils.RotateLeftAdvSimd(vector, rotation);
+
+        // Verify each element matches scalar rotation
+        for (int i = 0; i < 4; i++)
+        {
+            var expected = BitUtils.RotateLeft(testValues[i], rotation);
+            Assert.Equal(expected, result.GetElement(i));
+        }
+    }
+
+    [SkippableTheory(DisplayName = "BitOps RotateLeftAdvSimd All Salsa20 Rotations")]
+    [InlineData(18)] // Salsa20
+    [InlineData(13)] // Salsa20
+    [InlineData(9)]  // Salsa20
+    public static void BitOps_RotateLeftAdvSimd_Salsa20Rotations(int rotation)
+    {
+        Skip.IfNot(System.Runtime.Intrinsics.Arm.AdvSimd.IsSupported, "AdvSIMD not supported on this platform");
+
+        var testValues = new uint[] { 0xF0F0F0F0u, 0x0F0F0F0Fu, 0xFF00FF00u, 0x00FF00FFu };
+        var vector = System.Runtime.Intrinsics.Vector128.Create(testValues[0], testValues[1], testValues[2], testValues[3]);
+
+        var result = BitUtils.RotateLeftAdvSimd(vector, rotation);
+
+        // Verify each element matches scalar rotation
+        for (int i = 0; i < 4; i++)
+        {
+            var expected = BitUtils.RotateLeft(testValues[i], rotation);
+            Assert.Equal(expected, result.GetElement(i));
+        }
+    }
+
+    [SkippableFact(DisplayName = "BitOps RotateLeftAdvSimd Invalid Rotation Throws")]
+    public static void BitOps_RotateLeftAdvSimd_InvalidRotation_Throws()
+    {
+        Skip.IfNot(System.Runtime.Intrinsics.Arm.AdvSimd.IsSupported, "AdvSIMD not supported on this platform");
+
+        var vector = System.Runtime.Intrinsics.Vector128.Create(1u, 2u, 3u, 4u);
+
+        // Test unsupported rotation values
+        Assert.Throws<ArgumentException>(() => BitUtils.RotateLeftAdvSimd(vector, 1));
+        Assert.Throws<ArgumentException>(() => BitUtils.RotateLeftAdvSimd(vector, 5));
+        Assert.Throws<ArgumentException>(() => BitUtils.RotateLeftAdvSimd(vector, 10));
+        Assert.Throws<ArgumentException>(() => BitUtils.RotateLeftAdvSimd(vector, 32));
+    }
+#endif
 }
