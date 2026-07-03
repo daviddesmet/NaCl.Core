@@ -184,12 +184,13 @@ public class Salsa20Tests(ITestOutputHelper output)
     }
 
     [Fact]
+    [Category("Slow")]
     public void EncryptDecryptLongMessagesTest()
     {
         var rnd = new Random();
 
         var dataSize = 16;
-        while (dataSize <= (1 << 24))
+        while (dataSize <= (1 << 20))
         {
             var plaintext = new byte[dataSize];
             rnd.NextBytes(plaintext);

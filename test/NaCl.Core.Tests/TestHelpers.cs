@@ -4,12 +4,40 @@ namespace NaCl.Core.Tests;
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Net.Http;
 
 using Shouldly;
 
 public static class TestHelpers
 {
+    /// <summary>
+    /// Loads a Wycheproof test vector file.
+    /// On CI the committed copy in test/vectors is used for deterministic, offline builds.
+    /// Locally the latest vectors are fetched from the upstream repository (falling back
+    /// to the committed copy when offline), so drift from upstream surfaces during development.
+    /// </summary>
+    public static string GetWycheproofVector(string fileName)
+    {
+        var isCi = Environment.GetEnvironmentVariable("CI") is not null
+                   || Environment.GetEnvironmentVariable("TF_BUILD") is not null;
+        if (!isCi)
+        {
+            try
+            {
+                using var client = new HttpClient();
+                return client.GetStringAsync($"https://github.com/C2SP/wycheproof/raw/refs/heads/main/testvectors_v1/{fileName}").Result;
+            }
+            catch (Exception)
+            {
+                // Offline or upstream unavailable; fall back to the committed vectors.
+            }
+        }
+
+        return File.ReadAllText(Path.Combine("Vectors", fileName));
+    }
+
     private static readonly Random Random = new();
     private static readonly Lock Sync = new();
 
