@@ -402,10 +402,10 @@ public abstract class Salsa20Base : Snuffle
     /// <param name="state">The state.</param>
     protected static void SetSigma(Span<uint> state)
     {
-        state[0] = SIGMA[0];
-        state[5] = SIGMA[1];
-        state[10] = SIGMA[2];
-        state[15] = SIGMA[3];
+        state[0] = SIGMA_0;
+        state[5] = SIGMA_1;
+        state[10] = SIGMA_2;
+        state[15] = SIGMA_3;
     }
 
     /// <summary>

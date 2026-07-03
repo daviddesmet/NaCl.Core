@@ -37,6 +37,7 @@ public class XSalsa20 : Salsa20Base
         Span<byte> subKey = stackalloc byte[KEY_SIZE_IN_BYTES];
         HSalsa20(subKey, nonce);
         SetKey(state, subKey);
+        subKey.Clear(); // Clear sensitive data
 
         // Words 6-7 is the last 64-bits of the 192-bit nonce, which must not be repeated for the same key.
         state[6] = ArrayUtils.LoadUInt32LittleEndian(nonce, 16); // or ArrayUtils.LoadUInt32LittleEndian(nonce, 0)

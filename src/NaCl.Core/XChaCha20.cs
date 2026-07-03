@@ -36,6 +36,7 @@ public class XChaCha20 : ChaCha20Base
         Span<byte> subKey = stackalloc byte[KEY_SIZE_IN_BYTES];
         HChaCha20(subKey, nonce);
         SetKey(state, subKey);
+        subKey.Clear(); // Clear sensitive data
 
         // Word 12 is a block counter.
         state[12] = (uint)counter;

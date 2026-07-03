@@ -122,6 +122,9 @@ public abstract class SnufflePoly1305 : IDisposable
         if (nonce.IsEmpty || nonce.Length != _snuffle.NonceSizeInBytes)
             throw new ArgumentException(Snuffle.FormatNonceLengthExceptionMessage(_snuffle.GetType().Name, nonce.Length, _snuffle.NonceSizeInBytes));
 
+        if (tag.Length != Poly1305.MAC_TAG_SIZE_IN_BYTES)
+            throw new CryptographicException($"The tag length in bytes must be {Poly1305.MAC_TAG_SIZE_IN_BYTES}.");
+
         try
         {
             var aadPaddedLen = GetPaddedLength(associatedData, Poly1305.MAC_TAG_SIZE_IN_BYTES);
@@ -146,10 +149,6 @@ public abstract class SnufflePoly1305 : IDisposable
                 VerifyMacWithPooledKey(nonce, macData, tag);
             }
         }
-        catch (CryptographicException ex) when (ex.Message.Contains("length"))
-        {
-            throw;
-        }
         catch (Exception ex)
         {
             throw new CryptographicException(AEAD_EXCEPTION_INVALID_TAG, ex);
@@ -171,6 +170,7 @@ public abstract class SnufflePoly1305 : IDisposable
         _macKeySnuffle.ProcessKeyStreamBlock(nonce, 0, firstBlock);
 
         firstBlock[..Poly1305.MAC_KEY_SIZE_IN_BYTES].CopyTo(macKey);
+        firstBlock.Clear(); // Wipe the key stream block before the buffer returns to the shared pool
     }
 
     /// <summary>

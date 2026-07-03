@@ -30,6 +30,9 @@ on:
     types:
       - published
 
+permissions:
+  contents: read
+
 env:
   # Disable the .NET logo in the console output.
   DOTNET_NOLOGO: true
@@ -52,13 +55,13 @@ jobs:
     
     steps:
     - name: 'Checkout'
-      uses: actions/checkout@v4
+      uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
       with:
         fetch-depth: 0
         fetch-tags: true
         #filter: tree:0
     - name: 'Install .NET SDK'
-      uses: actions/setup-dotnet@v4
+      uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4.3.1
     - name: '.NET Restore'
       run: dotnet tool restore
     - name: 'Build Project'
@@ -68,7 +71,7 @@ jobs:
     - name: 'Pack NuGet'
       run: dotnet cake --target=Pack
     - name: 'Publish Artifacts'
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
       with:
         name: ${{matrix.os}}
         path: |
@@ -81,15 +84,15 @@ jobs:
     needs: build
     steps:
     - name: 'Checkout'
-      uses: actions/checkout@v4
+      uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
     - name: 'Download All Artifacts'
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
       with:
         path: ./artifacts
         pattern: '*-latest'
         merge-multiple: false
     - name: 'Install .NET SDK'
-      uses: actions/setup-dotnet@v4
+      uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4.3.1
       with:
         dotnet-version: | 
           6.0.x
@@ -103,13 +106,13 @@ jobs:
     - name: 'Generate Merged Coverage Report'
       run: reportgenerator -reports:"./artifacts/**/coverage.cobertura.xml" -targetdir:${{env.BUILD_ARTIFACT_PATH}}/TestResults/Coverage/Reports "-reporttypes:HtmlInline;HTMLChart;Cobertura"
     - name: 'Upload Coverage'
-      uses: codecov/codecov-action@v4
+      uses: codecov/codecov-action@b9fd7d16f6d7d1b5d2bec1a2887e65ceed900238 # v4.6.0
       with:
         file: ${{env.BUILD_ARTIFACT_PATH}}/TestResults/Coverage/Reports/Cobertura.xml
         fail_ci_if_error: false
         token: ${{ secrets.CODECOV_TOKEN }}
     - name: 'Publish Coverage Report'
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
       with:
         name: 'coverage-report'
         path: ${{env.BUILD_ARTIFACT_PATH}}
@@ -126,7 +129,7 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: 'Download Artifact'
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: 'windows-latest'
       - name: 'NuGet Push'
@@ -139,15 +142,22 @@ jobs:
     environment:
       name: 'NuGet'
       url: https://www.nuget.org/packages/NaCl.Core
+    permissions:
+      id-token: write # Required for NuGet Trusted Publishing (OIDC)
     runs-on: windows-latest
     steps:
       - name: 'Download Artifact'
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: 'windows-latest'
+      - name: 'NuGet Login (Trusted Publishing)'
+        id: nuget-login
+        uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1.2.0
+        with:
+          user: daviddesmet
       - name: 'NuGet Push'
         run: |
           Get-ChildItem -Filter *.nupkg |
           Where-Object { !$_.Name.Contains('preview') } |
-          ForEach-Object { dotnet nuget push $_ --source https://api.nuget.org/v3/index.json --skip-duplicate --api-key ${{secrets.NUGET_API_KEY}} }
+          ForEach-Object { dotnet nuget push $_ --source https://api.nuget.org/v3/index.json --skip-duplicate --api-key ${{steps.nuget-login.outputs.NUGET_API_KEY}} }
         shell: pwsh

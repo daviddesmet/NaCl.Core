@@ -1,8 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup Label="Build">
-    <TargetFrameworks>netstandard2.0;netstandard2.1;net6.0;net8.0;net9.0;net10.0</TargetFrameworks>
-    <TargetFrameworks Condition="'$(OS)' != 'Unix'">netstandard2.0;netstandard2.1;net45;net48;net481;net6.0;net8.0;net9.0;net10.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;netstandard2.1;net45;net48;net481;net6.0;net8.0;net9.0;net10.0</TargetFrameworks>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
@@ -41,25 +40,32 @@
     <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
   </PropertyGroup>
 
+  <PropertyGroup Label="Restore">
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <RestoreLockedMode Condition="'$(ContinuousIntegrationBuild)' == 'true'">true</RestoreLockedMode>
+  </PropertyGroup>
+
   <ItemGroup>
     <None Include="../../README.md" Pack="true" Visible="false" PackagePath="" />
   </ItemGroup>
 
   <ItemGroup Label="Package References">
-    <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" Version="8.0.0" />
-    <PackageReference Include="MinVer" Version="6.0.0">
+    <!-- Allows compiling the .NET Framework targets on non-Windows machines -->
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" Version="10.0.300" />
+    <PackageReference Include="MinVer" Version="7.0.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
   </ItemGroup>
 
   <ItemGroup Label="Package References for Windows" Condition="$(TargetFramework) == 'netstandard2.0' OR $(TargetFramework) == 'net48' OR $(TargetFramework) == 'net481'">
-    <PackageReference Include="IndexRange" Version="1.0.3" />
+    <PackageReference Include="IndexRange" Version="1.1.1" />
     <PackageReference Include="System.Memory" Version="4.6.3" />
   </ItemGroup>
 
   <ItemGroup Label="Package References for Windows" Condition="$(TargetFramework) == 'net45'">
-    <PackageReference Include="IndexRange" Version="1.0.3" />
+    <PackageReference Include="IndexRange" Version="1.1.1" />
     <PackageReference Include="System.Memory" Version="4.5.5" />
   </ItemGroup>
 

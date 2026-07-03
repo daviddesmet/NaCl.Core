@@ -40,7 +40,11 @@ public abstract class Snuffle : IDisposable
     protected const int BLOCK_SIZE_IN_INTS = 16;
     public const int BLOCK_SIZE_IN_BYTES = BLOCK_SIZE_IN_INTS * 4; // 64
 
-    protected static uint[] SIGMA = [0x61707865, 0x3320646E, 0x79622D32, 0x6B206574]; // "expand 32-byte k" (4 words constant: "expa", "nd 3", "2-by", and "te k")
+    // "expand 32-byte k" (4 words constant: "expa", "nd 3", "2-by", and "te k")
+    protected const uint SIGMA_0 = 0x61707865;
+    protected const uint SIGMA_1 = 0x3320646E;
+    protected const uint SIGMA_2 = 0x79622D32;
+    protected const uint SIGMA_3 = 0x6B206574;
 
     protected ReadOnlyMemory<byte> Key => _key;
 
