@@ -237,17 +237,17 @@ public abstract class ChaCha20Base : Snuffle
     protected static void ShuffleState(Span<uint> state)
     {
 #if NET6_0_OR_GREATER
-        if (Avx2.IsSupported)
+        if (Avx2.IsSupported && state.Length == BLOCK_SIZE_IN_INTS)
         {
             ShuffleStateAvx2(state);
             return;
         }
-        if (Ssse3.IsSupported)
+        if (Ssse3.IsSupported && state.Length == BLOCK_SIZE_IN_INTS)
         {
             ShuffleStateSsse3(state);
             return;
         }
-        if (AdvSimd.IsSupported)
+        if (AdvSimd.IsSupported && state.Length == BLOCK_SIZE_IN_INTS)
         {
             ShuffleStateAdvSimd(state);
             return;
@@ -558,11 +558,10 @@ public abstract class ChaCha20Base : Snuffle
     /// <param name="state">The state.</param>
     protected static void SetSigma(Span<uint> state)
     {
-        // SIGMA.AsSpan()[..4].CopyTo(state);
-        state[0] = SIGMA[0];
-        state[1] = SIGMA[1];
-        state[2] = SIGMA[2];
-        state[3] = SIGMA[3];
+        state[0] = SIGMA_0;
+        state[1] = SIGMA_1;
+        state[2] = SIGMA_2;
+        state[3] = SIGMA_3;
     }
 
     /// <summary>

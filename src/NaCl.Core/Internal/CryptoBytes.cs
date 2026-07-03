@@ -3,7 +3,7 @@ namespace NaCl.Core.Internal;
 using System;
 using System.Linq;
 using System.Runtime.CompilerServices;
-#if NET6_0_OR_GREATER
+#if NET6_0_OR_GREATER || NETSTANDARD2_1
 using System.Security.Cryptography;
 #endif
 
@@ -81,6 +81,18 @@ internal static class CryptoBytes
             differentbits |= x[xOffset + i] ^ y[yOffset + i];
 
         return (1 & (unchecked((uint)differentbits - 1) >> 8));
+    }
+
+    // NoInlining + NoOptimization prevent the JIT from eliding the clear as a dead store
+    // when the span (e.g. stackalloc'd key material) is not read afterwards.
+    [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
+    public static void Wipe(Span<byte> data)
+    {
+#if NET6_0_OR_GREATER || NETSTANDARD2_1
+        CryptographicOperations.ZeroMemory(data);
+#else
+        data.Clear();
+#endif
     }
 
     public static void Wipe(byte[] data)

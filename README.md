@@ -85,12 +85,22 @@ Refer to the [benchmarks](https://github.com/daviddesmet/NaCl.Core/tree/master/t
 
 Run the benchmarks using:
 ```bash
-dotnet run -c Release --framework net9.0
+dotnet run -c Release
 ```
 
 ```bash
-dotnet run -c Release --framework net9.0 --filter "*ChaCha20IntrinsicsBenchmark*"
+dotnet run -c Release --filter "*ChaCha20IntrinsicsBenchmark*"
 ```
+
+## Dependency Lock Files
+
+The repository uses [NuGet lock files](https://learn.microsoft.com/en-us/nuget/consume-packages/package-references-in-project-files#locking-dependencies) (`packages.lock.json`, committed per project) to pin the full dependency graph, including transitive packages. CI restores with locked mode enabled, so a build fails if the resolved packages differ from the lock files — protecting against floating transitive versions and dependency-confusion attacks.
+
+Upgrading packages therefore changes slightly:
+
+- Edit the package version in the `.csproj` (or let Dependabot do it), then run `dotnet restore --force-evaluate` from the repository root and commit the updated `packages.lock.json` files together with the `.csproj` change.
+- Dependabot PRs update the lock files automatically.
+- A plain `dotnet restore` locally never floats versions; it follows the lock files. If it reports `NU1004`, the lock files are out of date — run `dotnet restore --force-evaluate`.
 
 ## Learn More
 

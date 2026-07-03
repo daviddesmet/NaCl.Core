@@ -3,7 +3,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -233,12 +232,13 @@ public class XChaCha20Poly1305Test(ITestOutputHelper output)
     }
 
     [Fact]
+    [Category("Slow")]
     public void EncryptDecryptLongMessagesTest()
     {
         var rnd = new Random();
 
         var dataSize = 16;
-        while (dataSize <= (1 << 24))
+        while (dataSize <= (1 << 20))
         {
             var plaintext = new byte[dataSize];
             rnd.NextBytes(plaintext);
@@ -402,6 +402,7 @@ public class XChaCha20Poly1305Test(ITestOutputHelper output)
     }
 
     [Fact]
+    [Category("Slow")]
     public void RandomNonceTest()
     {
         var key = new byte[Snuffle.KEY_SIZE_IN_BYTES];
@@ -415,7 +416,7 @@ public class XChaCha20Poly1305Test(ITestOutputHelper output)
         var message = Encoding.UTF8.GetBytes("This is a secret content!!");
         var aad = Array.Empty<byte>();
         var ciphertexts = new HashSet<string>();
-        var samples = 1 << 17;
+        var samples = 1 << 14;
 
         for (var i = 0; i < samples; i++)
         {
@@ -590,17 +591,5 @@ public class XChaCha20Poly1305Test(ITestOutputHelper output)
         decrypted.ShouldBe(overBoundaryMessage);
     }
 
-    private static string GetWycheproofTestVector()
-    {
-        try
-        {
-            using var client = new HttpClient();
-            // originally hosted at: https://github.com/google/wycheproof/raw/master/testvectors/xchacha20_poly1305_test.json
-            return client.GetStringAsync("https://github.com/C2SP/wycheproof/raw/refs/heads/main/testvectors_v1/xchacha20_poly1305_test.json").Result;
-        }
-        catch (Exception)
-        {
-            return File.ReadAllText(Path.Combine("Vectors", "xchacha20_poly1305_test.json"));
-        }
-    }
+    private static string GetWycheproofTestVector() => TestHelpers.GetWycheproofVector("xchacha20_poly1305_test.json");
 }

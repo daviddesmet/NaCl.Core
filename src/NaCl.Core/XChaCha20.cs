@@ -34,8 +34,15 @@ public class XChaCha20 : ChaCha20Base
 
         // The next eight words (4-11) are taken from the 256-bit key in little-endian order, in 4-byte chunks; and the first 16 bytes of the 24-byte nonce to obtain the subKey.
         Span<byte> subKey = stackalloc byte[KEY_SIZE_IN_BYTES];
-        HChaCha20(subKey, nonce);
-        SetKey(state, subKey);
+        try
+        {
+            HChaCha20(subKey, nonce);
+            SetKey(state, subKey);
+        }
+        finally
+        {
+            CryptoBytes.Wipe(subKey); // Clear sensitive data
+        }
 
         // Word 12 is a block counter.
         state[12] = (uint)counter;

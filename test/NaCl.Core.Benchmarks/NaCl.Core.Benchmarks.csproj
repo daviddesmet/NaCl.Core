@@ -11,8 +11,13 @@
     <AssemblyOriginatorKeyFile>../../Key.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
+  <PropertyGroup Label="Restore">
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <RestoreLockedMode Condition="'$(GITHUB_ACTIONS)' == 'true' OR '$(TF_BUILD)' == 'true'">true</RestoreLockedMode>
+  </PropertyGroup>
+
   <ItemGroup Label="Package References">
-    <PackageReference Include="BenchmarkDotNet" Version="0.14.0" />
+    <PackageReference Include="BenchmarkDotNet" Version="0.15.8" />
   </ItemGroup>
 
   <ItemGroup Label="Project References">
