@@ -85,11 +85,11 @@ Refer to the [benchmarks](https://github.com/daviddesmet/NaCl.Core/tree/master/t
 
 Run the benchmarks using:
 ```bash
-dotnet run -c Release --framework net9.0
+dotnet run -c Release
 ```
 
 ```bash
-dotnet run -c Release --framework net9.0 --filter "*ChaCha20IntrinsicsBenchmark*"
+dotnet run -c Release --filter "*ChaCha20IntrinsicsBenchmark*"
 ```
 
 ## Dependency Lock Files
