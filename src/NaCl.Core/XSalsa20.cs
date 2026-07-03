@@ -35,9 +35,15 @@ public class XSalsa20 : Salsa20Base
 
         // The next eight words (1,2,3,4,11,12,13,14) are taken from the 256-bit key in little-endian order, in 4-byte chunks; and the first 16 bytes of the 24-byte nonce to obtain the subKey.
         Span<byte> subKey = stackalloc byte[KEY_SIZE_IN_BYTES];
-        HSalsa20(subKey, nonce);
-        SetKey(state, subKey);
-        subKey.Clear(); // Clear sensitive data
+        try
+        {
+            HSalsa20(subKey, nonce);
+            SetKey(state, subKey);
+        }
+        finally
+        {
+            CryptoBytes.Wipe(subKey); // Clear sensitive data
+        }
 
         // Words 6-7 is the last 64-bits of the 192-bit nonce, which must not be repeated for the same key.
         state[6] = ArrayUtils.LoadUInt32LittleEndian(nonce, 16); // or ArrayUtils.LoadUInt32LittleEndian(nonce, 0)

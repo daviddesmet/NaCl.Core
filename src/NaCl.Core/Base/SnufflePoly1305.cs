@@ -123,7 +123,7 @@ public abstract class SnufflePoly1305 : IDisposable
             throw new ArgumentException(Snuffle.FormatNonceLengthExceptionMessage(_snuffle.GetType().Name, nonce.Length, _snuffle.NonceSizeInBytes));
 
         if (tag.Length != Poly1305.MAC_TAG_SIZE_IN_BYTES)
-            throw new CryptographicException($"The tag length in bytes must be {Poly1305.MAC_TAG_SIZE_IN_BYTES}.");
+            throw new CryptographicException($"The tag length in bytes must be {Poly1305.MAC_TAG_SIZE_IN_BYTES}, but got {tag.Length}.");
 
         try
         {
@@ -167,10 +167,15 @@ public abstract class SnufflePoly1305 : IDisposable
     {
         using var blockOwner = MemoryPool<byte>.Shared.Rent(_macKeySnuffle.BlockSizeInBytes);
         var firstBlock = blockOwner.Memory.Span[.._macKeySnuffle.BlockSizeInBytes];
-        _macKeySnuffle.ProcessKeyStreamBlock(nonce, 0, firstBlock);
-
-        firstBlock[..Poly1305.MAC_KEY_SIZE_IN_BYTES].CopyTo(macKey);
-        firstBlock.Clear(); // Wipe the key stream block before the buffer returns to the shared pool
+        try
+        {
+            _macKeySnuffle.ProcessKeyStreamBlock(nonce, 0, firstBlock);
+            firstBlock[..Poly1305.MAC_KEY_SIZE_IN_BYTES].CopyTo(macKey);
+        }
+        finally
+        {
+            CryptoBytes.Wipe(firstBlock); // Wipe the key stream block before the buffer returns to the shared pool
+        }
     }
 
     /// <summary>
@@ -182,9 +187,15 @@ public abstract class SnufflePoly1305 : IDisposable
     private void ComputeMacWithPooledKey(ReadOnlySpan<byte> nonce, ReadOnlySpan<byte> macData, Span<byte> tag)
     {
         Span<byte> macKey = stackalloc byte[Poly1305.MAC_KEY_SIZE_IN_BYTES];
-        GetMacKeyPooled(nonce, macKey);
-        Poly1305.ComputeMac(macKey, macData, tag);
-        macKey.Clear(); // Clear sensitive data
+        try
+        {
+            GetMacKeyPooled(nonce, macKey);
+            Poly1305.ComputeMac(macKey, macData, tag);
+        }
+        finally
+        {
+            CryptoBytes.Wipe(macKey); // Clear sensitive data
+        }
     }
 
     /// <summary>
@@ -196,9 +207,15 @@ public abstract class SnufflePoly1305 : IDisposable
     private void VerifyMacWithPooledKey(ReadOnlySpan<byte> nonce, ReadOnlySpan<byte> macData, ReadOnlySpan<byte> tag)
     {
         Span<byte> macKey = stackalloc byte[Poly1305.MAC_KEY_SIZE_IN_BYTES];
-        GetMacKeyPooled(nonce, macKey);
-        Poly1305.VerifyMac(macKey, macData, tag);
-        macKey.Clear(); // Clear sensitive data
+        try
+        {
+            GetMacKeyPooled(nonce, macKey);
+            Poly1305.VerifyMac(macKey, macData, tag);
+        }
+        finally
+        {
+            CryptoBytes.Wipe(macKey); // Clear sensitive data
+        }
     }
 
     /// <summary>
