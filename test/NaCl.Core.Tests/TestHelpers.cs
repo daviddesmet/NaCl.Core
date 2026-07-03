@@ -26,8 +26,12 @@ public static class TestHelpers
         {
             try
             {
-                using var client = new HttpClient();
-                return client.GetStringAsync($"https://github.com/C2SP/wycheproof/raw/refs/heads/main/testvectors_v1/{fileName}").Result;
+                using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
+                using var request = new HttpRequestMessage(HttpMethod.Get, $"https://github.com/C2SP/wycheproof/raw/refs/heads/main/testvectors_v1/{fileName}");
+                using var response = client.Send(request, HttpCompletionOption.ResponseContentRead);
+                response.EnsureSuccessStatusCode();
+                using var reader = new StreamReader(response.Content.ReadAsStream());
+                return reader.ReadToEnd();
             }
             catch (Exception)
             {
