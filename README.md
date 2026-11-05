@@ -102,6 +102,10 @@ Upgrading packages therefore changes slightly:
 - Dependabot PRs update the lock files automatically.
 - A plain `dotnet restore` locally never floats versions; it follows the lock files. If it reports `NU1004`, the lock files are out of date — run `dotnet restore --force-evaluate`.
 
+## Contributing
+
+Commit messages and pull request titles follow [Conventional Commits](https://www.conventionalcommits.org/), e.g. `fix: handle empty nonce` or `ci: bump actions/checkout`.
+
 ## Learn More
 
 [![License](https://img.shields.io/github/license/daviddesmet/NaCl.Core.svg)](https://github.com/daviddesmet/NaCl.Core/blob/master/LICENSE)
