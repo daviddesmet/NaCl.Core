@@ -123,7 +123,6 @@ internal static class ArrayUtils
         {
             var i = 0;
             var vectorSize = Vector256<uint>.Count; // 8 elements
-            var vectorSizeBytes = vectorSize * sizeof(uint); // 32 bytes
 
             // Process 8 uint32s (32 bytes) at a time with AVX2
             for (; i + vectorSize <= size; i += vectorSize)
