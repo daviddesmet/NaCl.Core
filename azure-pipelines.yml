@@ -177,12 +177,19 @@ jobs:
     displayName: 'Build Project in $(BuildConfiguration) mode'
     env:
       Configuration: $(BuildConfiguration)
-  # Same flow as GitHub Actions: runs tests with AVX2, SSE3 and scalar intrinsics
-  # so the merged coverage matches Codecov.
+  # Same Windows flow as GitHub Actions: runs tests with AVX2, SSE3 and scalar intrinsics.
+  # Coverage here is Windows-only, so it can stay slightly below Codecov, which also
+  # merges Linux/macOS runs (including the ARM-only AdvSIMD paths).
   - script: dotnet cake --target=Test
     displayName: 'Run Tests'
     env:
       Configuration: $(BuildConfiguration)
+  - task: PublishTestResults@2
+    displayName: 'Publish Test Results'
+    inputs:
+      testResultsFormat: 'VSTest'
+      testResultsFiles: '$(Build.SourcesDirectory)/Artifacts/TestResults/**/*.trx'
+    condition: always()
   - script: dotnet tool install -g dotnet-reportgenerator-globaltool
     displayName: 'Install ReportGenerator'
   - script: reportgenerator -reports:"$(Build.SourcesDirectory)/Artifacts/TestResults/**/coverage.cobertura.xml" -targetdir:"$(Build.ArtifactStagingDirectory)/TestResults" "-reporttypes:HtmlInline_AzurePipelines_Dark;HTMLChart;Cobertura"
