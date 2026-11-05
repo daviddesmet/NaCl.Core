@@ -171,29 +171,27 @@ jobs:
       packageType: 'sdk'
       version: '10.0.x'
       includePreviewVersions: true
-  - task: DotNetCoreCLI@2
+  - script: dotnet tool restore
+    displayName: 'Restore .NET Tools'
+  - script: dotnet cake --target=Build
     displayName: 'Build Project in $(BuildConfiguration) mode'
-    inputs:
-      command: 'build'
-      projects: '**/NaCl.Core.csproj'
-      arguments: '-c $(BuildConfiguration)'
-  - task: DotNetCoreCLI@2
+    env:
+      Configuration: $(BuildConfiguration)
+  # Same flow as GitHub Actions: runs tests with AVX2, SSE3 and scalar intrinsics
+  # so the merged coverage matches Codecov.
+  - script: dotnet cake --target=Test
     displayName: 'Run Tests'
-    inputs:
-      command: 'test'
-      projects: '**/*.Tests.csproj'
-      arguments: '/p:CollectCoverage=true /p:CoverletOutputFormat=opencover /p:Include="[NaCl.*]*" /p:Exclude="[*Tests]*"'
-  - task: reportgenerator@4
+    env:
+      Configuration: $(BuildConfiguration)
+  - script: dotnet tool install -g dotnet-reportgenerator-globaltool
+    displayName: 'Install ReportGenerator'
+  - script: reportgenerator -reports:"$(Build.SourcesDirectory)/Artifacts/TestResults/**/coverage.cobertura.xml" -targetdir:"$(Build.ArtifactStagingDirectory)/TestResults" "-reporttypes:HtmlInline_AzurePipelines_Dark;HTMLChart;Cobertura"
     displayName: 'Generate Coverage Report'
-    inputs:
-      reports: '$(Build.SourcesDirectory)/**/coverage.opencover.xml'
-      targetdir: '$(Build.ArtifactStagingDirectory)/TestResults/'
-      reporttypes: 'HtmlInline_AzurePipelines_Dark;HTMLChart;Cobertura'
   - task: PublishCodeCoverageResults@2
     displayName: 'Publish Coverage Results'
     inputs:
       codeCoverageTool: 'Cobertura'
-      summaryFileLocation: '$(Build.ArtifactStagingDirectory)/TestResults/cobertura.xml'
+      summaryFileLocation: '$(Build.ArtifactStagingDirectory)/TestResults/Cobertura.xml'
       reportDirectory: '$(Build.ArtifactStagingDirectory)/TestResults/'
   - task: DotNetCoreCLI@2
     displayName: 'Pack NuGet'
